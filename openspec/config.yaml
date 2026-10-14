@@ -1,13 +1,11 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  Project: Jungle NFT Marketplace Frontend (React, TypeScript, Nx monorepo, Module Federation).
+  Backend: 100% simulated via MSW and Socket.IO (@mswjs/socket.io-binding).
+  Currency rule: ETH is strictly decimal string via shared/money; never use number or native arithmetic.
+  Architecture: Follow strictly AGENTS.md, ARCHITECTURE.md, and openspec/project.md.
+
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
