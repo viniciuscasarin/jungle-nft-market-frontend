@@ -1,21 +1,34 @@
 schema: spec-driven
 
 context: |
-  Project: Jungle NFT Marketplace Frontend (React, TypeScript, Nx monorepo, Module Federation).
-  Backend: 100% simulated via MSW and Socket.IO (@mswjs/socket.io-binding).
-  Currency rule: ETH is strictly decimal string via shared/money; never use number or native arithmetic.
-  Architecture: Follow strictly AGENTS.md, ARCHITECTURE.md, and openspec/project.md.
+  NFT Marketplace (desafio frontend). Monorepo Nx/pnpm, 4 apps React/Vite via Module Federation:
+  shell (host) + storefront, checkout, account (remotes) + web-e2e.
+  Backend 100% simulado (MSW + @mswjs/socket.io-binding). Sem blockchain, carteiras ou pagamentos reais.
+  Stack obrigatória com uso efetivo: React, TS strict, TanStack Router, TanStack Query, Axios,
+  socket.io-client, Tailwind, shadcn/ui, MSW, Playwright, Lighthouse.
+  Invariantes (violação é eliminatória):
+  - ETH é string decimal via shared/money; quantidades inteiras; totais vêm da cotação da API.
+  - Mocks só em libs/mocks/*; tempo real só via socket.io-client, nunca setters/cache.
+  - Query keys privadas incluem userId; logout/troca de usuário limpa cache, queries e subscriptions.
+  - Pedidos idempotentes; confirmação só para pedido confirmed pela simulação.
+  - Host é dono de rotas, guards e das instâncias únicas (QueryClient, HttpClient, RealtimeClient, SW).
+  Referências: openspec/project.md (o quê), ARCHITECTURE.md (como), AGENTS.md (processo).
+  Precedência: challenge.md > project.md > ARCHITECTURE.md.
 
-
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Listar apps/libs Nx afetados e suas tags (scope, type, flow).
+    - Declarar fora de escopo e premissas; premissas também vão para ARCHITECTURE.md.
+  specs:
+    - Requisitos com SHALL e cenários WHEN/THEN testáveis.
+    - Dado assíncrono especifica loading, vazio, erro com retry e sucesso.
+    - Incluir cenários de falha e de acessibilidade quando houver UI.
+  design:
+    - Respeitar fronteiras e encapsulamento de terceiros (ARCHITECTURE.md §4); justificar nova dependência.
+  tasks:
+    - Incluir tasks de teste (Vitest e/ou Playwright) e de cenário MSW para cada fluxo de falha.
+    - Incluir task de atualização da documentação afetada (ARCHITECTURE.md, README.md, docs/*).
+    - "Última task: typecheck, lint, test e build nos projetos afetados."
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.
