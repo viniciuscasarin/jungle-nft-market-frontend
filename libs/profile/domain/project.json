@@ -1,0 +1,36 @@
+{
+  "name": "profile-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/profile/domain/src",
+  "projectType": "library",
+  "tags": [
+    "scope:profile",
+    "type:domain",
+    "flow:account"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/profile/domain/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/profile/domain/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/profile/domain/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "orders-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/orders/data-access/src",
+  "projectType": "library",
+  "tags": [
+    "scope:orders",
+    "type:data-access",
+    "flow:checkout"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/orders/data-access/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/orders/data-access/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/orders/data-access/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

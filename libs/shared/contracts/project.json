@@ -1,0 +1,37 @@
+{
+  "name": "shared-contracts",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/contracts/src",
+  "projectType": "library",
+  "tags": [
+    "scope:shared",
+    "scope:contracts",
+    "type:util",
+    "flow:shared"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/shared/contracts/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/shared/contracts/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/shared/contracts/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

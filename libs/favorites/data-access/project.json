@@ -1,0 +1,36 @@
+{
+  "name": "favorites-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/favorites/data-access/src",
+  "projectType": "library",
+  "tags": [
+    "scope:favorites",
+    "type:data-access",
+    "flow:storefront"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/favorites/data-access/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/favorites/data-access/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/favorites/data-access/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

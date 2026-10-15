@@ -29,3 +29,12 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 *.pem
+
+# Nx
+.nx/cache/
+.nx/workspace-data/
+.nx/
+
+# Playwright
+test-results/
+playwright-report/

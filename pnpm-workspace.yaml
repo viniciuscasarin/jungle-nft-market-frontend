@@ -1,0 +1,13 @@
+packages:
+  - 'apps/*'
+  - 'libs/*'
+  - 'libs/shared/*'
+  - 'libs/mocks/*'
+  - 'libs/*/*'
+  - 'tools/*'
+
+allowBuilds:
+  '@playwright/test': true
+  esbuild: true
+  msw: true
+  nx: true

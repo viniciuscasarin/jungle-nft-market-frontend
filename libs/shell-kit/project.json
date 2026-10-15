@@ -1,0 +1,28 @@
+{
+  "name": "shell-kit",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shell-kit/src",
+  "projectType": "library",
+  "tags": ["scope:shell-kit", "type:util", "flow:shared"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/shell-kit/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "config": "libs/shell-kit/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/shell-kit/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

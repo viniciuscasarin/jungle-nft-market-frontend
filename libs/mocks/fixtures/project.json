@@ -1,0 +1,36 @@
+{
+  "name": "mocks-fixtures",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/mocks/fixtures/src",
+  "projectType": "library",
+  "tags": [
+    "scope:mocks",
+    "type:mocks",
+    "flow:shared"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/mocks/fixtures/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/mocks/fixtures/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/mocks/fixtures/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

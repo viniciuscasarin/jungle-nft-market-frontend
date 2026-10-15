@@ -1,0 +1,36 @@
+{
+  "name": "cart-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/cart/domain/src",
+  "projectType": "library",
+  "tags": [
+    "scope:cart",
+    "type:domain",
+    "flow:shared"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/cart/domain/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/cart/domain/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/cart/domain/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

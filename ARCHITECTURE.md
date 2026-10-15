@@ -28,17 +28,51 @@ Marketplace de NFTs em React + TypeScript, com backend 100% simulado (MSW). Este
 
 ```
 apps/
-  shell/        host: layout, providers, rotas, guards, MSW, realtime, sessão, login, cadastro
-  storefront/   remote: Home (catálogo) e PDP
-  checkout/     remote: Carrinho, Pagamento e Confirmação
-  account/      remote: Perfil e Carteiras
+  shell/        host: layout, providers, rotas, guards, MSW, realtime, sessão, login, cadastro (porta 4200)
+  storefront/   remote: Home (catálogo) e PDP (porta 4201)
+  checkout/     remote: Carrinho, Pagamento e Confirmação (porta 4202)
+  account/      remote: Perfil e Carteiras (porta 4203)
   web-e2e/      Playwright sobre o sistema integrado
 libs/
-  shared/{contracts,money,http,query,router,realtime,ui,testing}
+  shared/{contracts,money,http,query,router,realtime,ui,testing} (8 libs)
   shell-kit/    ShellContext, bootstrapStandalone, contrato de remotes
-  mocks/{core,fixtures,handlers,socket}
-  {auth,catalog,favorites,cart,checkout,orders,profile,wallets}/{domain,data-access,feature,ui}
+  mocks/{core,fixtures,handlers,socket} (4 libs)
+  {auth,catalog,favorites,cart,checkout,orders,profile,wallets}/{domain,data-access,feature,ui} (32 libs)
 ```
+
+### Inventário de Projetos Nx (50 projetos)
+
+- **Aplicações (5)**:
+  - `shell`: Host na porta `4200`, gerenciador de rotas, providers e sessão.
+  - `storefront`: Remote na porta `4201`, catálogo e PDP.
+  - `checkout`: Remote na porta `4202`, carrinho e checkout.
+  - `account`: Remote na porta `4203`, perfil e carteiras.
+  - `web-e2e`: Testes de integração Playwright.
+- **Bibliotecas Compartilhadas (8)**:
+  - `@nft/shared-contracts`: Schemas zod, DTOs e validação de runtime de env vars.
+  - `@nft/shared-money`: Operações e formatação de ETH em strings decimais via decimal.js.
+  - `@nft/shared-http`: Wrapper tipado de Axios com normalização de `ApiError`.
+  - `@nft/shared-query`: Configuração central do TanStack Query e query key factories.
+  - `@nft/shared-router`: Abstração do TanStack Router.
+  - `@nft/shared-realtime`: Wrapper tipado de Socket.IO client.
+  - `@nft/shared-ui`: Design system, primitivos Radix UI e tokens Tailwind v4.
+  - `@nft/shared-testing`: Utilitários de teste e asserções automatizadas de fronteiras arquiteturais.
+- **Host Kit (1)**:
+  - `@nft/shell-kit`: ShellContext, utilitários de remote e bootstrap standalone.
+- **Mocks (4)**:
+  - `@nft/mocks-core`: Estado reativo simulado em memória.
+  - `@nft/mocks-fixtures`: Fixtures tipadas de NFTs, usuários e pedidos.
+  - `@nft/mocks-handlers`: Handlers REST MSW interceptando requisições.
+  - `@nft/mocks-socket`: Simulação do canal de eventos Socket.IO.
+- **Domínios (32 libs em 8 domínios e 4 camadas)**:
+  - `auth`: `auth-domain`, `auth-data-access`, `auth-feature`, `auth-ui`
+  - `catalog`: `catalog-domain`, `catalog-data-access`, `catalog-feature`, `catalog-ui`
+  - `favorites`: `favorites-domain`, `favorites-data-access`, `favorites-feature`, `favorites-ui`
+  - `cart`: `cart-domain`, `cart-data-access`, `cart-feature`, `cart-ui`
+  - `checkout`: `checkout-domain`, `checkout-data-access`, `checkout-feature`, `checkout-ui`
+  - `orders`: `orders-domain`, `orders-data-access`, `orders-feature`, `orders-ui`
+  - `profile`: `profile-domain`, `profile-data-access`, `profile-feature`, `profile-ui`
+  - `wallets`: `wallets-domain`, `wallets-data-access`, `wallets-feature`, `wallets-ui`
 
 | App | Páginas | Domínios consumidos |
 |---|---|---|
@@ -216,11 +250,23 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 
 ## 16. Build, deploy e execução
 
-- Build consolida os apps em uma única pasta: shell em `/`, remotes em `/remotes/<nome>/`.
-- `vercel.json` com SPA fallback, sem cache longo em `remoteEntry` e cache imutável em chunks com hash. Acesso direto e refresh funcionam em qualquer rota.
-- Scripts raiz: `dev:mocks`, `dev:<app>`, `build`, `preview`, `typecheck`, `lint`, `test`, `e2e`, `lighthouse`.
-- Variáveis: `VITE_ENABLE_MOCKS`, `VITE_API_BASE_URL`, `VITE_SOCKET_URL`, `VITE_DEFAULT_SCENARIO`, `VITE_REMOTE_STOREFRONT_URL`, `VITE_REMOTE_CHECKOUT_URL`, `VITE_REMOTE_ACCOUNT_URL`.
-- CI: cache, `nx affected` para typecheck, lint, test e build; job de E2E separado.
+- Build consolida os apps em uma única pasta (`dist/integrated/`): shell na raiz `/`, remotes sob `/remotes/<nome>/` (`remotes/storefront`, `remotes/checkout`, `remotes/account`).
+- `vercel.json` com SPA fallback para `/index.html`, sem cache longo em `remoteEntry.js` (`Cache-Control: public, max-age=0, must-revalidate`) e cache imutável em chunks com hash (`Cache-Control: public, max-age=31536000, immutable`). Acesso direto e refresh funcionam em qualquer rota.
+- Scripts raiz no `package.json`:
+  - `pnpm dev:mocks`: Inicializa simultaneamente os 4 apps Vite via Nx.
+  - `pnpm dev:shell`: Host na porta `4200`.
+  - `pnpm dev:storefront`: Remote catálogo na porta `4201`.
+  - `pnpm dev:checkout`: Remote carrinho/pagamento na porta `4202`.
+  - `pnpm dev:account`: Remote perfil/carteiras na porta `4203`.
+  - `pnpm build`: Executa `scripts/build-integrated.js` compilando todos os apps e montando `dist/integrated/`.
+  - `pnpm preview`: Servidor estático Node.js servindo `dist/integrated/` com headers de cache simulados.
+  - `pnpm typecheck`: Checagem de tipos estrita em todos os 50 projetos (`nx run-many -t typecheck`).
+  - `pnpm lint`: ESLint com regras de fronteiras e restrição de imports de terceiros.
+  - `pnpm test`: Vitest rodando em paralelo em todas as bibliotecas.
+  - `pnpm e2e`: Execução dos testes integrados com Playwright em `apps/web-e2e`.
+  - `pnpm lighthouse`: Runner de auditoria Lighthouse.
+- Variáveis de ambiente validadas via schema Zod em `libs/shared/contracts/src/env.ts` (`.env.example` fornecido na raiz).
+- CI em `.github/workflows/ci.yml`: cache de dependências e do Nx, jobs paralelos para `nx affected` (typecheck, lint, test, build) e job isolado de E2E.
 - Setup, credenciais fictícias, seleção e reset de cenários e reprodução dos fluxos de falha ficam no `README.md`.
 
 ## 17. Limitações conhecidas

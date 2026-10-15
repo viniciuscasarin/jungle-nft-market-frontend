@@ -1,0 +1,36 @@
+{
+  "name": "catalog-feature",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/catalog/feature/src",
+  "projectType": "library",
+  "tags": [
+    "scope:catalog",
+    "type:feature",
+    "flow:storefront"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/catalog/feature/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/catalog/feature/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/catalog/feature/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

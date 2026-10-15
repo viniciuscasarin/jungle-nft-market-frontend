@@ -1,0 +1,36 @@
+{
+  "name": "favorites-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/favorites/ui/src",
+  "projectType": "library",
+  "tags": [
+    "scope:favorites",
+    "type:ui",
+    "flow:storefront"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/favorites/ui/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/favorites/ui/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/favorites/ui/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

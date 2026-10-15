@@ -1,0 +1,36 @@
+{
+  "name": "catalog-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/catalog/data-access/src",
+  "projectType": "library",
+  "tags": [
+    "scope:catalog",
+    "type:data-access",
+    "flow:storefront"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/catalog/data-access/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/catalog/data-access/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/catalog/data-access/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "checkout-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/checkout/domain/src",
+  "projectType": "library",
+  "tags": [
+    "scope:checkout",
+    "type:domain",
+    "flow:checkout"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/checkout/domain/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/checkout/domain/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/checkout/domain/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

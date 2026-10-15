@@ -1,0 +1,36 @@
+{
+  "name": "catalog-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/catalog/ui/src",
+  "projectType": "library",
+  "tags": [
+    "scope:catalog",
+    "type:ui",
+    "flow:storefront"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/catalog/ui/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "config": "libs/catalog/ui/vite.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/catalog/ui/tsconfig.json --noEmit"
+      }
+    }
+  }
+}
