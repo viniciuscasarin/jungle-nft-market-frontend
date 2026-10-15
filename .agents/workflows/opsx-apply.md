@@ -94,7 +94,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Remaining tasks overview
    - Dynamic instruction from CLI
 
-6. **Implement tasks (loop until done or blocked)**
+6. **Implement tasks (one task at a time)**
 
    For each pending task:
    - Show which task is being worked on
@@ -103,7 +103,13 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Before editing, confirm the checkbox at the returned `sourcePath` and `line` still matches the task description; if it does not, rerun the apply instructions and use the refreshed location
    - Mark the task complete at its returned `sourcePath` and `line`: `- [ ]` → `- [x]`
    - Rerun the apply instructions and confirm that task is now done and progress changed
-   - Continue to next task
+   - **Immediately pause and call the `ask_question` tool**:
+     - Do NOT continue to the next task automatically in a single loop.
+     - Ask: "Deseja continuar com a próxima task nesta mesma sessão?"
+     - Options:
+       - `"(Recommended) Sim, continuar com a próxima task nesta mesma sessão"`
+       - `"Não, prefiro abrir um novo chat para manter o contexto limpo"`
+     - If the user confirms ("Sim"), proceed to the next task. If "Não", stop and display current progress.
 
    **Pause if:**
    - Task is unclear → ask for clarification
@@ -173,7 +179,7 @@ What would you like to do?
 ```
 
 **Guardrails**
-- Keep going through tasks until done or blocked
+- Execute exactly one task at a time; after checking off a task, pause immediately and call `ask_question` with Yes/No options to confirm whether to proceed in the current session or start a new chat
 - Always read context files before starting (from the apply instructions output)
 - If task is ambiguous, pause and ask before implementing
 - If implementation reveals issues, pause and suggest artifact updates

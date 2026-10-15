@@ -134,8 +134,21 @@ Quando estiver executando a skill `opsx-apply-change` (via `/opsx-apply`):
 - NÃO execute todas as tarefas em um loop contínuo único.
 - Execute exatamente UMA tarefa por vez.
 - Após implementar a tarefa e marcá-la como concluída (`[x]`), PAUSE a execução imediatamente.
-- Pergunte ao usuário: "Deseja continuar com a próxima task nesta mesma sessão ou prefere iniciar um novo chat para manter o contexto limpo?"
-- Aguarde as instruções do usuário antes de prosseguir para a próxima tarefa.
+- Use obrigatoriamente a tool interativa `ask_question` para perguntar com opções de Sim / Não se o usuário deseja prosseguir:
+  - Pergunta: "Deseja continuar com a próxima task nesta mesma sessão?"
+  - Opções:
+    - "(Recommended) Sim, continuar com a próxima task nesta mesma sessão"
+    - "Não, prefiro abrir um novo chat para manter o contexto limpo"
+- Aguarde a resposta do usuário antes de prosseguir para a próxima tarefa.
+
+### Finalização de Arquivamento (Archive)
+Quando estiver executando a skill `openspec-archive-change` (via `/opsx-archive`):
+- Ao finalizar o arquivamento e exibir o resumo, use a tool interativa `ask_question` para perguntar se o usuário deseja commitar as alterações no Git:
+  - Pergunta: "Deseja commitar as alterações do arquivamento no Git?"
+  - Opções:
+    - "(Recommended) Sim, commitar alterações do arquivamento"
+    - "Não, não commitar agora"
+- Se o usuário responder afirmativamente ("Sim"), crie o commit seguindo a convenção do projeto (`docs(openspec): archive <change-name>`).
 
 
 ## 10. Git

@@ -192,6 +192,19 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Whether specs were synced (if applicable)
    - Note about any warnings (incomplete artifacts/tasks)
 
+7. **Prompt for Git commit**
+
+   After displaying the archive completion summary, call the `ask_question` tool to ask if the user wants to commit the changes:
+   - Question: "Deseja commitar as alterações do arquivamento no Git?"
+   - Options:
+     - `"(Recommended) Sim, commitar alterações do arquivamento"`
+     - `"Não, não commitar agora"`
+   - If confirmed ("Sim"), stage the relevant files (`git add openspec/`) and commit:
+     ```bash
+     git commit -m "docs(openspec): archive <change-name>"
+     ```
+   - Display confirmation of the committed changes.
+
 **Output On Success**
 
 ```markdown
@@ -211,6 +224,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
 - Don't block archive on warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
+- After displaying summary, prompt the user with ask_question to ask whether to commit archive changes to Git, and commit if confirmed
 - If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven)
 - Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving `changeRoot`
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
