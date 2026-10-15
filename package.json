@@ -34,9 +34,11 @@
     "react-hook-form": "^7.54.2",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.0.2",
+    "@nft/shell-kit": "workspace:*",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@module-federation/vite": "^1.23.5",
     "@mswjs/socket.io-binding": "^0.2.0",
     "@nx/devkit": "23.3.0",
     "@nx/eslint": "23.3.0",

@@ -67,3 +67,10 @@ declare global {
     __NFT_STANDALONE_PAGE__?: React.ComponentType;
   }
 }
+
+export {
+  SINGLETON_PROBE_KEY,
+  singletonProbe,
+  type ProbeEvent,
+  type SingletonProbe,
+} from './singleton-probe';

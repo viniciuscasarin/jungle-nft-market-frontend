@@ -25,6 +25,26 @@ const MIME_TYPES = {
   '.ttf': 'font/ttf',
 };
 
+function getCacheControl(filePath) {
+  const fileName = path.basename(filePath).toLowerCase();
+
+  if (
+    fileName === 'remoteentry.js' ||
+    fileName.startsWith('remoteentry') ||
+    fileName === 'mf-manifest.json' ||
+    fileName.startsWith('mf-manifest') ||
+    fileName === 'index.html'
+  ) {
+    return 'public, max-age=0, must-revalidate';
+  }
+
+  if (filePath.includes(`${path.sep}assets${path.sep}`) || filePath.includes('/assets/')) {
+    return 'public, max-age=31536000, immutable';
+  }
+
+  return 'public, max-age=0, must-revalidate';
+}
+
 function serveFile(filePath, res) {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
@@ -36,12 +56,11 @@ function serveFile(filePath, res) {
       return;
     }
 
-    const headers = { 'Content-Type': contentType };
-    if (filePath.includes('assets') || filePath.includes('hash')) {
-      headers['Cache-Control'] = 'public, max-age=31536000, immutable';
-    } else {
-      headers['Cache-Control'] = 'public, max-age=0, must-revalidate';
-    }
+    const headers = {
+      'Content-Type': contentType,
+      'Cache-Control': getCacheControl(filePath),
+      'Access-Control-Allow-Origin': '*',
+    };
 
     res.writeHead(200, headers);
     res.end(content);

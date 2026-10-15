@@ -25,6 +25,7 @@
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
+      "dependsOn": ["storefront:build"],
       "options": {
         "outputPath": "dist/apps/shell",
         "configFile": "apps/shell/vite.config.ts"
@@ -33,6 +34,7 @@
     "preview": {
       "executor": "@nx/vite:preview-server",
       "defaultConfiguration": "development",
+      "dependsOn": ["storefront:build"],
       "options": {
         "buildTarget": "shell:build",
         "port": 4200

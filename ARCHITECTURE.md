@@ -15,7 +15,7 @@ Marketplace de NFTs em React + TypeScript, com backend 100% simulado (MSW). Este
 | # | Decisão | Motivo |
 |---|---|---|
 | 1 | Monorepo Nx único, pnpm | Um checkout, um lockfile, um CI, um deploy. Atende "checkout limpo". |
-| 2 | Fluxos como apps isolados (shell, storefront, checkout, account) integrados por Module Federation | Isolamento de fluxo e fronteiras explícitas, mantendo um único repositório. |
+| 2 | Fluxos como apps isolados (shell, storefront, checkout, account) integrados por `@module-federation/vite` (v1.23.5) | Isolamento de fluxo e fronteiras explícitas validadas empiricamente no spike de Module Federation ([docs/spikes/module-federation.md](docs/spikes/module-federation.md)). |
 | 3 | Host é dono de rotas, guards, sessão, MSW, QueryClient, HttpClient e RealtimeClient | Evita instâncias duplicadas, que quebrariam isolamento de usuário e tempo real. |
 | 4 | Domínios em 4 camadas: `domain`, `data-access`, `feature`, `ui` | Regras puras separadas de I/O e de apresentação. |
 | 5 | Terceiros encapsulados em libs `shared/*` | Troca de biblioteca localizada; reforço por lint. |
@@ -109,14 +109,21 @@ Violações falham no lint (`no-restricted-imports`).
 
 ## 5. Module Federation
 
-- `@module-federation/vite`. Remotes expõem apenas componentes de página: `HomePage`, `PdpPage`, `CartPage`, `PaymentPage`, `ConfirmationPage`, `ProfilePage`, `WalletsPage`.
-- O host é dono da tabela de rotas, dos guards `requireAuth` e dos schemas de search params (em `shared/contracts`). As páginas dos remotes entram via `lazy`.
-- Singletons com versão estrita: `react`, `react-dom`, `@tanstack/react-router`, `@tanstack/react-query`, `socket.io-client` e as libs do workspace.
-- O host injeta QueryClient, HttpClient, RealtimeClient, sessão e `navigate` por `ShellContext` (`shell-kit`). Remotes só consomem.
-- `RemoteBoundary`: Suspense + ErrorBoundary com skeleton, ErrorState com retry (recarrega o remote sem refresh do shell) e timeout configurável.
-- `bootstrapStandalone(page)` roda um remote isolado em dev, com MSW e providers, reutilizando o código do host.
-- Um teste falha se houver mais de um QueryClient, RealtimeClient ou service worker no runtime.
-- Risco de performance: waterfall de `remoteEntry`. Mitigação: preload do entry das rotas prováveis, chunks pequenos e Home/PDP no mesmo remote.
+A infraestrutura e viabilidade técnica foram comprovadas e validadas empiricamente no spike documentado em [`docs/spikes/module-federation.md`](docs/spikes/module-federation.md) com decisão formal de **GO**.
+
+- **Biblioteca e Runtime:** `@module-federation/vite` (v1.23.5) integrado ao Vite 6.2, React 19.0, TanStack Router 1.114 e Tailwind CSS v4.
+- **Contrato de Exposição:** Remotes expõem apenas componentes de página: `HomePage`, `PdpPage`, `CartPage`, `PaymentPage`, `ConfirmationPage`, `ProfilePage`, `WalletsPage`.
+- **Roteamento e Governança:** O host shell (`apps/shell`) é proprietário único da tabela de rotas, dos guards `requireAuth` e dos schemas de validação de search params (em `shared/contracts`). Páginas remotas são consumidas de forma preguiçosa via `lazyRouteComponent(() => import('remote/Page'))`.
+- **Singletons Estritos:** `react`, `react-dom`, `@tanstack/react-router`, `@tanstack/react-query` e pacotes compartilhados do workspace (`@nft/shell-kit`) são configurados como singletons estritos (`singleton: true`, `requiredVersion` explícito e `eager: true` no host).
+- **Garantia de Instância Única (`singletonProbe`):** Implementada em `@nft/shell-kit/singleton-probe` com identificador global `Symbol.for('nft.singleton.probe')` e fallback em `globalThis`, garantindo que múltiplas cargas de chunks reutilizem a mesma instância em memória (comprovado com contagem sequencial Shell=1, Storefront=2).
+- **Injeção de Contexto (`ShellContext`):** O host injeta `QueryClient`, `HttpClient`, `RealtimeClient`, sessão e `navigate` por `ShellContext` (`shell-kit`). Remotes atuam puramente como consumidores e nunca criam clientes ou service workers duplicados.
+- **Resiliência a Falhas do Remote (`RemoteErrorComponent` / `RemoteBoundary`):** Rota encapsulada com captura de falha de dynamic import, exibindo estado de erro acessível (`role="alert"`, `aria-live="assertive"`, botão de retry e link para Home), mantendo cabeçalho, navegação e rodapé do shell operacionais mesmo se o remote estiver indisponível.
+- **Centralização de Estilos Tailwind v4:** O compilador do host escaneia os arquivos fonte do remote através da diretiva `@source "../../storefront/src"` em `apps/shell/src/styles.css`. O componente exposto pelo remote não injeta folhas de estilo duplicadas no `<head>`. Para desenvolvimento isolado (`pnpm dev:storefront`), o remote possui seu próprio `styles.css`.
+- **Resolução Dinâmica e Build Consolidado:**
+  - Desenvolvimento: `http://localhost:4201/remoteEntry.js` (com `server.origin` e `cors: true`).
+  - Produção / Preview: `/remotes/storefront/remoteEntry.js` com `base: '/remotes/storefront/'`.
+  - Servidor de preview com SPA fallback para `/index.html` e políticas de cache estritas: `Cache-Control: public, max-age=0, must-revalidate` para `remoteEntry.js` e `Cache-Control: public, max-age=31536000, immutable` para chunks com hash sob `/assets/`.
+- **Execução Standalone:** `bootstrapStandalone(page)` roda um remote isolado em dev, com MSW e providers, reutilizando o código do host.
 
 ## 6. Contratos REST e eventos
 

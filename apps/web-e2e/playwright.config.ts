@@ -27,7 +27,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx nx serve shell',
+    command: 'node scripts/preview.js',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,

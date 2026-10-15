@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { singletonProbe } from '@nft/shell-kit';
 
 export function App() {
+  const [probeCount, setProbeCount] = useState<number>(() => singletonProbe.getCount());
+
+  useEffect(() => {
+    const nextCount = singletonProbe.increment('apps/storefront');
+    setProbeCount(nextCount);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-950/80 px-6 py-4 backdrop-blur">
@@ -33,6 +41,15 @@ export function App() {
             <p className="mt-1">
               Pronto para execução independente em desenvolvimento ou consumo via Module Federation pelo host shell.
             </p>
+            <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+              <span>Sonda Singleton:</span>
+              <span
+                data-testid="singleton-probe-count"
+                className="font-mono font-semibold text-emerald-400"
+              >
+                {probeCount}
+              </span>
+            </div>
           </div>
         </div>
       </main>

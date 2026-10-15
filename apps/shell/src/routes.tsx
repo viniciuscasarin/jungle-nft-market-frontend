@@ -1,10 +1,14 @@
+import React, { useEffect } from 'react';
 import {
   createRootRoute,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   Link,
   Outlet,
+  type ErrorComponentProps,
 } from '@tanstack/react-router';
+import { singletonProbe } from '@nft/shell-kit';
 
 export function NotFoundComponent() {
   return (
@@ -38,7 +42,50 @@ export function NotFoundComponent() {
   );
 }
 
+export function RemoteErrorComponent({ reset }: ErrorComponentProps) {
+  return (
+    <main
+      role="region"
+      aria-label="Falha ao carregar catálogo"
+      className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center"
+    >
+      <div
+        role="alert"
+        aria-live="assertive"
+        className="max-w-md rounded-2xl border border-rose-900/50 bg-slate-900/90 p-8 shadow-2xl backdrop-blur"
+      >
+        <span className="inline-block text-5xl">⚠️</span>
+        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-rose-400">
+          Módulo Indisponível
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Não foi possível conectar ao serviço do catálogo (Storefront Remote). O módulo pode estar temporariamente offline ou inacessível.
+        </p>
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={reset}
+            className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+          >
+            Tentar Novamente
+          </button>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+          >
+            Voltar para o Início
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export function RootComponent() {
+  useEffect(() => {
+    singletonProbe.increment('apps/shell');
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
@@ -54,12 +101,9 @@ export function RootComponent() {
             <Link to="/" className="transition hover:text-emerald-400">
               Início
             </Link>
-            <span
-              className="cursor-not-allowed text-xs text-slate-500"
-              title="Disponível na integração de remotes"
-            >
+            <Link to="/catalogo" className="transition hover:text-emerald-400">
               Catálogo
-            </span>
+            </Link>
           </nav>
         </div>
       </header>
@@ -105,7 +149,14 @@ export const indexRoute = createRoute({
   component: HomeComponent,
 });
 
-export const routeTree = rootRoute.addChildren([indexRoute]);
+export const catalogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/catalogo',
+  component: lazyRouteComponent(() => import('storefront/HomePage')),
+  errorComponent: RemoteErrorComponent,
+});
+
+export const routeTree = rootRoute.addChildren([indexRoute, catalogRoute]);
 
 export const router = createRouter({
   routeTree,
