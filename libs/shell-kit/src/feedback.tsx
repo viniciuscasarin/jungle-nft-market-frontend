@@ -22,7 +22,6 @@ export function announceToLiveRegion(
 type ToastDispatcher =
   | ((options: {
       description: React.ReactNode;
-      duration?: number;
       variant?: 'default' | 'info' | 'success' | 'warning' | 'error';
     }) => string)
   | null;
@@ -38,9 +37,9 @@ export function getToastDispatcher(): ToastDispatcher {
 }
 
 export const globalFeedback: ShellFeedback = {
-  notify: ({ message, tone = 'info', politeness = 'polite', duration }: ShellFeedbackNotifyOptions) => {
+  notify: ({ message, tone = 'info', politeness = 'polite' }: ShellFeedbackNotifyOptions) => {
     if (activeAddToast) {
-      activeAddToast({ description: message, variant: tone, ...(duration === undefined ? {} : { duration }) });
+      activeAddToast({ description: message, variant: tone });
     }
     announceToLiveRegion(message, politeness);
   },

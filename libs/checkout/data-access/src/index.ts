@@ -7,7 +7,6 @@ import {
   ProfileSchema,
   UserWalletsSchema,
   QuoteSchema,
-  CreateQuoteInputSchema,
 } from '@nft/shared-contracts';
 import { queryKeys, queryOptions } from '@nft/shared-query';
 
@@ -48,7 +47,7 @@ export async function createCheckoutQuote(
   client: HttpClient,
   input: CreateQuoteInput
 ): Promise<Quote> {
-  const response = await client.post<Quote>('/api/checkout/quote', CreateQuoteInputSchema.parse(input));
+  const response = await client.post<Quote>('/api/checkout/quote', input);
   return QuoteSchema.parse(response.data);
 }
 

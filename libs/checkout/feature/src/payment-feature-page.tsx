@@ -5,7 +5,6 @@ import {
   CollectorSchema,
   type Collector,
   type Quote,
-  type CreateQuoteInput,
   type WalletType,
   type WalletNetwork,
   ApiError,
@@ -26,7 +25,7 @@ import {
 import {
   profileQueryOptions,
   walletsQueryOptions,
-  createCheckoutQuote,
+  quoteQueryOptions,
 } from '@nft/checkout-data-access';
 import {
   createIdempotencyKey,
@@ -34,9 +33,7 @@ import {
 import {
   useCreateOrderMutation,
 } from '@nft/orders-data-access';
-import { useQuery, queryKeys } from '@nft/shared-query';
-import { cartQueryOptions } from '@nft/cart-data-access';
-import { Button, EmptyState } from '@nft/shared-ui';
+import { useQuery } from '@nft/shared-query';
 
 export interface PaymentFeaturePageProps {
   quoteId?: string | undefined;
@@ -45,20 +42,14 @@ export interface PaymentFeaturePageProps {
 }
 
 export function PaymentFeaturePage({
+  quoteId: initialQuoteId,
   onNavigateBack,
   onOrderSuccess,
 }: PaymentFeaturePageProps) {
-  const { httpClient, queryClient, feedback, navigate } = useShell();
+  const { httpClient, feedback, navigate } = useShell();
   const session = useSession();
 
-  const userId = session?.userId ?? '';
-  const cart = useQuery({ ...cartQueryOptions(httpClient, userId), enabled: Boolean(userId) });
-  const quoteInput: CreateQuoteInput = React.useMemo(() => ({
-    items: (cart.data?.items ?? []).map(item => ({
-      nftId: item.nftId, editionId: item.editionId, quantity: item.quantity,
-    })),
-    couponCode: cart.data?.couponCode ?? null,
-  }), [cart.data]);
+  const userId = session?.userId ?? 'user_alice';
 
   // 1. Fetch Profile and Wallets
   const {
@@ -76,6 +67,7 @@ export function PaymentFeaturePage({
   } = useQuery(walletsQueryOptions(httpClient, userId));
 
   // Current active quote ID
+  const activeQuoteId = initialQuoteId ?? 'quote-999';
   const [quoteChangedNotice, setQuoteChangedNotice] = React.useState<string | null>(null);
   const [previousQuote, setPreviousQuote] = React.useState<Quote | null>(null);
   const [orderErrorMessage, setOrderErrorMessage] = React.useState<string | null>(null);
@@ -87,15 +79,7 @@ export function PaymentFeaturePage({
     isLoading: isLoadingQuote,
     isError: isQuoteError,
     refetch: refetchQuote,
-    isFetching: isFetchingQuote,
-  } = useQuery({
-    queryKey: queryKeys.quote.payment(userId, quoteInput),
-    queryFn: () => createCheckoutQuote(httpClient, quoteInput),
-    enabled: Boolean(userId) && quoteInput.items.length > 0 && !cart.isFetching,
-    retry: false,
-    staleTime: 0,
-    refetchOnWindowFocus: false,
-  });
+  } = useQuery(quoteQueryOptions(httpClient, activeQuoteId));
 
   // Check for quote changes
   React.useEffect(() => {
@@ -216,20 +200,15 @@ export function PaymentFeaturePage({
   // Convert Quote items to CheckoutNftItem format
   const nfts: CheckoutNftItem[] = React.useMemo(() => {
     if (!quote?.itemsAvailability) return [];
-    return quote.itemsAvailability.flatMap(item => {
-      const selected = cart.data?.items.find(candidate =>
-        candidate.nftId === item.nftId && candidate.editionId === item.editionId);
-      if (!selected || !item.lineSubtotal) return [];
-      return [{
-        id: selected.id,
-        name: selected.title,
-        tokenId: selected.editionNumber ? `#${selected.editionNumber}` : selected.editionId,
-        imageUrl: selected.imageUrl,
-        quantity: item.requestedQuantity,
-        subtotalEth: `${formatEth(item.lineSubtotal)} ETH`,
-      }];
-    });
-  }, [quote, cart.data]);
+    return quote.itemsAvailability.map((item, index) => ({
+      id: item.nftId,
+      name: `NFT Item #${item.nftId}`,
+      tokenId: `#00${index + 1}`,
+      imageUrl: '/assets/images/nft-03-emerald-ape.png',
+      quantity: item.requestedQuantity,
+      subtotalEth: `${formatEth(item.currentPrice)} ETH`,
+    }));
+  }, [quote]);
 
   // Idempotency key per logical submission attempt
   const idempotencyKeyRef = React.useRef<string>(createIdempotencyKey());
@@ -238,17 +217,8 @@ export function PaymentFeaturePage({
   const createOrderMutation = useCreateOrderMutation(httpClient);
 
   // Loading and Error states
-  const isLoading = isLoadingProfile || isLoadingWallets || cart.isLoading || isLoadingQuote;
-  const isError = isProfileError || isWalletsError || isQuoteError || cart.isError;
-
-  if (!session || (cart.isSuccess && cart.data.items.length === 0)) {
-    return <div className="page-container py-8"><EmptyState
-      title={session ? 'Seu carrinho está vazio' : 'Entre para continuar a compra'}
-      action={<Button onClick={() => navigate(session ? '/' : '/login?redirect=%2Fpagamento')}>
-        {session ? 'Explorar NFTs' : 'Entrar'}
-      </Button>}
-    /></div>;
-  }
+  const isLoading = isLoadingProfile || isLoadingWallets || isLoadingQuote;
+  const isError = isProfileError || isWalletsError || isQuoteError;
 
   if (isLoading) {
     return (
@@ -256,7 +226,7 @@ export function PaymentFeaturePage({
         role="region"
         aria-busy="true"
         aria-label="Carregando dados de pagamento"
-        className="page-container min-h-screen bg-surface-default flex items-center justify-center py-8 font-mono text-text-primary"
+        className="w-full min-h-screen bg-surface-default flex items-center justify-center p-8 font-mono text-text-primary"
       >
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -270,7 +240,7 @@ export function PaymentFeaturePage({
     return (
       <div
         role="alert"
-        className="page-container min-h-screen bg-surface-default flex items-center justify-center py-8 font-mono text-text-primary"
+        className="w-full min-h-screen bg-surface-default flex items-center justify-center p-8 font-mono text-text-primary"
       >
         <div className="max-w-md w-full p-6 border border-feedback-error bg-surface-card flex flex-col items-center gap-4 text-center">
           <h2 className="text-title-20 font-bold text-feedback-error">Erro ao carregar checkout</h2>
@@ -283,7 +253,6 @@ export function PaymentFeaturePage({
               refetchProfile();
               refetchWallets();
               refetchQuote();
-              void cart.refetch();
             }}
             className="px-6 py-3 bg-primary text-ink font-bold hover:bg-primary-hover transition-colors"
           >
@@ -315,16 +284,9 @@ export function PaymentFeaturePage({
     (errorEntries.length > 0 ? (errorEntries[0]?.[1]?.message as string) : null);
 
   const onSubmitValid = async (collectorData: Collector) => {
-    if (!quote || cart.isFetching || isFetchingQuote || cart.isError || isQuoteError ||
-        quote.isExpired ||
-        nfts.length !== quoteInput.items.length || quoteInput.items.length === 0) {
-      setOrderErrorMessage('A cotação não está válida. Atualize e revise os valores antes de confirmar.');
-      return;
-    }
     // If quote changed notice is active, user must acknowledge/clear
     if (quoteChangedNotice) {
       setQuoteChangedNotice(null);
-      idempotencyKeyRef.current = createIdempotencyKey();
       return;
     }
 
@@ -345,14 +307,12 @@ export function PaymentFeaturePage({
       const order = await createOrderMutation.mutateAsync({
         idempotencyKey: idempotencyKeyRef.current,
         input: {
-          quoteId: quote.quoteId,
+          quoteId: quote?.quoteId ?? activeQuoteId,
           collector: collectorData,
         },
       });
 
       if (order.status === 'confirmed') {
-        await queryClient.invalidateQueries({ queryKey: queryKeys.cart.all() });
-        await queryClient.invalidateQueries({ queryKey: queryKeys.quote.all() });
         setIsConfirmedOrder(true);
         feedback.notify({
           message: 'Compra confirmada com sucesso!',
@@ -385,7 +345,6 @@ export function PaymentFeaturePage({
       if (err instanceof ApiError) {
         if (err.code === 'PRICE_CHANGED') {
           setQuoteChangedNotice('O preço de um ou mais itens mudou. Revise a nova cotação.');
-          void refetchQuote();
         } else if (err.code === 'AVAILABILITY_CONFLICT') {
           setOrderErrorMessage('A edição selecionada encontra-se esgotada.');
         } else {
@@ -418,9 +377,6 @@ export function PaymentFeaturePage({
       errorMessage={firstErrorMessage}
       isSubmitting={createOrderMutation.isPending}
       isConfirmed={isConfirmedOrder}
-      canConfirm={Boolean(quote && !isFetchingQuote && !cart.isFetching &&
-        !quote.isExpired && nfts.length === quoteInput.items.length &&
-        quote.itemsAvailability.every(item => item.isAvailable))}
       onConfirmPurchase={() => {
         handleSubmit(
           onSubmitValid,

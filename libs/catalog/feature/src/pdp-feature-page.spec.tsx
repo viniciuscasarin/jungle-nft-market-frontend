@@ -1,16 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PdpFeaturePage } from './pdp-feature-page';
-import { createQueryClient, QueryClientProvider } from '@nft/shared-query';
-
-function renderPdp() {
-  const client = createQueryClient();
-  return render(
-    <QueryClientProvider client={client}>
-      <PdpFeaturePage />
-    </QueryClientProvider>,
-  );
-}
 
 const mockNavigate = vi.fn();
 vi.mock('@nft/shared-router', () => ({
@@ -58,38 +48,26 @@ const nft = {
 describe('PdpFeaturePage (@nft/catalog-feature)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    detailResult = {
-      data: nft,
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch: mockRefetch,
-    };
+    detailResult = { data: nft, isLoading: false, isError: false, error: null, refetch: mockRefetch };
   });
 
   it('renders NFT details from the API and sets the shell breadcrumb', () => {
-    renderPdp();
+    render(<PdpFeaturePage />);
     expect(screen.getByTestId('pdp-product-title').textContent).toBe('Alpha Primate');
     expect(screen.getByTestId('pdp-price-eth').textContent).toBe('1,5000 ETH');
     expect(mockUsePageChrome).toHaveBeenCalledWith({ breadcrumbLabel: 'Alpha Primate' });
   });
 
   it('lists related items excluding the current NFT and navigates on select', () => {
-    renderPdp();
+    render(<PdpFeaturePage />);
     expect(screen.queryByTestId('pdp-related-item-nft-01')).toBeNull();
     fireEvent.click(screen.getByTestId('pdp-related-item-nft-02'));
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/nft/$nftId', params: { nftId: 'nft-02' } });
   });
 
   it('shows an aria-busy skeleton while loading', () => {
-    detailResult = {
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      error: null,
-      refetch: mockRefetch,
-    };
-    renderPdp();
+    detailResult = { data: undefined, isLoading: true, isError: false, error: null, refetch: mockRefetch };
+    render(<PdpFeaturePage />);
     expect(screen.getByTestId('pdp-loading').getAttribute('aria-busy')).toBe('true');
   });
 
@@ -101,7 +79,7 @@ describe('PdpFeaturePage (@nft/catalog-feature)', () => {
       error: { code: 'NOT_FOUND' },
       refetch: mockRefetch,
     };
-    renderPdp();
+    render(<PdpFeaturePage />);
     expect(screen.getByTestId('pdp-not-found')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: /voltar ao catálogo/i }));
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/' });
@@ -115,7 +93,7 @@ describe('PdpFeaturePage (@nft/catalog-feature)', () => {
       error: { code: 'INTERNAL' },
       refetch: mockRefetch,
     };
-    renderPdp();
+    render(<PdpFeaturePage />);
     fireEvent.click(screen.getByRole('button', { name: /tentar novamente/i }));
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });

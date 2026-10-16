@@ -375,7 +375,7 @@ export function RootComponent() {
 
 export function HomeComponent() {
   return (
-    <div className="page-container py-12 font-mono">
+    <div className="container mx-auto px-4 py-12 font-mono">
       <div className="rounded-2xl border border-border-default bg-surface-card p-8 shadow-xl sm:p-12">
         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           Host Shell v1.0
@@ -429,12 +429,6 @@ export const pdpRoute = createRoute({
   component: createRemoteRouteComponent(() => import('storefront/PdpPage')),
   errorComponent: RemoteErrorComponent,
   pendingComponent: DefaultRemoteSkeleton,
-});
-
-const cartAliasRoute = createRoute({
-  getParentRoute: () => appLayoutRoute,
-  path: '/cart',
-  beforeLoad: () => { throw redirect({ to: ROUTES.CART }); },
 });
 
 export const cartRoute = createRoute({
@@ -518,7 +512,6 @@ export const routeTree = rootRoute.addChildren([
     indexRoute,
     pdpRoute,
     cartRoute,
-      cartAliasRoute,
     paymentRoute,
     profileRoute,
     walletsRoute,

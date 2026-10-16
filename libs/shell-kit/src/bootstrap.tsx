@@ -2,7 +2,6 @@ import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { createQueryClient, QueryClientProvider, clearPrivateCache } from '@nft/shared-query';
 import { createHttpClient } from '@nft/shared-http';
-import { getOrCreateGuestId } from '@nft/auth-data-access';
 import { createRealtimeClient } from '@nft/shared-realtime';
 import {
   createRootRoute,
@@ -345,7 +344,6 @@ export async function bootstrapStandalone(
         createHttpClient({
           baseURL,
           getAuthToken: () => activeToken,
-          getGuestId: () => getOrCreateGuestId(),
           onSessionExpired: () => {
             handleSessionExpired();
           },

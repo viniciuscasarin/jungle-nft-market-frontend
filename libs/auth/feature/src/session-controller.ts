@@ -1,5 +1,5 @@
 import type { QueryClient } from '@nft/shared-query';
-import { clearPrivateCache, queryKeys } from '@nft/shared-query';
+import { clearPrivateCache } from '@nft/shared-query';
 import type { RealtimeClient } from '@nft/shared-realtime';
 import type { Session } from '@nft/shared-contracts';
 import {
@@ -105,10 +105,6 @@ export class SessionController {
     }
 
     this.state = { status: 'authenticated', session: newSession };
-    await this.deps.queryClient.cancelQueries({ queryKey: queryKeys.cart.all() });
-    this.deps.queryClient.removeQueries({ queryKey: queryKeys.cart.lists() });
-    this.deps.queryClient.removeQueries({ queryKey: queryKeys.cart.counts() });
-    await this.deps.queryClient.invalidateQueries({ queryKey: queryKeys.cart.all() });
     this.notify();
 
     // Check if ResumeStore has context to restore

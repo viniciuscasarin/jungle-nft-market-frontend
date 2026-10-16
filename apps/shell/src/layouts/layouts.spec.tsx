@@ -1,6 +1,3 @@
-import { createQueryClient, QueryClientProvider, queryKeys } from '@nft/shared-query';
-import { getOrCreateGuestId } from '@nft/auth-data-access';
-import { createHttpClient } from '@nft/shared-http';
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, act, type RenderResult } from '@testing-library/react';
@@ -68,14 +65,9 @@ function createTestRouter(initialPath: string, layoutComponent: React.ComponentT
 type AppTestRouter = ReturnType<typeof createTestRouter>;
 
 function renderRouterWithProviders(router: AppTestRouter) {
-  const testQueryClient = createQueryClient();
-  testQueryClient.setQueryData(queryKeys.cart.list(null, getOrCreateGuestId()), {
-    id: 'test-cart',
-    items: [],
-  });
   const dummyShell = {
-    queryClient: testQueryClient,
-    httpClient: createHttpClient(),
+    queryClient: {} as ShellContextValue['queryClient'],
+    httpClient: {} as ShellContextValue['httpClient'],
     realtimeClient: {} as ShellContextValue['realtimeClient'],
     session: null,
     navigate: (to: string) => void router.navigate({ to }),
@@ -83,13 +75,11 @@ function renderRouterWithProviders(router: AppTestRouter) {
   };
 
   return render(
-    <QueryClientProvider client={testQueryClient}>
-      <ShellProvider value={dummyShell}>
-        <ShellPageChromeProvider>
-          <RouterProvider router={router} />
-        </ShellPageChromeProvider>
-      </ShellProvider>
-    </QueryClientProvider>,
+    <ShellProvider value={dummyShell}>
+      <ShellPageChromeProvider>
+        <RouterProvider router={router} />
+      </ShellPageChromeProvider>
+    </ShellProvider>
   );
 }
 

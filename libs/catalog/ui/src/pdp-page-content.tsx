@@ -7,6 +7,7 @@ import {
   IconMinus,
   IconPlus,
   IconCart,
+  Breadcrumb,
 } from '@nft/shared-ui';
 import { PdpGallery, type PdpImageItem } from './pdp-gallery';
 import {
@@ -15,7 +16,10 @@ import {
   type PdpAttributeItem,
 } from './pdp-purchase-section';
 import { PdpTabs, type PdpCollectorReview } from './pdp-tabs';
-import { PdpRelatedCarousel, type PdpRelatedItem } from './pdp-related-carousel';
+import {
+  PdpRelatedCarousel,
+  type PdpRelatedItem,
+} from './pdp-related-carousel';
 
 export interface PdpPageContentProps {
   /** Fotos do produto para a galeria (primeira coluna) */
@@ -46,8 +50,6 @@ export interface PdpPageContentProps {
   onFavoriteToggle?: (() => void) | undefined;
   onBuyNow?: (() => void) | undefined;
   onAddToCart?: (() => void) | undefined;
-  isAddingToCart?: boolean | undefined;
-  isSoldOut?: boolean | undefined;
   isBuying?: boolean | undefined;
   /** Ação de voltar no topo mobile */
   onBack?: (() => void) | undefined;
@@ -81,7 +83,7 @@ export interface PdpPageContentProps {
  * Suporte completo a Desktop (Figma #10:244) e Mobile (Figma #15:5536):
  *
  * No Desktop:
- * - Linha 1: Galeria fluida sticky + Seção de compra
+ * - Linha 1: Galeria (573px sticky) + Seção de compra
  * - Linha 2: Tabs "Detalhes do NFT" e "Avaliacao de colecionadores (0)"
  * - Linha 3: Carrossel "Mais dessa colecao" (5 itens visíveis, arrastável por mouse)
  *
@@ -114,8 +116,6 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
   onFavoriteToggle,
   onBuyNow,
   onAddToCart,
-  isAddingToCart = false,
-  isSoldOut = false,
   isBuying = false,
   onBack,
   tokenId = '#0042',
@@ -158,7 +158,7 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
   };
 
   const handleFavoriteToggle = () => {
-    setInternalFavorite(prev => !prev);
+    setInternalFavorite((prev) => !prev);
     onFavoriteToggle?.();
   };
 
@@ -182,8 +182,8 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
     <div
       data-testid="pdp-page-content"
       className={cn(
-        'page-container pt-4 md:pt-6 pb-36 lg:pb-10 relative overflow-x-clip lg:overflow-x-visible',
-        className,
+        'w-full max-w-[1440px] mx-auto px-0 lg:px-[120px] pt-4 md:pt-6 pb-36 lg:pb-10 relative overflow-x-clip lg:overflow-x-visible',
+        className
       )}
     >
       {/* =========================================================================
@@ -204,7 +204,7 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
           ========================================================================= */}
       <div
         data-testid="pdp-mobile-top-bar"
-        className="flex items-center justify-between w-full mb-3 lg:hidden relative z-10"
+        className="flex items-center justify-between w-full mb-3 px-4 sm:px-6 md:px-10 lg:px-0 lg:hidden relative z-10"
       >
         <button
           type="button"
@@ -215,7 +215,7 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
             'w-10 h-10 rounded-full bg-surface-card border border-border-default/60',
             'flex items-center justify-center text-text-primary hover:text-accent hover:border-accent',
             'transition-colors cursor-pointer active:scale-95 shadow-sm',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'
           )}
         >
           <IconArrowRight2 className="rotate-180 w-4 h-4 text-text-primary" aria-hidden="true" />
@@ -232,7 +232,7 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
             'flex items-center justify-center text-accent hover:border-accent',
             'transition-colors cursor-pointer active:scale-95 shadow-sm',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-            activeIsFavorite && 'bg-accent/15 border-accent',
+            activeIsFavorite && 'bg-accent/15 border-accent'
           )}
         >
           {activeIsFavorite ? (
@@ -244,6 +244,18 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
       </div>
 
       {/* =========================================================================
+          BREADCRUMB OFICIAL DESKTOP: Início / Mercado (Figma #10:244)
+          ========================================================================= */}
+      <Breadcrumb
+        data-testid="pdp-breadcrumb"
+        className="hidden lg:flex mb-6"
+        items={[
+          { label: 'Início', href: '/' },
+          { label: 'Mercado', href: '/#catalogo' },
+        ]}
+      />
+
+      {/* =========================================================================
           PRIMEIRA LINHA COM DUAS COLUNAS:
           - COLUNA 1: GALERIA DE IMAGENS DO PRODUTO (THUMBNAILS + FOTO COM ZOOM)
           - COLUNA 2: SEÇÃO COM INFORMAÇÕES DE COMPRA (SOBREPOSIÇÃO RAIO 40PX NO MOBILE)
@@ -252,10 +264,10 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
         data-testid="pdp-first-row-grid"
         className="flex flex-col lg:flex-row gap-0 lg:gap-[48px] xl:gap-[64px] items-stretch lg:items-start w-full relative z-10"
       >
-        {/* A galeria acompanha o container para caber também no desktop de 1024px. */}
+        {/* Coluna 1 da página: Galeria de imagens do produto (largura exata de 573px no desktop) */}
         <div
           data-testid="pdp-col-gallery"
-          className="w-full lg:w-1/2 lg:min-w-0 shrink-0 lg:sticky lg:top-6 z-10"
+          className="w-full px-4 sm:px-6 md:px-10 lg:px-0 lg:w-[573px] lg:min-w-[573px] lg:max-w-[573px] shrink-0 lg:sticky lg:top-6 z-10"
         >
           <PdpGallery images={galleryImages} />
         </div>
@@ -267,9 +279,9 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
             'w-full lg:w-auto flex-1 min-w-0',
             'm-0 -mt-[36px] sm:-mt-[44px] lg:mt-0 relative z-20',
             'bg-surface-card lg:bg-transparent rounded-t-[40px] lg:rounded-none',
-            'py-6 lg:p-0',
+            'px-5 py-6 sm:px-8 lg:p-0',
             'border-t border-border-default/50 lg:border-none',
-            'shadow-2xl lg:shadow-none',
+            'shadow-2xl lg:shadow-none'
           )}
         >
           <PdpPurchaseSection
@@ -289,9 +301,6 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
             isFavorite={activeIsFavorite}
             onFavoriteToggle={handleFavoriteToggle}
             onBuyNow={onBuyNow}
-            onAddToCart={onAddToCart}
-            isAddingToCart={isAddingToCart}
-            isSoldOut={isSoldOut}
             isBuying={isBuying}
             tokenId={tokenId}
             collectionName={collectionName}
@@ -310,7 +319,10 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
           - Botões com height 28px, font-size 17 (selecionado: color accent, bold, borda 2px da mesma cor)
           - Conteúdo com font-size 14, line-height 24, color text secondary, padding-top 12px
           ========================================================================= */}
-      <div data-testid="pdp-second-row-tabs" className="w-full mt-10 md:mt-14">
+      <div
+        data-testid="pdp-second-row-tabs"
+        className="w-full mt-10 md:mt-14 px-4 sm:px-6 md:px-10 lg:px-0"
+      >
         <PdpTabs
           defaultTab={defaultTab}
           activeTab={activeTab}
@@ -334,7 +346,10 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
           - Preço abaixo do nome: cor text accent, font size 16px e bold
           - Entre cada item do carrossel: 26px
           ========================================================================= */}
-      <div data-testid="pdp-third-row-carousel" className="w-full mt-10 md:mt-14">
+      <div
+        data-testid="pdp-third-row-carousel"
+        className="w-full mt-10 md:mt-14 px-4 sm:px-6 md:px-10 lg:px-0"
+      >
         {relatedItems && relatedItems.length > 0 && (
           <PdpRelatedCarousel
             title={relatedCarouselTitle}
@@ -360,13 +375,15 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
           'lg:hidden fixed bottom-0 left-0 right-0 z-40',
           'bg-surface-card/95 backdrop-blur-md border-t border-border-default/60',
           'rounded-t-[40px] shadow-[0px_0px_20px_rgba(10,6,4,0.45)]',
-          'px-5 pt-4 pb-5 sm:pb-6 select-none',
+          'px-5 pt-4 pb-5 sm:pb-6 select-none'
         )}
       >
         {/* Linha 1 da barra fixa: Stepper de quantidade à esquerda e Preço em ETH à direita */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-[14px] font-mono font-medium text-text-secondary">Qtd.</span>
+            <span className="text-[14px] font-mono font-medium text-text-secondary">
+              Qtd.
+            </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -378,7 +395,7 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
                   'w-[30px] h-[30px] rounded-full bg-accent text-surface-default',
                   'flex items-center justify-center font-mono font-bold transition-transform active:scale-95 cursor-pointer',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-                  'disabled:opacity-40 disabled:pointer-events-none',
+                  'disabled:opacity-40 disabled:pointer-events-none'
                 )}
               >
                 <IconMinus className="h-3 w-3 text-surface-default stroke-[3]" />
@@ -401,7 +418,7 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
                   'w-[30px] h-[30px] rounded-full bg-accent text-surface-default',
                   'flex items-center justify-center font-mono font-bold transition-transform active:scale-95 cursor-pointer',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-                  'disabled:opacity-40 disabled:pointer-events-none',
+                  'disabled:opacity-40 disabled:pointer-events-none'
                 )}
               >
                 <IconPlus className="h-3 w-3 text-surface-default stroke-[3]" />
@@ -432,7 +449,7 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
               'hover:bg-action-primary-hover active:scale-[0.99] transition-all cursor-pointer shadow-md',
               'flex items-center justify-center',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-              'disabled:opacity-50 disabled:pointer-events-none',
+              'disabled:opacity-50 disabled:pointer-events-none'
             )}
           >
             {isBuying ? 'Processando...' : 'Comprar NFT'}
@@ -443,13 +460,11 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
             onClick={handleCartClick}
             aria-label="Adicionar ao carrinho"
             data-testid="pdp-mobile-cart-button"
-            disabled={isAddingToCart || isSoldOut}
-            aria-busy={isAddingToCart}
             className={cn(
               'w-[46px] h-[46px] rounded-full bg-surface-raised border border-border-default/80',
               'flex items-center justify-center text-text-primary hover:text-accent hover:border-accent',
               'transition-all cursor-pointer active:scale-95 shadow-sm shrink-0',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'
             )}
           >
             <IconCart className="w-5 h-5" aria-hidden="true" />

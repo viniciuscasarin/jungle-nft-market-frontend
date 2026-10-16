@@ -103,8 +103,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
               {item.icon}
               {typeof item.badge === 'number' && item.badge > 0 && (
                 <span
-                  aria-label={`${item.badge} itens no carrinho`}
-                  data-testid={item.id === 'cart' ? 'cart-badge' : undefined}
+                  aria-label={`${item.badge} itens`}
                   className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-tiny-9 font-bold text-ink"
                 >
                   {item.badge > 99 ? '99+' : item.badge}

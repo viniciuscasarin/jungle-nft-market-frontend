@@ -21,9 +21,9 @@ describe('PdpGallery', () => {
   it('renders a gallery with 2 columns: 4 thumbnails in first col and main image in second col', () => {
     render(<PdpGallery />);
 
-    // A galeria ocupa a coluna fluida do grid compartilhado, mantendo o gap interno.
+    // Galeria possui largura de 573px no desktop e gap de 28px entre colunas
     const gallery = screen.getByTestId('pdp-gallery');
-    expect(gallery.className).toContain('w-full');
+    expect(gallery.className).toContain('lg:w-[573px]');
     expect(gallery.className).toContain('gap-[28px]');
 
     // Coluna de miniaturas possui gap de 16px, miniaturas de 100px x 100px e é oculta no mobile (hidden lg:flex)

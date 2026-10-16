@@ -6,7 +6,7 @@
   "tags": [
     "scope:catalog",
     "type:data-access",
-    "flow:shared"
+    "flow:storefront"
   ],
   "targets": {
     "lint": {

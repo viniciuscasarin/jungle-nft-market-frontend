@@ -117,7 +117,7 @@ export const PdpGallery: React.FC<PdpGalleryProps> = ({
     <div
       data-testid="pdp-gallery"
       className={cn(
-        'flex flex-col-reverse lg:flex-row gap-[28px] items-start w-full',
+        'flex flex-col-reverse lg:flex-row gap-[28px] items-start w-full lg:w-[573px] lg:min-w-[573px] lg:max-w-[573px]',
         className
       )}
     >

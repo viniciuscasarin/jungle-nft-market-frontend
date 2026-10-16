@@ -115,8 +115,6 @@ Nenhum desvio foi mascarado ou ignorado. Todas as limitações conhecidas, débi
 
 ## 2. Decisões de arquitetura
 
-O grid externo usa a utility `page-container` de `shared/ui`, com a mesma largura do conteúdo do footer: máximo de 1280px, centralização e padding horizontal pelos tokens 4, 6 (sm) e 8 (lg). Header, breadcrumb e conteúdo de página compartilham esses limites, inclusive estados assíncronos. Cada página mantém suas colunas internas; modais mantêm suas larguras próprias. Containers não devem ser aninhados para evitar padding duplicado. A galeria da PDP é fluida para caber também no desktop de 1024px.
-
 | # | Decisão | Motivo |
 |---|---|---|
 | 1 | Monorepo Nx único, pnpm | Um checkout, um lockfile, um CI, um deploy. Atende "checkout limpo". |
@@ -308,10 +306,6 @@ Todo recurso carrega `version` inteira e monotônica.
 
 ## 9. Carrinho
 
-- `auth-data-access` e `catalog-data-access` usam `flow:shared`: seus serviços de rede são consumidos por mais de um remote. Isso alinha as tags à regra de compartilhamento de domain/data-access; features e UI preservam seus fluxos exclusivos. O card acionável do catálogo usa semântica de link e permanece operável por teclado.
-
-- Os handlers usam `defineHandler` com caminhos relativos (`/cart`, `/cart/items`), que aplica o prefixo `/api` uma única vez e o pipeline de cenários de rede. Identidade autenticada é validada por `requireSession`; sem token, `X-Session-Id` identifica o visitante. Token inválido ou expirado nunca recai no carrinho visitante. Timestamps usam o relógio injetável e alterações de quantidade revalidam o estoque atual, inclusive zero.
-- As query keys ficam em `shared/query/src/query-keys.ts`, expostas pelo `index.ts` público. `cart.all()` abrange o domínio, `lists()` e `counts()` separam invalidações, e `list(userId)`/`count(userId)` isolam usuários (fallback `guest`), preservando a API de factories existente.
 - O servidor (mock) é a fonte de verdade. O cliente não guarda itens em estado próprio fora do cache do TanStack Query.
 - Visitante: carrinho associado a um identificador anônimo enviado em header. No login, o servidor mescla o carrinho anônimo ao do usuário (soma limitada à disponibilidade por NFT e edição).
 - Persistência após refresh vem do servidor simulado, que persiste localmente.
