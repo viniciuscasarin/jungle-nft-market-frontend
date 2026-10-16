@@ -4,6 +4,9 @@
   "private": true,
   "packageManager": "pnpm@12.11.2",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev:mocks": "node scripts/copy-mock-worker.js && nx run-many -t dev",
     "dev:shell": "nx dev shell",
