@@ -19,17 +19,24 @@ import {
   usePageChrome,
   useUnavailable,
   toShellUserSession,
+  useShell,
 } from '@nft/shell-kit';
 import { useOptionalAuth } from '@nft/auth-feature';
+import { getOrCreateGuestId } from '@nft/auth-data-access';
+import { cartItemCountQueryOptions } from '@nft/cart-data-access';
+import { useQuery } from '@nft/shared-query';
 
 export interface AppLayoutProps {
   cartCount?: number;
 }
 
-export function AppLayout({ cartCount }: AppLayoutProps) {
+export function AppLayout({ cartCount: suppliedCartCount }: AppLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const authContext = useOptionalAuth();
+  const { httpClient } = useShell();
+  const cartCountQuery = useQuery(cartItemCountQueryOptions(httpClient, authContext?.session?.user.id, getOrCreateGuestId()));
+  const cartCount = suppliedCartCount ?? cartCountQuery.data ?? 0;
   const { notifyUnavailable } = useUnavailable();
   const { breadcrumbLabel } = usePageChrome();
 
@@ -151,7 +158,7 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
 
       {/* 2. Chrome Desktop (>= 1024px): Header (oculto no mobile) */}
       <Header
-        className="hidden lg:block w-full border-b border-border-default px-6 bg-surface-default"
+        className="hidden lg:block w-full border-b border-border-default bg-surface-default"
         user={headerUser}
         isLoadingUser={isSessionResolving}
         cartCount={cartCount}
@@ -172,7 +179,7 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
 
       {/* 4. Breadcrumb container */}
       {breadcrumbItems.length > 0 && (
-        <div className="container mx-auto px-4 lg:px-8 py-3">
+        <div className="page-container py-3">
           <Breadcrumb items={breadcrumbItems} />
         </div>
       )}

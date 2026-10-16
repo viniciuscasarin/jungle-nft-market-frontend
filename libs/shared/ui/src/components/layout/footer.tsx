@@ -47,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({
         className
       )}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-[32px]">
+      <div className="page-container">
         {/* Seção 1: Benefícios e Newsletter (grid no tablet/mobile, flex-row no desktop) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row items-stretch pt-[32px] pb-[16px] border-b border-border-default gap-6 lg:gap-0">
           {/* Card 1: Segurança da carteira */}
@@ -139,7 +139,7 @@ export const Footer: React.FC<FooterProps> = ({
 
       {/* Seção 2: Faixa Intermediária de Contato */}
       <div className="w-full bg-surface-dark border-b border-border-default">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-[32px] py-[32px] flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-[92px] text-text-primary">
+        <div className="page-container py-[32px] flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-[92px] text-text-primary">
           <div className="flex-1">
             <span className="font-mono font-bold text-[14px] tracking-widest text-text-primary">
               KURIO
@@ -172,7 +172,7 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-[32px] py-[32px]">
+      <div className="page-container py-[32px]">
         {/* Seção 3: Navegação Inferior e Carteiras (grid no tablet, flex-row no desktop) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row items-start gap-8 lg:gap-[92px] text-text-primary">
           {/* Coluna 1: Meu perfil */}

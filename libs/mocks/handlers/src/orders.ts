@@ -29,6 +29,8 @@ import {
   getMockDatabase,
   transaction,
   getClock,
+  getPrng,
+  defineHandler,
   emitOrderUpdated,
 } from '@nft/mocks-core';
 
@@ -118,6 +120,7 @@ export function calculateQuote(
       availableQuantity: edition.availableSupply,
       isAvailable,
       currentPrice: edition.price,
+      lineSubtotal: mul(parse(edition.price), requestedItem.quantity).toString(),
       priceChanged: false,
     });
 
@@ -161,7 +164,7 @@ export function calculateQuote(
   const totalEth = add(sub(subtotalEth, discountEth), networkFeeEth);
 
   const clock = getClock();
-  const quoteId = `quote_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const quoteId = `quote_${getPrng().uuid()}`;
   const expiresAt = new Date(clock.nowMs() + 1000 * 60 * 30).toISOString();
 
   const quote: Quote = {
@@ -182,7 +185,7 @@ export function calculateQuote(
 
 export const orderHandlers = [
   // 1. POST /api/checkout/quote
-  http.post(apiPath('/checkout/quote'), async ({ request }) => {
+  defineHandler('POST', '/checkout/quote', async ({ request }) => {
     const parseResult = await parseBody(request, CreateQuoteInputSchema);
     if (!parseResult.success) {
       return parseResult.response;
@@ -234,7 +237,7 @@ export const orderHandlers = [
   }),
 
   // 3. POST /api/orders
-  http.post(apiPath('/orders'), async ({ request }) => {
+  defineHandler('POST', '/orders', async ({ request }) => {
     // A. Require session
     const { session, response: sessionError } = requireSession(request);
     if (sessionError || !session) {
@@ -266,6 +269,7 @@ export const orderHandlers = [
     // D. Check for existing order with identical idempotencyKey
     const existingOrder = db.orders.find((o) => o.idempotencyKey === idempotencyKey);
     if (existingOrder) {
+      if (existingOrder.userId !== userId) return apiError(ApiErrorCode.FORBIDDEN);
       // Compare payloads
       const existingInput = {
         quoteId: existingOrder.quoteId,
@@ -289,6 +293,11 @@ export const orderHandlers = [
       return apiError(ApiErrorCode.NOT_FOUND, {
         message: 'Cotação não encontrada ou expirada.',
         status: 404,
+      });
+    }
+    if (quote.isExpired || Date.parse(quote.expiresAt) <= getClock().nowMs()) {
+      return apiError(ApiErrorCode.PRICE_CHANGED, {
+        message: 'Cotação expirada. Revise uma nova cotação antes de confirmar.', status: 409,
       });
     }
 
@@ -338,7 +347,7 @@ export const orderHandlers = [
     // F. Execute order creation inside transaction
     const clock = getClock();
     const timestamp = clock.toISOString();
-    const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const orderId = `order_${getPrng().uuid()}`;
 
     // Check scenario outcome: if scenario is 'payment-rejected'
     const isPaymentRejected = db.scenarioId === 'payment-rejected';
@@ -360,11 +369,13 @@ export const orderHandlers = [
         // 2. Clear purchased items from user's cart
         const userCart = txDb.carts.find((c) => c.userId === userId);
         if (userCart) {
-          userCart.items = userCart.items.filter((cartItem) => {
-            const wasPurchased = orderItems.some(
+          userCart.items = userCart.items.flatMap((cartItem) => {
+            const purchased = orderItems.find(
               (oi) => oi.nftId === cartItem.nftId && oi.editionId === cartItem.editionId
             );
-            return !wasPurchased;
+            if (!purchased) return [cartItem];
+            const quantity = cartItem.quantity - purchased.quantity;
+            return quantity > 0 ? [{ ...cartItem, quantity }] : [];
           });
           if (userCart.items.length === 0) {
             userCart.couponCode = null;

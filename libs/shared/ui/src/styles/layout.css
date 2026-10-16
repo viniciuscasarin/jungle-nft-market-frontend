@@ -1,0 +1,4 @@
+/* Shared page boundaries follow the footer content at every breakpoint. */
+@utility page-container {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}

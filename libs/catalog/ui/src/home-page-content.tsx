@@ -120,7 +120,7 @@ export const HomePageContent: React.FC<HomePageContentProps> = ({
     <div
       data-testid="home-page-content"
       className={cn(
-        'w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-10 lg:px-[120px] font-mono text-text-primary py-4 sm:py-6 pb-24 lg:pb-12',
+        'page-container font-mono text-text-primary py-4 sm:py-6 pb-24 lg:pb-12',
         className,
       )}
     >
@@ -358,7 +358,7 @@ export const HomePageContent: React.FC<HomePageContentProps> = ({
                       data-item-index={index}
                       aria-label={`${item.title}, preço ${formattedPrice}`}
                       tabIndex={0}
-                      role="article"
+                      role="link"
                       onClick={() => onSelectNft?.(item.id)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {

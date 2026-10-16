@@ -29,6 +29,7 @@ export function toShellUserSession(
 
 export interface ShellFeedbackNotifyOptions {
   message: string;
+  duration?: number | undefined;
   tone?: 'info' | 'success' | 'warning' | 'error' | undefined;
   politeness?: 'polite' | 'assertive' | undefined;
 }

@@ -143,6 +143,8 @@ Para restaurar integralmente o estado determinístico inicial do cenário ativo:
 ## 6. Instruções para Reproduzir os Fluxos de Falha
 
 ### 6.1. Falha de Conexão e Erros HTTP 4xx / 5xx
+
+Os endpoints de carrinho (`GET/DELETE /api/cart`, `POST /api/cart/items` e `PUT/DELETE /api/cart/items/:itemId`) também passam pelo pipeline dos cenários existentes (`connection-down`, `http-4xx`, `http-5xx`, `slow-network`). Usam `Authorization: Bearer <token>` ou, para visitantes, `X-Session-Id`. Um token inválido/expirado retorna 401 mesmo com identificador visitante; estoque insuficiente retorna 409 `AVAILABILITY_CONFLICT` e payload inválido retorna 422 `VALIDATION_ERROR`, conforme os contratos compartilhados. A validação dos handlers pode ser reproduzida com `pnpm exec vitest run --config libs/mocks/handlers/vite.config.ts`.
 1. Acesse a Home ou o Detalhe de um NFT (`/nft/nft-01`).
 2. Abra o Dev Panel (`Ctrl+Alt+M`) e selecione o cenário `connection-down` ou `http-5xx` (ou passe `/?scenario=http-5xx` na URL).
 3. Ao recarregar a tela ou navegar para outra página, a aplicação exibe a tela de erro acessível com `role="alert"` e botão **"Tentar novamente"**.

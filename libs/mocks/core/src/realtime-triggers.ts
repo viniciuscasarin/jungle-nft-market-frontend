@@ -203,16 +203,23 @@ export function emitOrderUpdated(input: EmitOrderUpdatedInput = {}): OrderUpdate
     }
 
     if (targetOrder) {
+      const wasConfirmed = targetOrder.status === 'confirmed';
       targetOrder.status = status;
       targetOrder.updatedAt = timestamp;
       if (status === 'rejected' && rejectionReason) {
         targetOrder.rejectionReason = rejectionReason;
       }
-      if (status === 'confirmed') {
+      if (status === 'confirmed' && !wasConfirmed) {
         const userCart = db.carts.find((c) => c.userId === userId);
         if (userCart) {
-          userCart.items = [];
-          userCart.couponCode = null;
+          userCart.items = userCart.items.flatMap(item => {
+            const purchased = targetOrder.items.find(candidate =>
+              candidate.nftId === item.nftId && candidate.editionId === item.editionId);
+            if (!purchased) return [item];
+            const quantity = item.quantity - purchased.quantity;
+            return quantity > 0 ? [{ ...item, quantity }] : [];
+          });
+          if (userCart.items.length === 0) userCart.couponCode = null;
           userCart.updatedAt = timestamp;
         }
       }

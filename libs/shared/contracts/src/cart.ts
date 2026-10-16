@@ -47,6 +47,9 @@ export const UpdateCartItemInputSchema = z.object({
 
 export type UpdateCartItemInput = z.infer<typeof UpdateCartItemInputSchema>;
 
+export const CartCouponInputSchema = z.object({ couponCode: z.string().trim().min(1).nullable() });
+export type CartCouponInput = z.infer<typeof CartCouponInputSchema>;
+
 export const CartSchema = z.object({
   id: z.string().min(1, 'ID do carrinho é obrigatório'),
   userId: z.string().optional().nullable(),

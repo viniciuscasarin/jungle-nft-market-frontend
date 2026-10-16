@@ -1,0 +1,19 @@
+schema: spec-driven
+version: '1.0'
+change:
+  id: add-to-cart-from-pdp
+  title: Add to Cart from PDP
+  status: proposed
+  created: 2026-10-16
+  updated: 2026-10-16
+  author: agent
+  priority: high
+  tags:
+    - cart
+    - checkout
+    - pdp
+    - integration
+  dependencies:
+    - storefront-pdp-page
+  references:
+    - feat/layouts  # Source para cherry-pick de componentes UI

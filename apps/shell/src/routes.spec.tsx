@@ -1,3 +1,6 @@
+import { createQueryClient, QueryClientProvider, queryKeys } from '@nft/shared-query';
+import { getOrCreateGuestId } from '@nft/auth-data-access';
+import { createHttpClient } from '@nft/shared-http';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
@@ -40,29 +43,19 @@ vi.mock('checkout/CartPage', () => ({
 }));
 
 vi.mock('checkout/PaymentPage', () => ({
-  default: () => (
-    <div data-testid="remote-payment-page">Payment Remote Content</div>
-  ),
+  default: () => <div data-testid="remote-payment-page">Payment Remote Content</div>,
 }));
 
 vi.mock('checkout/ConfirmationPage', () => ({
-  default: () => (
-    <div data-testid="remote-confirmation-page">
-      Confirmation Remote Content
-    </div>
-  ),
+  default: () => <div data-testid="remote-confirmation-page">Confirmation Remote Content</div>,
 }));
 
 vi.mock('account/ProfilePage', () => ({
-  default: () => (
-    <div data-testid="remote-profile-page">Profile Remote Content</div>
-  ),
+  default: () => <div data-testid="remote-profile-page">Profile Remote Content</div>,
 }));
 
 vi.mock('account/WalletsPage', () => ({
-  default: () => (
-    <div data-testid="remote-wallets-page">Wallets Remote Content</div>
-  ),
+  default: () => <div data-testid="remote-wallets-page">Wallets Remote Content</div>,
 }));
 
 type AppRouterInstance = Parameters<typeof RouterProvider>[0]['router'];
@@ -72,9 +65,14 @@ function renderWithShell(testRouter: AppRouterInstance) {
     options: { context?: RouterContext };
   };
 
+  const testQueryClient = createQueryClient();
+  testQueryClient.setQueryData(queryKeys.cart.list(null, getOrCreateGuestId()), {
+    id: 'test-cart',
+    items: [],
+  });
   const dummyShell = {
-    queryClient: {} as ShellContextValue['queryClient'],
-    httpClient: {} as ShellContextValue['httpClient'],
+    queryClient: testQueryClient,
+    httpClient: createHttpClient(),
     realtimeClient: {} as ShellContextValue['realtimeClient'],
     session: routerWithContext.options.context?.session ?? null,
     navigate: (to: string) => void testRouter.navigate({ to }),
@@ -82,11 +80,13 @@ function renderWithShell(testRouter: AppRouterInstance) {
   };
 
   return render(
-    <ShellProvider value={dummyShell}>
-      <ShellPageChromeProvider>
-        <RouterProvider router={testRouter} />
-      </ShellPageChromeProvider>
-    </ShellProvider>
+    <QueryClientProvider client={testQueryClient}>
+      <ShellProvider value={dummyShell}>
+        <ShellPageChromeProvider>
+          <RouterProvider router={testRouter} />
+        </ShellPageChromeProvider>
+      </ShellProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -115,7 +115,7 @@ describe('Shell routes and layouts', () => {
     expect(screen.getByRole('link', { name: /Pular para o conteúdo/i })).toBeDefined();
 
     expect(singletonProbe.getCount()).toBe(2);
-    const callers = singletonProbe.getEvents().map((e) => e.caller);
+    const callers = singletonProbe.getEvents().map(e => e.caller);
     expect(callers).toContain('apps/shell');
     expect(callers).toContain('apps/storefront');
   });
@@ -135,16 +135,10 @@ describe('Shell routes and layouts', () => {
       renderWithShell(testRouter);
     });
 
-    expect(
-      screen.getByRole('heading', { level: 1, name: '404' }),
-    ).toBeDefined();
-    expect(
-      screen.getByRole('heading', { level: 2, name: /Página Não Encontrada/i }),
-    ).toBeDefined();
+    expect(screen.getByRole('heading', { level: 1, name: '404' })).toBeDefined();
+    expect(screen.getByRole('heading', { level: 2, name: /Página Não Encontrada/i })).toBeDefined();
     expect(screen.getByRole('alert')).toBeDefined();
-    expect(
-      screen.getByRole('link', { name: /Voltar para o Início/i }),
-    ).toBeDefined();
+    expect(screen.getByRole('link', { name: /Voltar para o Início/i })).toBeDefined();
     // 404 is inside _app layout
     expect(screen.getAllByRole('banner').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('contentinfo')).toBeDefined();
@@ -163,9 +157,7 @@ describe('Shell routes and layouts', () => {
       await testRouter.load();
 
       const { unmount } = renderWithShell(testRouter);
-      expect(
-        screen.getByRole('heading', { level: 1, name: '404' }),
-      ).toBeDefined();
+      expect(screen.getByRole('heading', { level: 1, name: '404' })).toBeDefined();
       unmount();
     }
   });
@@ -305,9 +297,7 @@ describe('Shell routes and layouts', () => {
     await confirmationRouter.load();
 
     const { unmount: unmountConf } = renderWithShell(confirmationRouter);
-    expect(
-      await screen.findByTestId('remote-confirmation-page'),
-    ).toBeDefined();
+    expect(await screen.findByTestId('remote-confirmation-page')).toBeDefined();
     // /pedido/$orderId uses _modal layout (no header/footer)
     expect(screen.queryByRole('banner')).toBeNull();
     expect(screen.queryByRole('contentinfo')).toBeNull();
@@ -350,9 +340,7 @@ describe('Shell routes and layouts', () => {
       renderWithShell(testRouter);
     });
 
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Entrar na Conta' }),
-    ).toBeDefined();
+    expect(screen.getByRole('heading', { level: 1, name: 'Entrar na Conta' })).toBeDefined();
     // Modal layout has NO banner (header) and NO contentinfo (footer)
     expect(screen.queryByRole('banner')).toBeNull();
     expect(screen.queryByRole('contentinfo')).toBeNull();
@@ -406,9 +394,7 @@ describe('Shell routes and layouts', () => {
       renderWithShell(testRouter);
     });
 
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Criar Conta' }),
-    ).toBeDefined();
+    expect(screen.getByRole('heading', { level: 1, name: 'Criar Conta' })).toBeDefined();
     expect(screen.queryByRole('banner')).toBeNull();
     expect(screen.queryByRole('contentinfo')).toBeNull();
   });
@@ -443,18 +429,10 @@ describe('Shell routes and layouts', () => {
       renderWithShell(testRouter);
     });
 
-    expect(
-      screen.getByRole('region', { name: 'Falha ao carregar catálogo' }),
-    ).toBeDefined();
+    expect(screen.getByRole('region', { name: 'Falha ao carregar catálogo' })).toBeDefined();
     expect(screen.getByRole('alert')).toBeDefined();
-    expect(
-      screen.getByRole('heading', { level: 1, name: /Módulo Indisponível/i }),
-    ).toBeDefined();
-    expect(
-      screen.getByRole('button', { name: /Tentar Novamente/i }),
-    ).toBeDefined();
-    expect(
-      screen.getByRole('link', { name: /Voltar para o Início/i }),
-    ).toBeDefined();
+    expect(screen.getByRole('heading', { level: 1, name: /Módulo Indisponível/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Tentar Novamente/i })).toBeDefined();
+    expect(screen.getByRole('link', { name: /Voltar para o Início/i })).toBeDefined();
   });
 });

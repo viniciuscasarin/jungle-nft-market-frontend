@@ -2,10 +2,7 @@ import * as React from 'react';
 import { useNavigate, useParams } from '@nft/shared-router';
 import { useShell, usePageChrome, useUnavailable } from '@nft/shell-kit';
 import { Button, EmptyState, ErrorState, Skeleton } from '@nft/shared-ui';
-import {
-  useCatalogDetailQuery,
-  useCatalogListQuery,
-} from '@nft/catalog-data-access';
+import { useCatalogDetailQuery, useCatalogListQuery } from '@nft/catalog-data-access';
 import {
   PdpPageContent,
   type PdpAttributeItem,
@@ -14,6 +11,8 @@ import {
 } from '@nft/catalog-ui';
 import { formatEth } from '@nft/shared-money';
 import type { NftEdition, NftItem } from '@nft/shared-contracts';
+import { getOrCreateGuestId } from '@nft/auth-data-access';
+import { useAddToCart } from '@nft/cart-data-access';
 
 const MAX_RELATED_ITEMS = 10;
 
@@ -22,7 +21,7 @@ function editionLabel(edition: NftEdition): string {
 }
 
 function toVersions(editions: NftEdition[]): PdpVersionOption[] {
-  return editions.map((edition) => ({
+  return editions.map(edition => ({
     id: edition.id,
     name: editionLabel(edition),
     editionBadge: editionLabel(edition),
@@ -47,7 +46,7 @@ function PdpSkeleton() {
       data-testid="pdp-loading"
       aria-busy="true"
       aria-live="polite"
-      className="w-full max-w-[1440px] mx-auto px-4 lg:px-[120px] py-8 flex flex-col lg:flex-row gap-8"
+      className="page-container py-8 flex flex-col lg:flex-row gap-8"
     >
       <Skeleton width="100%" height={573} rounded="xl" ariaLabel="Carregando imagem do NFT" />
       <div className="flex-1 flex flex-col gap-4">
@@ -65,7 +64,22 @@ function PdpSkeleton() {
  * edição selecionada na resposta da API (a UI não calcula totais).
  */
 export function PdpFeaturePage() {
-  const { httpClient } = useShell();
+  const { httpClient, session, feedback, navigate: navigateShell } = useShell();
+  const [announceMessage, setAnnounceMessage] = React.useState('');
+  const addToCart = useAddToCart({
+    client: httpClient,
+    userId: session?.userId,
+    sessionId: getOrCreateGuestId(),
+    onFeedback: (message, tone) => {
+      feedback.notify({ message, tone, duration: 5000 });
+      setAnnounceMessage(tone === 'success' ? message : 'Erro ao adicionar item ao carrinho');
+    },
+  });
+  React.useEffect(() => {
+    if (!announceMessage) return;
+    const timer = window.setTimeout(() => setAnnounceMessage(''), 3000);
+    return () => window.clearTimeout(timer);
+  }, [announceMessage]);
   const navigate = useNavigate();
   const { notifyUnavailable } = useUnavailable();
   const params = useParams({ strict: false }) as Record<string, string | undefined>;
@@ -82,19 +96,30 @@ export function PdpFeaturePage() {
 
   const editions = nft?.editions ?? [];
   const activeEdition =
-    editions.find((edition) => edition.id === selectedEditionId) ??
-    editions.find((edition) => edition.availableSupply > 0) ??
+    editions.find(edition => edition.id === selectedEditionId) ??
+    editions.find(edition => edition.availableSupply > 0) ??
     editions[0];
 
   const maxQuantity = Math.max(1, activeEdition?.availableSupply ?? 1);
   const safeQuantity = Math.min(quantity, maxQuantity);
+  const handleAddToCart = () => {
+    if (!nft || !activeEdition || activeEdition.availableSupply === 0 || addToCart.isPending)
+      return;
+    addToCart.mutate({ nftId: nft.id, editionId: activeEdition.id, quantity: safeQuantity });
+  };
+  const handleBuyNow = () => {
+    if (!nft || !activeEdition || activeEdition.availableSupply === 0 || addToCart.isPending) return;
+    addToCart.mutate({ nftId: nft.id, editionId: activeEdition.id, quantity: safeQuantity }, {
+      onSuccess: () => navigateShell('/carrinho'),
+    });
+  };
 
   const relatedItems = React.useMemo<PdpRelatedItem[]>(
     () =>
       (related.data?.items ?? [])
-        .filter((item) => item.id !== nftId)
+        .filter(item => item.id !== nftId)
         .slice(0, MAX_RELATED_ITEMS)
-        .map((item) => ({
+        .map(item => ({
           id: item.id,
           name: item.title,
           price: `${formatEth(item.price)} ETH`,
@@ -128,7 +153,7 @@ export function PdpFeaturePage() {
     if (code === 'NOT_FOUND') {
       return (
         <div data-testid="storefront-pdp-page" className="w-full">
-          <div data-testid="pdp-not-found" className="max-w-[1440px] mx-auto px-4 py-16">
+          <div data-testid="pdp-not-found" className="page-container py-16">
             <EmptyState
               title="Colecionável não encontrado"
               description="O NFT que você procura não existe ou foi removido."
@@ -140,7 +165,7 @@ export function PdpFeaturePage() {
     }
     return (
       <div data-testid="storefront-pdp-page" className="w-full">
-        <div data-testid="pdp-error" className="max-w-[1440px] mx-auto px-4 py-16">
+        <div data-testid="pdp-error" className="page-container py-16">
           <ErrorState
             title="Não foi possível carregar o NFT"
             description="Tente novamente em instantes."
@@ -161,6 +186,14 @@ export function PdpFeaturePage() {
 
   return (
     <div data-testid="storefront-pdp-page" className="w-full">
+      <div
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="pdp-cart-announcement"
+      >
+        {announceMessage}
+      </div>
       <PdpPageContent
         galleryImages={[
           { id: `${nft.id}-main`, url: nft.imageUrl, alt: nft.title, label: 'Principal' },
@@ -179,8 +212,10 @@ export function PdpFeaturePage() {
         minQuantity={1}
         maxQuantity={maxQuantity}
         onFavoriteToggle={() => notifyUnavailable('Favoritar NFT')}
-        onBuyNow={() => notifyUnavailable('Compra direta')}
-        onAddToCart={() => notifyUnavailable('Adicionar ao carrinho')}
+        onBuyNow={handleBuyNow}
+        onAddToCart={handleAddToCart}
+        isAddingToCart={addToCart.isPending}
+        isSoldOut={!activeEdition || activeEdition.availableSupply === 0}
         tokenId={`#${nft.id}`}
         collectionName={nft.collectionName ?? ''}
         isCollectionVerified={nft.creator.verified}

@@ -29,9 +29,13 @@ Um único monorepo Nx com 4 apps React/Vite integrados por Module Federation:
 10. Dev integrado usa quatro processos simultâneos (`dev:mocks`, `--parallel=4`), portas estritas, `.env` da raiz e caches Vite separados por app. O host usa `loaded-first` em dev e `version-first` em produção. CSS global entra pelo HTML para manter dependências de observação do Tailwind fora do aquecimento JavaScript de Federation.
 
 ## Arquitetura de libs
+
+As libs `auth-data-access` e `catalog-data-access` têm `flow:shared`, pois expõem serviços de rede usados por múltiplos fluxos, incluindo carrinho. Essa classificação não altera as restrições de features e UI por remote.
 Libs por domínio em 4 camadas (`domain`, `data-access`, `feature`, `ui`), além de `shared/*`, `shell-kit` e `mocks/*`. Fronteiras, direção de dependências e encapsulamento de terceiros em [`ARCHITECTURE.md`](../ARCHITECTURE.md) §4.
 
 ## Regras transversais (viram requisitos de toda change)
+
+Grid de conteúdo: usar `page-container` de `shared/ui` em header, breadcrumb e páginas, seguindo o footer (máximo 1280px e padding horizontal 4 / sm:6 / lg:8). Aplicar uma vez por seção, sem aninhar containers; colunas internas e modais mantêm composição própria.
 1. ETH é sempre string decimal; nunca `number`/float. Quantidades são inteiras. Cálculos só via `shared/money`.
 2. Totais (subtotal, desconto, taxa de rede, total) vêm da cotação da API; a UI não recalcula.
 3. Mocks vivem apenas na camada de rede (`libs/mocks/*`). Componentes, hooks, data-access e o cliente Axios não contêm respostas fictícias nem caminhos alternativos de negócio.

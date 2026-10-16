@@ -1,8 +1,5 @@
 import * as React from 'react';
 import {
-  Header,
-  Footer,
-  Breadcrumb,
   Drawer,
   DrawerTrigger,
   DrawerContent,
@@ -15,7 +12,6 @@ import { CollectorProfileForm } from './collector-profile-form';
 import { CheckoutNftsSummary } from './checkout-nfts-summary';
 import { WalletAndNetworkSelector } from './wallet-and-network-selector';
 import { ConnectedWalletsSection } from './connected-wallets-section';
-import { OrderConfirmationModal } from './order-confirmation-modal';
 import type { WalletProviderOption, CollectorProfileData, CheckoutNftItem } from './types';
 
 export interface PaymentPageContentProps {
@@ -30,6 +26,7 @@ export interface PaymentPageContentProps {
   totalEth?: string | undefined;
   isSubmitting?: boolean | undefined;
   isConfirmed?: boolean | undefined;
+  canConfirm?: boolean | undefined;
   errorMessage?: string | null | undefined;
   onConfirmPurchase?: (() => void) | undefined;
   onNavigateBack?: (() => void) | undefined;
@@ -55,6 +52,7 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
   totalEth,
   isSubmitting = false,
   isConfirmed = false,
+  canConfirm = true,
   errorMessage,
   onConfirmPurchase,
   onNavigateBack,
@@ -69,16 +67,15 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
 
   const [isSuccessFeedback, setIsSuccessFeedback] = React.useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (isConfirmed) {
       setIsSuccessFeedback(true);
-      setIsConfirmationModalOpen(true);
     }
   }, [isConfirmed]);
 
   const handleConfirm = () => {
+    if (!canConfirm || isSubmitting) return;
     onConfirmPurchase?.();
   };
 
@@ -92,23 +89,10 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
       {/* --- DESKTOP VIEWPORT (>= 1024px) --- */}
       <div className="hidden lg:flex flex-col min-h-screen">
         {/* Header oficial Kurio */}
-        <div className="w-full max-w-[1440px] mx-auto px-6 lg:px-[120px] pt-4">
-          <Header
-            activePath="/mercado"
-            cartCount={6}
-          />
-        </div>
 
         {/* Conteúdo Principal Desktop */}
-        <main className="w-full max-w-[1440px] mx-auto px-6 lg:px-[120px] py-8 flex flex-col gap-10 flex-1">
+        <div className="page-container py-8 flex flex-col gap-10 flex-1">
           {/* Breadcrumb oficial */}
-          <Breadcrumb
-            items={[
-              { label: 'Início', href: '/' },
-              { label: 'Mercado', href: '/#catalogo' },
-              { label: 'Pagamento' },
-            ]}
-          />
 
           {/* Grade de 2 Colunas */}
           <div className="grid grid-cols-12 gap-12 items-start">
@@ -146,7 +130,7 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
               <button
                 type="button"
                 onClick={handleConfirm}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !canConfirm}
                 aria-busy={isSubmitting}
                 className={`w-full h-12 rounded-lg bg-primary hover:bg-primary-hover text-ink font-mono font-bold text-body-large-16 tracking-wide transition-all duration-200 cursor-pointer shadow-lg shadow-primary/10 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-default my-4 ${
                   isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
@@ -156,14 +140,13 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
               </button>
             </div>
           </div>
-        </main>
+        </div>
 
         {/* Rodapé Oficial Kurio */}
-        <Footer />
       </div>
 
       {/* --- MOBILE / TABLET VIEWPORT (< 1024px) --- */}
-      <div className="flex lg:hidden flex-col min-h-screen px-4 sm:px-6 pb-36 sm:pb-40 max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto w-full">
+      <div className="flex lg:hidden flex-col min-h-screen page-container pb-36 sm:pb-40">
         {/* Header mobile específico com botão voltar e título centralizado */}
         <header
           data-testid="payment-mobile-header"
@@ -244,7 +227,7 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
                   data-testid="payment-mobile-total-eth"
                   className="text-[20px] sm:text-[22px] font-bold font-mono text-accent tracking-tight"
                 >
-                  {totalEth ?? '8.936 ETH'}
+                  {totalEth ?? '—'}
                 </span>
               </div>
             </div>
@@ -253,7 +236,7 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canConfirm}
               aria-busy={isSubmitting}
               className={`w-full h-12 rounded-lg bg-primary hover:bg-primary-hover text-ink font-mono font-bold text-body-large-16 tracking-wide transition-all duration-200 cursor-pointer shadow-lg shadow-primary/10 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-default ${
                 isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
@@ -289,7 +272,7 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
                     setIsDrawerOpen(false);
                     handleConfirm();
                   }}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !canConfirm}
                   aria-busy={isSubmitting}
                   className={`w-full h-12 rounded-lg bg-primary hover:bg-primary-hover text-ink font-mono font-bold text-body-large-16 tracking-wide transition-all duration-200 cursor-pointer shadow-lg shadow-primary/10 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-default ${
                     isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
@@ -304,10 +287,6 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
       </div>
 
       {/* Modal de Confirmação de Pedido (#11:4385) */}
-      <OrderConfirmationModal
-        isOpen={isConfirmationModalOpen}
-        onClose={() => setIsConfirmationModalOpen(false)}
-      />
     </div>
   );
 };

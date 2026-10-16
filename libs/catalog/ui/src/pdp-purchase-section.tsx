@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   cn,
+  Button,
   IconHeart,
   IconHeartFilled,
   IconMinus,
@@ -58,6 +59,9 @@ export interface PdpPurchaseSectionProps {
   isFavorite?: boolean | undefined;
   onFavoriteToggle?: (() => void) | undefined;
   onBuyNow?: (() => void) | undefined;
+  onAddToCart?: (() => void) | undefined;
+  isAddingToCart?: boolean | undefined;
+  isSoldOut?: boolean | undefined;
   isBuying?: boolean | undefined;
 
   /** Próxima Linha 1: ID do Token */
@@ -128,6 +132,9 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
   isFavorite: controlledIsFavorite,
   onFavoriteToggle,
   onBuyNow,
+  onAddToCart,
+  isAddingToCart = false,
+  isSoldOut = false,
   isBuying = false,
   tokenId = '#0042',
   collectionName = 'Kurio Apes',
@@ -139,7 +146,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
 }) => {
   // Estado local para versão se não for controlado (padrão v-3: 1/50 do Figma)
   const [internalVersionId, setInternalVersionId] = React.useState<string>(
-    controlledVersionId ?? versions[2]?.id ?? 'v-3'
+    controlledVersionId ?? versions[2]?.id ?? 'v-3',
   );
   const activeVersionId = controlledVersionId ?? internalVersionId;
 
@@ -171,21 +178,24 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
   };
 
   const handleFavoriteClick = () => {
-    setInternalFavorite((prev) => !prev);
+    setInternalFavorite(prev => !prev);
     onFavoriteToggle?.();
   };
 
   // String formatada dos atributos conforme o Figma ("Óculos, Esmeralda, Raro")
   const displayAttributes =
     attributesFormatted ??
-    attributes.map((a) => a.value).filter(Boolean).join(', ');
+    attributes
+      .map(a => a.value)
+      .filter(Boolean)
+      .join(', ');
 
   return (
     <div
       data-testid="pdp-purchase-section"
       className={cn(
         'flex flex-col gap-2 w-full text-text-primary font-mono select-none',
-        className
+        className,
       )}
     >
       {/* =========================================================================
@@ -207,7 +217,9 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
             className="lg:hidden flex items-center gap-1.5 border border-accent/70 rounded-full px-2.5 py-0.5 text-[12px] font-mono text-accent shrink-0 bg-accent/10"
             aria-label={`Avaliação ${rating} de 5 estrelas (${reviewCount} avaliações)`}
           >
-            <span className="text-[12px] text-accent font-bold" aria-hidden="true">★</span>
+            <span className="text-[12px] text-accent font-bold" aria-hidden="true">
+              ★
+            </span>
             <span className="text-text-primary font-bold">{rating}</span>
             <span className="text-text-secondary">({reviewCount})</span>
           </div>
@@ -221,7 +233,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
         data-testid="pdp-row-2-price-rating"
         className={cn(
           'flex-wrap items-center justify-between gap-4 pt-1 pb-2',
-          hidePriceOnMobile ? 'hidden lg:flex' : 'flex'
+          hidePriceOnMobile ? 'hidden lg:flex' : 'flex',
         )}
       >
         {/* Preço em ETH */}
@@ -232,11 +244,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
           >
             {priceEth} ETH
           </span>
-          {priceUsd && (
-            <span className="text-[13px] font-mono text-text-muted">
-              ({priceUsd})
-            </span>
-          )}
+          {priceUsd && <span className="text-[13px] font-mono text-text-muted">({priceUsd})</span>}
         </div>
 
         {/* 5 Estrelas + 19 avaliações de colecionadores */}
@@ -247,7 +255,9 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
         >
           <div className="flex items-center gap-0.5 text-accent" aria-hidden="true">
             {Array.from({ length: 5 }, (_, i) => (
-              <span key={i} className="text-[15px]">★</span>
+              <span key={i} className="text-[15px]">
+                ★
+              </span>
             ))}
           </div>
           <span className="text-text-primary text-[13px]">
@@ -280,18 +290,17 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
           LINHA 4: EDICÃO COM CHIPS ARREDONDADOS (Figma: 1/1  1/10  1/50  ABERTA)
           ========================================================================= */}
       <div data-testid="pdp-row-4-versions" className="space-y-2 pt-1">
-        <span className="text-[15px] font-mono font-bold text-text-primary block">
-          Edição:
-        </span>
+        <span className="text-[15px] font-mono font-bold text-text-primary block">Edição:</span>
 
         <div
           role="radiogroup"
           aria-label="Opções de edição"
           className="flex flex-wrap items-center gap-2.5"
         >
-          {versions.map((ver) => {
+          {versions.map(ver => {
             const isSelected = ver.id === activeVersionId;
-            const isSoldOut = ver.isSoldOut || (ver.availableStock !== undefined && ver.availableStock === 0);
+            const isSoldOut =
+              ver.isSoldOut || (ver.availableStock !== undefined && ver.availableStock === 0);
 
             return (
               <button
@@ -308,7 +317,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
                   isSelected
                     ? 'bg-accent/20 text-accent font-bold border-2 border-accent shadow-sm'
                     : 'bg-transparent text-text-primary border-border-default hover:border-accent hover:text-accent',
-                  isSoldOut && 'opacity-40 cursor-not-allowed border-dashed'
+                  isSoldOut && 'opacity-40 cursor-not-allowed border-dashed',
                 )}
               >
                 {ver.editionBadge}
@@ -326,14 +335,11 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
         data-testid="pdp-row-5-actions"
         className={cn(
           'flex-wrap items-center justify-between gap-4 pt-3 pb-2',
-          hideActionsOnMobile ? 'hidden lg:flex' : 'flex'
+          hideActionsOnMobile ? 'hidden lg:flex' : 'flex',
         )}
       >
         {/* Seletor de quantidade no estilo circular Figma (- 1 +) */}
-        <div
-          data-testid="pdp-quantity-stepper-container"
-          className="flex items-center gap-3"
-        >
+        <div data-testid="pdp-quantity-stepper-container" className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleDecrement}
@@ -343,7 +349,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
               'w-[32px] h-[32px] rounded-full bg-accent text-surface-default',
               'flex items-center justify-center font-mono font-bold transition-transform active:scale-95 cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface-default',
-              'disabled:opacity-40 disabled:pointer-events-none'
+              'disabled:opacity-40 disabled:pointer-events-none',
             )}
           >
             <IconMinus className="h-3.5 w-3.5 text-surface-default stroke-[3]" />
@@ -365,7 +371,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
               'w-[32px] h-[32px] rounded-full bg-accent text-surface-default',
               'flex items-center justify-center font-mono font-bold transition-transform active:scale-95 cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface-default',
-              'disabled:opacity-40 disabled:pointer-events-none'
+              'disabled:opacity-40 disabled:pointer-events-none',
             )}
           >
             <IconPlus className="h-3.5 w-3.5 text-surface-default stroke-[3]" />
@@ -373,7 +379,17 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
         </div>
 
         {/* Botões COMPRAR e Favoritar lado a lado */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={onAddToCart}
+            loading={isAddingToCart}
+            loadingLabel="Adicionando..."
+            disabled={isSoldOut}
+            data-testid="pdp-add-to-cart-button"
+          >
+            Adicionar ao carrinho
+          </Button>
           <button
             type="button"
             onClick={onBuyNow}
@@ -383,7 +399,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
               'h-[42px] px-8 rounded-sm bg-accent text-surface-default font-mono font-bold uppercase tracking-wider text-[14px]',
               'hover:bg-action-primary-hover active:scale-[0.99] transition-all cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-default',
-              'disabled:opacity-50 disabled:pointer-events-none'
+              'disabled:opacity-50 disabled:pointer-events-none',
             )}
           >
             {isBuying ? 'Processando...' : 'COMPRAR'}
@@ -399,7 +415,7 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
               'h-[42px] px-5 rounded-sm border border-accent bg-transparent text-accent font-mono text-[14px] font-medium',
               'inline-flex items-center gap-2 hover:bg-accent/10 active:scale-[0.99] transition-all cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-default',
-              activeIsFavorite && 'bg-accent/15 font-bold'
+              activeIsFavorite && 'bg-accent/15 font-bold',
             )}
           >
             {activeIsFavorite ? (
@@ -420,42 +436,25 @@ export const PdpPurchaseSection: React.FC<PdpPurchaseSectionProps> = ({
         className="pt-3 space-y-2 text-[14px] leading-[22px] border-t border-border-default/40 mt-1"
       >
         {/* ID do Token */}
-        <div
-          data-testid="pdp-detail-token-id"
-          className="flex items-center gap-2"
-        >
+        <div data-testid="pdp-detail-token-id" className="flex items-center gap-2">
           <span className="text-text-secondary">ID do token:</span>
-          <span
-            data-testid="pdp-token-id-value"
-            className="text-text-secondary"
-          >
+          <span data-testid="pdp-token-id-value" className="text-text-secondary">
             {tokenId}
           </span>
         </div>
 
         {/* Coleção */}
-        <div
-          data-testid="pdp-detail-collection"
-          className="flex items-center gap-2"
-        >
+        <div data-testid="pdp-detail-collection" className="flex items-center gap-2">
           <span className="text-text-secondary">Coleção:</span>
-          <span
-            data-testid="pdp-collection-name"
-            className="text-text-secondary"
-          >
+          <span data-testid="pdp-collection-name" className="text-text-secondary">
             {collectionName}
           </span>
         </div>
 
         {/* Atributos */}
-        <div
-          data-testid="pdp-detail-attributes"
-          className="flex items-center gap-2 flex-wrap"
-        >
+        <div data-testid="pdp-detail-attributes" className="flex items-center gap-2 flex-wrap">
           <span className="text-text-secondary">Atributos:</span>
-          <span className="text-text-secondary">
-            {displayAttributes}
-          </span>
+          <span className="text-text-secondary">{displayAttributes}</span>
 
           {/* Grid invisível para retrocompatibilidade com testes que buscam pdp-attributes-grid */}
           <div data-testid="pdp-attributes-grid" className="sr-only">

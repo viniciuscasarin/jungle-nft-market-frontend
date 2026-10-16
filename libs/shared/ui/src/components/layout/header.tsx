@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
         className
       )}
     >
-      <div className="w-full h-[45px] flex items-center justify-between">
+      <div className="page-container h-[45px] flex items-center justify-between">
         {/* Coluna 1: Título KURIO com width fixo de 100px, font size 14px, 24px de altura, alinhado ao topo */}
         <div className="w-[100px] shrink-0 h-[45px] flex items-start">
           <a
@@ -172,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-hidden="true"
             />
             {showCartBadge && (
-              <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-tiny-9 font-bold text-ink">
+              <span data-testid="cart-badge" aria-label={`${cartCount} itens no carrinho`} className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-feedback-error/40 px-1 text-tiny-9 font-bold text-text-primary">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}

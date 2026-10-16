@@ -8,6 +8,7 @@ export const ItemAvailabilitySchema = z.object({
   availableQuantity: z.number().int('Quantidade disponível deve ser inteira').nonnegative(),
   isAvailable: z.boolean(),
   currentPrice: EthAmountSchema,
+  lineSubtotal: EthAmountSchema.optional(),
   priceChanged: z.boolean().default(false),
 });
 

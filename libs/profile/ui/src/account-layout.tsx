@@ -37,7 +37,7 @@ export const AccountLayout: React.FC<AccountLayoutProps> = ({
   return (
     <div
       className={cn(
-        'w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-10 lg:px-[120px] py-4 md:py-8',
+        'page-container py-4 md:py-8',
         className
       )}
     >

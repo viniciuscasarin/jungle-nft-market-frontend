@@ -6,7 +6,7 @@
   "tags": [
     "scope:auth",
     "type:data-access",
-    "flow:shell"
+    "flow:shared"
   ],
   "targets": {
     "lint": {

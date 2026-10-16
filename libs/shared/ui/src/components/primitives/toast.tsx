@@ -113,6 +113,7 @@ export const ToastContainer: React.FC<{
             <div
               key={toast.id}
               role="status"
+              onKeyDown={event => { if (event.key === 'Escape') onDismiss(toast.id); }}
               className={cn(
                 'pointer-events-auto flex items-start gap-3 p-4 rounded-md border shadow-modal font-mono transition-all duration-200 text-body-14',
                 config.borderClass
