@@ -1,4 +1,4 @@
 @import "tailwindcss";
 @import "../../../libs/shared/ui/src/styles/theme.css";
-@source "../../../libs/shared/ui/src";
+@source "../../../libs";
 @source "../src";
