@@ -225,6 +225,25 @@ describe('Shell routes and layouts', () => {
     });
   });
 
+  it('redirects unauthenticated users from protected route /pedido/$orderId to /login with redirect param', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/pedido/ord-123'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      renderWithShell(testRouter);
+    });
+
+    expect(testRouter.state.location.pathname).toBe('/login');
+    expect(testRouter.state.location.search).toEqual({
+      redirect: '/pedido/ord-123',
+    });
+  });
+
   it('redirects unauthenticated users from /perfil to /login preserving redirect url', async () => {
     const testRouter = createRouter({
       routeTree,

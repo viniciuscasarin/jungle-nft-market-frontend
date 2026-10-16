@@ -8,17 +8,22 @@ export interface HttpClientConfig {
   getAuthToken?: () => string | null | undefined;
   getGuestId?: () => string | null | undefined;
   onSessionExpired?: () => void;
+  adapter?: AxiosRequestConfig['adapter'];
 }
 
 export function createHttpClient(config?: string | HttpClientConfig): HttpClient {
   const options: HttpClientConfig = typeof config === 'string' ? { baseURL: config } : (config ?? {});
   const { baseURL = '', getAuthToken, getGuestId, onSessionExpired } = options;
 
+  const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+  const resolvedAdapter = options.adapter ?? (isTest && typeof fetch !== 'undefined' ? 'fetch' : undefined);
+
   const client = axios.create({
     baseURL,
     headers: {
       'Content-Type': 'application/json',
     },
+    ...(resolvedAdapter ? { adapter: resolvedAdapter } : {}),
   });
 
   client.interceptors.request.use(requestConfig => {

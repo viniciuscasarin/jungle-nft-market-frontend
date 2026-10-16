@@ -1,3 +1,1 @@
-import { CatalogHomePage } from '@nft/catalog-feature';
-
-export default CatalogHomePage;
+export { CatalogHomePage as default, CatalogHomePage as HomePage } from '@nft/catalog-feature';

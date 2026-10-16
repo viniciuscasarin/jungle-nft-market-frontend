@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { createQueryClient, QueryClientProvider } from '@nft/shared-query';
+import { createQueryClient, QueryClientProvider, clearPrivateCache } from '@nft/shared-query';
 import { createHttpClient } from '@nft/shared-http';
 import { createRealtimeClient } from '@nft/shared-realtime';
 import {
@@ -18,6 +18,7 @@ import {
 } from '@nft/shared-router';
 import {
   ShellProvider,
+  toShellUserSession,
   type ShellContextValue,
   type ShellUserSession,
 } from './context';
@@ -117,6 +118,20 @@ export function StandaloneLink({
   );
 }
 
+export type StandaloneSessionInitResult =
+  | ShellUserSession
+  | {
+      token?: string | null | undefined;
+      user?: unknown;
+      session?: unknown;
+      userId?: string | undefined;
+      name?: string | undefined;
+      email?: string | undefined;
+      avatarUrl?: string | undefined;
+    }
+  | null
+  | undefined;
+
 export interface StandaloneBootstrapConfig {
   mountPoint?: HTMLElement | string | null;
   initialRoute?: string;
@@ -125,9 +140,74 @@ export interface StandaloneBootstrapConfig {
   pages?: StandalonePageDescriptor[];
   shellOrigin?: string;
   initMsw?: () => Promise<void>;
-  initSession?: (client: ShellContextValue['httpClient']) => Promise<ShellUserSession | null>;
+  initSession?: (
+    client: ShellContextValue['httpClient'],
+  ) => Promise<StandaloneSessionInitResult>;
   session?: ShellUserSession | null;
+  token?: string | null;
   onNavigate?: (to: string) => void;
+}
+
+export interface StandaloneSessionExpiredProps {
+  onReconnect?: () => void | Promise<void>;
+  shellOrigin?: string;
+}
+
+export function StandaloneSessionExpired({
+  onReconnect,
+  shellOrigin = 'http://localhost:4200',
+}: StandaloneSessionExpiredProps) {
+  const [reconnecting, setReconnecting] = React.useState(false);
+
+  const handleReconnect = async () => {
+    if (!onReconnect || reconnecting) return;
+    setReconnecting(true);
+    try {
+      await onReconnect();
+    } finally {
+      setReconnecting(false);
+    }
+  };
+
+  return (
+    <div
+      role="region"
+      aria-label="Sessão expirada"
+      className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center font-mono"
+    >
+      <div
+        role="alert"
+        aria-live="polite"
+        className="max-w-md w-full rounded-lg border border-border-default bg-surface-card p-8 shadow-xl"
+      >
+        <span className="inline-block text-5xl" aria-hidden="true">
+          🔒
+        </span>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-text-primary">
+          Sessão Expirada
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+          Sua sessão de desenvolvimento expirou ou foi encerrada. Para continuar testando este remote com dados privados, reconecte a sessão.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => void handleReconnect()}
+            disabled={reconnecting}
+            className="inline-flex items-center justify-center rounded-sm bg-primary px-4 py-2 text-xs font-semibold text-ink transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-ink disabled:opacity-50"
+          >
+            {reconnecting ? 'Reconectando…' : 'Reconectar Sessão Dev'}
+          </button>
+          <a
+            href={shellOrigin}
+            className="inline-flex items-center justify-center rounded-sm border border-border-default bg-surface-raised px-4 py-2 text-xs font-semibold text-text-primary transition hover:bg-surface-raised/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-ink"
+          >
+            Abrir Shell Integrado
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export interface StandaloneNotFoundProps {
@@ -214,13 +294,21 @@ export async function bootstrapStandalone(
     shellOrigin = 'http://localhost:4200',
     initMsw,
     initSession,
-    session = {
-      userId: 'mock-standalone-user',
-      name: 'Standalone User',
-      email: 'standalone@jungle.test',
-    },
+    token: initialToken = null,
     onNavigate,
   } = config;
+
+  let activeToken: string | null = initialToken;
+  let activeSession: ShellUserSession | null =
+    'session' in config
+      ? (config.session ?? null)
+      : {
+          userId: 'mock-standalone-user',
+          name: 'Standalone User',
+          email: 'standalone@jungle.test',
+        };
+
+  let handleSessionExpired = () => {};
 
   let element: HTMLElement | null = null;
   if (typeof mountPoint === 'string') {
@@ -242,8 +330,51 @@ export async function bootstrapStandalone(
   const queryClient = singletonRegistry.get<ReturnType<typeof createQueryClient>>('queryClient')
     ?? singletonRegistry.assertSingleton('queryClient', createQueryClient());
 
-  const httpClient = singletonRegistry.get<ReturnType<typeof createHttpClient>>('httpClient')
-    ?? singletonRegistry.assertSingleton('httpClient', createHttpClient());
+  const baseURL =
+    typeof window !== 'undefined' && window.location?.origin && window.location.origin !== 'null'
+      ? window.location.origin
+      : 'http://localhost:4200';
+
+  const existingHttpClient = singletonRegistry.get<ReturnType<typeof createHttpClient>>('httpClient');
+  const httpClient = existingHttpClient
+    ?? singletonRegistry.assertSingleton(
+        'httpClient',
+        createHttpClient({
+          baseURL,
+          getAuthToken: () => activeToken,
+          onSessionExpired: () => {
+            handleSessionExpired();
+          },
+        }),
+      );
+
+  if (existingHttpClient) {
+    existingHttpClient.interceptors.response.use(
+      (res) => res,
+      (error) => {
+        if (error?.response?.status === 401 && error?.response?.data?.code === 'SESSION_EXPIRED') {
+          handleSessionExpired();
+        }
+        return Promise.reject(error);
+      },
+    );
+    existingHttpClient.interceptors.request.use((req) => {
+      if (activeToken) {
+        const hasAuth =
+          (typeof req.headers?.get === 'function' && req.headers.get('Authorization')) ||
+          (req.headers && req.headers['Authorization']);
+        if (!hasAuth) {
+          if (typeof req.headers?.set === 'function') {
+            req.headers.set('Authorization', `Bearer ${activeToken}`);
+          } else {
+            req.headers = req.headers || {};
+            req.headers['Authorization'] = `Bearer ${activeToken}`;
+          }
+        }
+      }
+      return req;
+    });
+  }
 
   const realtimeClient = singletonRegistry.get<ReturnType<typeof createRealtimeClient>>('realtimeClient')
     ?? singletonRegistry.assertSingleton(
@@ -352,7 +483,12 @@ export async function bootstrapStandalone(
     queryClient,
     httpClient,
     realtimeClient,
-    session,
+    get session() {
+      return activeSession;
+    },
+    set session(val: ShellUserSession | null) {
+      activeSession = val;
+    },
     navigate: (to: string) => {
       const resolved = resolveStandaloneDestination(to, {
         localPaths,
@@ -405,6 +541,27 @@ export async function bootstrapStandalone(
     </React.StrictMode>,
   );
 
+  const renderExpired = () => {
+    render(
+      <StandaloneSessionExpired
+        shellOrigin={shellOrigin}
+        onReconnect={async () => {
+          await initialize();
+        }}
+      />,
+    );
+  };
+
+  handleSessionExpired = () => {
+    const currentUserId = activeSession?.userId;
+    clearPrivateCache(queryClient, currentUserId);
+    void queryClient.cancelQueries();
+    realtimeClient.setAuthToken(null, null);
+    activeToken = null;
+    activeSession = null;
+    renderExpired();
+  };
+
   let initializing = false;
   const initialize = async () => {
     if (initializing) return;
@@ -417,10 +574,56 @@ export async function bootstrapStandalone(
     );
     try {
       await initMsw?.();
-      if (initSession) shellValue.session = await initSession(httpClient);
+      if (initSession) {
+        const result = await initSession(httpClient);
+        if (result) {
+          if ('token' in result && typeof result.token === 'string') {
+            activeToken = result.token;
+          }
+          if ('session' in result && result.session && typeof result.session === 'object') {
+            const parsed = toShellUserSession(result.session as never);
+            if (parsed) {
+              activeSession = parsed;
+            }
+          } else if ('userId' in result && typeof result.userId === 'string') {
+            activeSession = result as ShellUserSession;
+          } else if ('user' in result && result.user && typeof result.user === 'object') {
+            const u = result.user as {
+              id?: string;
+              displayName?: string;
+              email?: string;
+              avatarUrl?: string;
+            };
+            activeSession = {
+              userId: u.id ?? 'standalone-user',
+              name: u.displayName ?? 'Standalone User',
+              email: u.email ?? 'standalone@jungle.test',
+              ...(u.avatarUrl ? { avatarUrl: u.avatarUrl } : {}),
+            };
+          }
+        } else {
+          activeToken = null;
+          activeSession = null;
+        }
+      } else if ('session' in config) {
+        activeSession = config.session ?? null;
+        activeToken = config.token ?? null;
+      }
+
+      if (activeToken || activeSession) {
+        realtimeClient.setAuthToken(activeToken, activeSession?.userId ?? null);
+      }
+
       render(<RouterProvider router={router} />);
     } catch {
-      render(<ErrorState aria-label="Falha na inicialização" title="Não foi possível iniciar o ambiente" message="Verifique a conexão e tente novamente." onRetry={() => void initialize()} />);
+      render(
+        <ErrorState
+          aria-label="Falha na inicialização"
+          title="Não foi possível iniciar o ambiente"
+          message="Verifique a conexão e tente novamente."
+          onRetry={() => void initialize()}
+        />,
+      );
     } finally {
       initializing = false;
     }
