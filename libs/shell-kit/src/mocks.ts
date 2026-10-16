@@ -33,10 +33,7 @@ export async function startMocks(options: StartMocksOptions = {}): Promise<{
     return startMocksPromise;
   }
 
-  startMocksPromise = (async () => {
-    const coreModule = '@nft/mocks-core';
-    const handlersModule = '@nft/mocks-handlers';
-
+  const startPromise = (async () => {
     const [
       { setupWorker },
       { resolveActiveScenario, applyScenario, exposeMockControls, mocksPingHandler },
@@ -69,8 +66,9 @@ export async function startMocks(options: StartMocksOptions = {}): Promise<{
 
     return { worker: activeWorker, controls };
   })();
+  startMocksPromise = startPromise;
 
-  return startMocksPromise;
+  return startPromise;
 }
 
 export function stopMocks(): void {
