@@ -47,5 +47,6 @@ apps/checkout/public/mockServiceWorker.js
 apps/account/public/mockServiceWorker.js
 
 tmp/
-
-
+debug.log
+typecheck-output.txt
+.mf/

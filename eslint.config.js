@@ -4,6 +4,12 @@ import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
+// Positive constraints check direct edges, so the authorized shell-kit → mocks
+// bootstrap does not make every consumer of ShellContext a mock consumer.
+const productLibraryTypes = [
+  'type:feature', 'type:ui', 'type:data-access', 'type:domain', 'type:util',
+];
+
 const baseRestrictedPaths = [
   {
     name: 'axios',
@@ -90,6 +96,7 @@ export default [
           checkDynamicDependenciesExceptions: [
             '@nft/mocks-core',
             '@nft/mocks-handlers',
+            '@nft/mocks-socket',
             'msw/browser',
           ],
           allow: [],
@@ -160,21 +167,22 @@ export default [
             },
             {
               sourceTag: 'type:feature',
-              notDependOnLibsWithTags: ['type:app', 'scope:mocks'],
+              onlyDependOnLibsWithTags: productLibraryTypes,
+              notDependOnLibsWithTags: ['type:app'],
             },
 
             // 4. Mock isolation: only shell, shell-kit, and web-e2e can import mocks
             {
               sourceTag: 'scope:storefront',
-              notDependOnLibsWithTags: ['scope:mocks'],
+              onlyDependOnLibsWithTags: productLibraryTypes,
             },
             {
               sourceTag: 'scope:checkout',
-              notDependOnLibsWithTags: ['scope:mocks'],
+              onlyDependOnLibsWithTags: productLibraryTypes,
             },
             {
               sourceTag: 'scope:account',
-              notDependOnLibsWithTags: ['scope:mocks'],
+              onlyDependOnLibsWithTags: productLibraryTypes,
             },
             {
               sourceTag: 'scope:testing',

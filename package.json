@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@12.11.2",
-  "type": "module",
   "engines": {
     "node": "22.x"
   },
+  "type": "module",
   "scripts": {
-    "dev:mocks": "node scripts/copy-mock-worker.js && nx run-many -t dev",
+    "dev:mocks": "node scripts/copy-mock-worker.js && nx run-many -t dev -p shell storefront checkout account --parallel=4",
     "dev:shell": "nx dev shell",
     "dev:storefront": "node scripts/copy-mock-worker.js && nx dev storefront",
     "dev:checkout": "node scripts/copy-mock-worker.js && nx dev checkout",
@@ -17,8 +17,10 @@
     "typecheck": "nx run-many -t typecheck",
     "lint": "eslint .",
     "test": "nx run-many -t test",
+    "test:dev": "node --test --test-force-exit scripts/federated-dev.test.js",
     "build": "node scripts/build-integrated.js",
     "build:apps": "nx run-many -t build",
+    "build:deploy:full": "pnpm build:storybook && node scripts/build-integrated.js",
     "preview": "node scripts/preview.js",
     "storybook": "storybook dev -p 6006 -c apps/storybook/.storybook",
     "build:storybook": "storybook build -c apps/storybook/.storybook -o dist/apps/storybook --quiet --disable-telemetry",
@@ -33,6 +35,7 @@
     "@hookform/resolvers": "^4.1.3",
     "@nft/shell-kit": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.2.1",
     "@radix-ui/react-slot": "^1.1.2",
     "@tanstack/react-query": "^5.67.0",
     "@tanstack/react-router": "^1.114.0",
