@@ -132,15 +132,21 @@ Se o lint bloquear um import, corrija a arquitetura. Nunca desative a regra com 
 ### Orquestração de Execução (Apply)
 Quando estiver executando a skill `opsx-apply-change` (via `/opsx-apply`):
 - NÃO execute todas as tarefas em um loop contínuo único por padrão.
-- Execute exatamente UMA tarefa por vez.
-- Após implementar a tarefa e marcá-la como concluída (`[x]`), a menos que o usuário já tenha escolhido executar todas as tarefas restantes, PAUSE a execução imediatamente.
+- Execute as tarefas incrementalmente (uma a uma, ou até a task limite indicada).
+- Após implementar a tarefa e marcá-la como concluída (`[x]`), a menos que o usuário tenha escolhido executar todas as tarefas restantes ou uma tarefa limite ainda não tenha sido atingida, PAUSE a execução imediatamente.
 - Use obrigatoriamente a tool interativa `ask_question` para perguntar se o usuário deseja prosseguir:
   - Pergunta: "Deseja continuar com a próxima task nesta mesma sessão?"
   - Opções:
     - "(Recommended) Sim, continuar com a próxima task nesta mesma sessão"
     - "Sim, executar todas as próximas tasks nesta mesma sessão"
+    - "Sim, executar até uma task/subtask específica (informe o número no campo de resposta, ex: 'até 2.2')"
     - "Não, prefiro abrir um novo chat para manter o contexto limpo"
-- Aguarde a resposta do usuário antes de prosseguir para a próxima tarefa. Se o usuário escolher "Sim, executar todas as próximas tasks nesta mesma sessão", continue executando as tasks subsequentes nesta mesma sessão sem perguntar novamente entre as tarefas (a menos que ocorra um erro ou bloqueador).
+- Comportamento das opções:
+  - "Sim, continuar com a próxima task...": implementa a próxima task, marca `[x]` e chama o gate novamente.
+  - "Sim, executar todas as próximas tasks...": continua executando sequencialmente até concluir todas as tasks da change sem perguntar entre tarefas (a menos que ocorra erro ou bloqueador).
+  - Executar até task/subtask específica (ex: "até 2.2" ou digitado no write-in): continua executando sequencialmente até concluir a task indicada. Ao concluir a task indicada, PAUSE a execução e reabra exatamente o mesmo gate (`ask_question`) com as mesmas opções.
+  - "Não...": encerra a execução no estado atual e exibe o resumo de progresso.
+- Aguarde a resposta do usuário antes de prosseguir. Em qualquer modo contínuo, pause imediatamente se houver erro ou bloqueador.
 
 ### Finalização de Arquivamento (Archive)
 Quando estiver executando a skill `openspec-archive-change` (via `/opsx-archive`):
