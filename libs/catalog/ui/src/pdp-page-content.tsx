@@ -350,11 +350,13 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
         data-testid="pdp-third-row-carousel"
         className="w-full mt-10 md:mt-14 px-4 sm:px-6 md:px-10 lg:px-0"
       >
-        <PdpRelatedCarousel
-          title={relatedCarouselTitle}
-          items={relatedItems}
-          onSelectItem={onSelectRelatedItem}
-        />
+        {relatedItems && relatedItems.length > 0 && (
+          <PdpRelatedCarousel
+            title={relatedCarouselTitle}
+            items={relatedItems}
+            onSelectItem={onSelectRelatedItem}
+          />
+        )}
       </div>
 
       {/* =========================================================================

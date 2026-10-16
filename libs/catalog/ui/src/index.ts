@@ -6,3 +6,10 @@ export * from './catalog-filter-sidebar';
 export * from './home-promo-section';
 export * from './home-blog-section';
 export * from './home-page-content';
+
+// PDP Components
+export * from './pdp-gallery';
+export * from './pdp-purchase-section';
+export * from './pdp-tabs';
+export * from './pdp-related-carousel';
+export * from './pdp-page-content';

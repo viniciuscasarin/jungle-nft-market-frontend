@@ -19,7 +19,7 @@ export interface NftCarouselProps {
   /**
    * Lista de itens exibidos no carrossel.
    */
-  items?: NftCarouselItem[] | undefined;
+  items: NftCarouselItem[];
   /**
    * Callback disparado ao selecionar um item.
    */
@@ -36,125 +36,6 @@ export interface NftCarouselProps {
 }
 
 /**
- * Lista padrão com 10 itens da coleção para a Página de Detalhes (PDP).
- */
-const nftNum = (n: string) => `#${n}`;
-
-export const DEFAULT_PDP_RELATED_ITEMS: NftCarouselItem[] = [
-  {
-    id: 'related-1',
-    name: `Cosmic Bloom ${nftNum('118')}`,
-    price: '1.29 ETH',
-    imageUrl: '/assets/images/nft-06-cosmic-bloom.png',
-    alt: `NFT Cosmic Bloom ${nftNum('118')}`,
-  },
-  {
-    id: 'related-2',
-    name: `Violet Nomad ${nftNum('314')}`,
-    price: '1.39 ETH',
-    imageUrl: '/assets/images/nft-07-violet-nomad.png',
-    alt: `NFT Violet Nomad ${nftNum('314')}`,
-  },
-  {
-    id: 'related-3',
-    name: `Ivory Baron ${nftNum('088')}`,
-    price: '1.79 ETH',
-    imageUrl: '/assets/images/nft-08-ivory-baron.png',
-    alt: `NFT Ivory Baron ${nftNum('088')}`,
-  },
-  {
-    id: 'related-4',
-    name: `Golden Beat ${nftNum('207')}`,
-    price: '0.99 ETH',
-    imageUrl: '/assets/images/nft-09-golden-beat.png',
-    alt: `NFT Golden Beat ${nftNum('207')}`,
-  },
-  {
-    id: 'related-5',
-    name: `Golden Signal ${nftNum('160')}`,
-    price: '0.39 ETH',
-    imageUrl: '/assets/images/nft-11-golden-signal.png',
-    alt: `NFT Golden Signal ${nftNum('160')}`,
-  },
-  {
-    id: 'related-6',
-    name: `Emerald Ape ${nftNum('042')}`,
-    price: '1.19 ETH',
-    imageUrl: '/assets/images/nft-03-emerald-ape.png',
-    alt: `NFT Emerald Ape ${nftNum('042')}`,
-  },
-  {
-    id: 'related-7',
-    name: `Sage Nomad ${nftNum('095')}`,
-    price: '0.85 ETH',
-    imageUrl: '/assets/images/nft-04-sage-nomad.png',
-    alt: `NFT Sage Nomad ${nftNum('095')}`,
-  },
-  {
-    id: 'related-8',
-    name: `Neon Vessel ${nftNum('019')}`,
-    price: '1.45 ETH',
-    imageUrl: '/assets/images/nft-05-neon-vessel.png',
-    alt: `NFT Neon Vessel ${nftNum('019')}`,
-  },
-  {
-    id: 'related-9',
-    name: `Artwork Genesis ${nftNum('003')}`,
-    price: '2.10 ETH',
-    imageUrl: '/assets/images/nft-10-artwork.png',
-    alt: `NFT Artwork Genesis ${nftNum('003')}`,
-  },
-  {
-    id: 'related-10',
-    name: `Kurio Hero ${nftNum('001')}`,
-    price: '3.50 ETH',
-    imageUrl: '/assets/images/hero-nft.png',
-    alt: `NFT Kurio Hero ${nftNum('001')}`,
-  },
-];
-
-/**
- * Lista padrão com 5 itens recomendados conforme o frame Desktop de Carrinho (#11:1278).
- */
-export const DEFAULT_CART_RECOMMENDED_ITEMS: NftCarouselItem[] = [
-  {
-    id: 'cosmic-bloom-118',
-    name: `Cosmic Bloom ${nftNum('118')}`,
-    price: '1.29 ETH',
-    imageUrl: '/assets/images/nft-06-cosmic-bloom.png',
-    alt: `NFT Cosmic Bloom ${nftNum('118')}`,
-  },
-  {
-    id: 'violet-nomad-314',
-    name: `Violet Nomad ${nftNum('314')}`,
-    price: '1.39 ETH',
-    imageUrl: '/assets/images/nft-07-violet-nomad.png',
-    alt: `NFT Violet Nomad ${nftNum('314')}`,
-  },
-  {
-    id: 'ivory-baron-088',
-    name: `Ivory Baron ${nftNum('088')}`,
-    price: '1.79 ETH',
-    imageUrl: '/assets/images/nft-08-ivory-baron.png',
-    alt: `NFT Ivory Baron ${nftNum('088')}`,
-  },
-  {
-    id: 'golden-beat-207',
-    name: `Golden Beat ${nftNum('207')}`,
-    price: '0.99 ETH',
-    imageUrl: '/assets/images/nft-09-golden-beat.png',
-    alt: `NFT Golden Beat ${nftNum('207')}`,
-  },
-  {
-    id: 'golden-signal-160',
-    name: `Golden Signal ${nftNum('160')}`,
-    price: '0.39 ETH',
-    imageUrl: '/assets/images/nft-11-golden-signal.png',
-    alt: `NFT Golden Signal ${nftNum('160')}`,
-  },
-];
-
-/**
  * Componente unificado de Carrossel de NFTs reutilizável entre a Página de Detalhes (PDP)
  * e o Carrinho de Compras, fiel aos frames do Figma (#10:244 e #11:1278).
  *
@@ -167,7 +48,7 @@ export const DEFAULT_CART_RECOMMENDED_ITEMS: NftCarouselItem[] = [
  */
 export const NftCarousel: React.FC<NftCarouselProps> = ({
   title = 'Mais dessa colecao',
-  items = DEFAULT_PDP_RELATED_ITEMS,
+  items,
   onSelectItem,
   testIdPrefix = 'pdp-related',
   className,

@@ -7,6 +7,15 @@ import { PdpTabs } from './pdp-tabs';
 import { PdpRelatedCarousel } from './pdp-related-carousel';
 import { PdpPageContent } from './pdp-page-content';
 
+// Fixture local de teste: o componente nao embute dados, entao os itens sao injetados.
+const RELATED_ITEMS = [
+  { id: 'related-1', name: 'Cosmic Bloom #118', price: '1.29 ETH', imageUrl: '/assets/images/nft-06-cosmic-bloom.png', alt: 'NFT Cosmic Bloom #118' },
+  { id: 'related-2', name: 'Violet Nomad #314', price: '1.39 ETH', imageUrl: '/assets/images/nft-07-violet-nomad.png', alt: 'NFT Violet Nomad #314' },
+  { id: 'related-3', name: 'Ivory Baron #088', price: '1.79 ETH', imageUrl: '/assets/images/nft-08-ivory-baron.png', alt: 'NFT Ivory Baron #088' },
+  { id: 'related-4', name: 'Golden Beat #207', price: '0.99 ETH', imageUrl: '/assets/images/nft-09-golden-beat.png', alt: 'NFT Golden Beat #207' },
+  { id: 'related-5', name: 'Golden Signal #160', price: '0.39 ETH', imageUrl: '/assets/images/nft-11-golden-signal.png', alt: 'NFT Golden Signal #160' },
+];
+
 
 describe('PdpGallery', () => {
   it('renders a gallery with 2 columns: 4 thumbnails in first col and main image in second col', () => {
@@ -331,7 +340,7 @@ describe('PdpTabs', () => {
 
 describe('PdpRelatedCarousel', () => {
   it('renders carousel header with "Mais dessa colecao", height 28px, font size 17 bold, text accent, border solid bottom 1px color primary', () => {
-    render(<PdpRelatedCarousel />);
+    render(<PdpRelatedCarousel items={RELATED_ITEMS} />);
 
     const carousel = screen.getByTestId('pdp-related-carousel');
     expect(carousel).toBeDefined();
@@ -354,7 +363,7 @@ describe('PdpRelatedCarousel', () => {
 
   it('renders carousel with 5 visible items, gap 26px, image 212x212 with 13px border inside surface card container py 20px px 4px, name foreground 15px with mt 12px, price accent 16px bold', () => {
     const handleSelect = vi.fn();
-    render(<PdpRelatedCarousel onSelectItem={handleSelect} />);
+    render(<PdpRelatedCarousel items={RELATED_ITEMS} onSelectItem={handleSelect} />);
 
     // Trilha com gap de 26px
     const track = screen.getByTestId('pdp-related-carousel-track');
@@ -412,7 +421,7 @@ describe('PdpRelatedCarousel', () => {
   });
 
   it('supports mouse drag-to-scroll across items', () => {
-    render(<PdpRelatedCarousel />);
+    render(<PdpRelatedCarousel items={RELATED_ITEMS} />);
     const track = screen.getByTestId('pdp-related-carousel-track');
 
     expect(track.className).toContain('cursor-grab');
@@ -432,7 +441,7 @@ describe('PdpRelatedCarousel', () => {
 
 describe('PdpPageContent', () => {
   it('renders 3 rows: row 1 (gallery & purchase), row 2 (tabs), row 3 (carousel "Mais dessa colecao")', () => {
-    render(<PdpPageContent />);
+    render(<PdpPageContent relatedItems={RELATED_ITEMS} />);
 
     // Primeira linha: Galeria e Seção de compra
     const firstRowGrid = screen.getByTestId('pdp-first-row-grid');
