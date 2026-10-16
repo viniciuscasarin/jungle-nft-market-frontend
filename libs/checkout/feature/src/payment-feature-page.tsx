@@ -7,6 +7,7 @@ import {
   type Quote,
   type WalletType,
   type WalletNetwork,
+  ApiError,
 } from '@nft/shared-contracts';
 import { formatEth } from '@nft/shared-money';
 import { useShell, useSession } from '@nft/shell-kit';
@@ -26,6 +27,12 @@ import {
   walletsQueryOptions,
   quoteQueryOptions,
 } from '@nft/checkout-data-access';
+import {
+  createIdempotencyKey,
+} from '@nft/orders-domain';
+import {
+  useCreateOrderMutation,
+} from '@nft/orders-data-access';
 import { useQuery } from '@nft/shared-query';
 
 export interface PaymentFeaturePageProps {
@@ -39,7 +46,7 @@ export function PaymentFeaturePage({
   onNavigateBack,
   onOrderSuccess,
 }: PaymentFeaturePageProps) {
-  const { httpClient, feedback } = useShell();
+  const { httpClient, feedback, navigate } = useShell();
   const session = useSession();
 
   const userId = session?.userId ?? 'user_alice';
@@ -63,6 +70,8 @@ export function PaymentFeaturePage({
   const activeQuoteId = initialQuoteId ?? 'quote-999';
   const [quoteChangedNotice, setQuoteChangedNotice] = React.useState<string | null>(null);
   const [previousQuote, setPreviousQuote] = React.useState<Quote | null>(null);
+  const [orderErrorMessage, setOrderErrorMessage] = React.useState<string | null>(null);
+  const [isConfirmedOrder, setIsConfirmedOrder] = React.useState(false);
 
   // 2. Fetch Active Quote
   const {
@@ -98,6 +107,7 @@ export function PaymentFeaturePage({
   const {
     handleSubmit,
     setValue,
+    reset,
     watch,
     formState: { errors },
   } = useForm<Collector>({
@@ -131,19 +141,25 @@ export function PaymentFeaturePage({
           : null,
       });
 
-      if (initial.fullName) setValue('fullName', initial.fullName);
-      if (initial.email) setValue('email', initial.email);
-      if (initial.walletAddress) setValue('walletAddress', initial.walletAddress);
+      reset({
+        fullName: initial.fullName ?? '',
+        email: initial.email ?? '',
+        walletAddress: initial.walletAddress ?? '',
+        walletType: (initial.walletType as WalletType) ?? 'coinbase',
+        network: (initial.network as WalletNetwork) ?? 'ethereum-mainnet',
+        ensName: initial.ensName ?? null,
+        useSecondaryWallet: false,
+        secondaryWallet: null,
+        note: '',
+      });
+
       if (initial.walletType) {
-        setValue('walletType', initial.walletType);
         setSelectedWalletType(initial.walletType as WalletProviderOption);
       }
-      if (initial.network) setValue('network', initial.network);
-      if (initial.ensName) setValue('ensName', initial.ensName);
 
       hasPrefilledRef.current = true;
     }
-  }, [profile, wallets, setValue, userId]);
+  }, [profile, wallets, reset, userId]);
 
   const watchedCollector = watch();
 
@@ -193,6 +209,12 @@ export function PaymentFeaturePage({
       subtotalEth: `${formatEth(item.currentPrice)} ETH`,
     }));
   }, [quote]);
+
+  // Idempotency key per logical submission attempt
+  const idempotencyKeyRef = React.useRef<string>(createIdempotencyKey());
+
+  // Mutation for creating orders
+  const createOrderMutation = useCreateOrderMutation(httpClient);
 
   // Loading and Error states
   const isLoading = isLoadingProfile || isLoadingWallets || isLoadingQuote;
@@ -257,18 +279,88 @@ export function PaymentFeaturePage({
   // Collect any form validation errors for alert display
   const errorEntries = Object.entries(errors);
   const firstErrorMessage =
+    orderErrorMessage ??
     quoteChangedNotice ??
     (errorEntries.length > 0 ? (errorEntries[0]?.[1]?.message as string) : null);
 
-  const onSubmitValid = async () => {
+  const onSubmitValid = async (collectorData: Collector) => {
     // If quote changed notice is active, user must acknowledge/clear
     if (quoteChangedNotice) {
       setQuoteChangedNotice(null);
       return;
     }
 
-    // Proceed to order creation (handled by subsequent tasks)
-    onOrderSuccess?.('order_simulated');
+    setOrderErrorMessage(null);
+
+    // Block if availability conflict is present
+    if (quote?.itemsAvailability.some((item) => !item.isAvailable)) {
+      setOrderErrorMessage('Um ou mais itens no pedido estão esgotados.');
+      feedback.notify({
+        message: 'Itens esgotados. Revise seu carrinho antes de continuar.',
+        tone: 'error',
+        politeness: 'assertive',
+      });
+      return;
+    }
+
+    try {
+      const order = await createOrderMutation.mutateAsync({
+        idempotencyKey: idempotencyKeyRef.current,
+        input: {
+          quoteId: quote?.quoteId ?? activeQuoteId,
+          collector: collectorData,
+        },
+      });
+
+      if (order.status === 'confirmed') {
+        setIsConfirmedOrder(true);
+        feedback.notify({
+          message: 'Compra confirmada com sucesso!',
+          tone: 'success',
+          politeness: 'polite',
+        });
+        if (onOrderSuccess) {
+          onOrderSuccess(order.id);
+        } else {
+          navigate(`/pedido/${order.id}`);
+        }
+      } else if (order.status === 'rejected') {
+        const reason = order.rejectionReason || 'Pagamento recusado na simulação.';
+        setOrderErrorMessage(reason);
+        feedback.notify({
+          message: reason,
+          tone: 'error',
+          politeness: 'assertive',
+        });
+      } else {
+        // Pending
+        setOrderErrorMessage('Seu pedido está em processamento.');
+        feedback.notify({
+          message: 'Pedido em processamento. Aguarde a confirmação.',
+          tone: 'info',
+          politeness: 'polite',
+        });
+      }
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.code === 'PRICE_CHANGED') {
+          setQuoteChangedNotice('O preço de um ou mais itens mudou. Revise a nova cotação.');
+        } else if (err.code === 'AVAILABILITY_CONFLICT') {
+          setOrderErrorMessage('A edição selecionada encontra-se esgotada.');
+        } else {
+          setOrderErrorMessage(err.message || 'Falha ao processar pagamento.');
+        }
+        feedback.notify({
+          message: err.message || 'Erro ao processar o pedido.',
+          tone: 'error',
+          politeness: 'assertive',
+        });
+      } else if (err instanceof Error) {
+        setOrderErrorMessage(err.message);
+      } else {
+        setOrderErrorMessage('Erro inesperado ao finalizar a compra.');
+      }
+    }
   };
 
   return (
@@ -283,8 +375,18 @@ export function PaymentFeaturePage({
       networkFeeEth={quote ? `${formatEth(quote.networkFee)} ETH` : undefined}
       totalEth={quote ? `${formatEth(quote.total)} ETH` : undefined}
       errorMessage={firstErrorMessage}
+      isSubmitting={createOrderMutation.isPending}
+      isConfirmed={isConfirmedOrder}
       onConfirmPurchase={() => {
-        handleSubmit(onSubmitValid)();
+        handleSubmit(
+          onSubmitValid,
+          (formErrors) => {
+            const firstErr = Object.values(formErrors)[0]?.message;
+            if (firstErr) {
+              setOrderErrorMessage(firstErr as string);
+            }
+          }
+        )();
       }}
       onNavigateBack={onNavigateBack}
     />

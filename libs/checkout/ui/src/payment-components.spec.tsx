@@ -127,10 +127,12 @@ describe('Payment & Checkout UI Components', () => {
     });
 
     it('opens OrderConfirmationModal when purchase is confirmed', () => {
-      render(<PaymentPageContent />);
+      const { rerender } = render(<PaymentPageContent isConfirmed={false} />);
 
       const confirmBtns = screen.getAllByRole('button', { name: 'Confirmar compra' });
       fireEvent.click(confirmBtns[0]!);
+
+      rerender(<PaymentPageContent isConfirmed={true} />);
 
       expect(screen.getByTestId('order-confirmation-modal')).toBeInTheDocument();
       expect(screen.getByText('Seus NFTs agora estão na sua carteira')).toBeInTheDocument();

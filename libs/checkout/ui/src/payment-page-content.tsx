@@ -16,7 +16,7 @@ import { CheckoutNftsSummary } from './checkout-nfts-summary';
 import { WalletAndNetworkSelector } from './wallet-and-network-selector';
 import { ConnectedWalletsSection } from './connected-wallets-section';
 import { OrderConfirmationModal } from './order-confirmation-modal';
-import { WalletProviderOption } from './types';
+import type { WalletProviderOption, CollectorProfileData, CheckoutNftItem } from './types';
 
 export interface PaymentPageContentProps {
   initialCollectorData?: Partial<CollectorProfileData> | undefined;
@@ -79,8 +79,6 @@ export const PaymentPageContent: React.FC<PaymentPageContentProps> = ({
   }, [isConfirmed]);
 
   const handleConfirm = () => {
-    setIsSuccessFeedback(true);
-    setIsConfirmationModalOpen(true);
     onConfirmPurchase?.();
   };
 
