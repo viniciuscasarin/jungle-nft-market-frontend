@@ -23,6 +23,10 @@ const config: StorybookConfig = {
   core: {
     disableTelemetry: true,
   },
+  staticDirs: [
+    '../../shell/public',
+    { from: '../../../design/assets', to: '/assets' },
+  ],
   async viteFinal(config) {
     config.plugins = config.plugins || [];
     config.plugins.push(

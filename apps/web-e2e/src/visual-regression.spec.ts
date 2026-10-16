@@ -44,7 +44,7 @@ test.describe('Visual Regression - Storybook Components', () => {
     for (const story of mobileStories) {
       test(`deve corresponder ao snapshot visual de ${story.name} (390px)`, async ({ page }) => {
         await page.goto(`/storybook/iframe.html?id=${story.id}&viewMode=story`);
-        await page.waitForSelector('#storybook-root > *', { state: 'visible' });
+        await page.waitForSelector('#storybook-root > *', { state: 'attached' });
         await page.waitForLoadState('networkidle');
 
         // Aguarda estabilização de fontes e renderização

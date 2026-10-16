@@ -1,11 +1,9 @@
 import * as React from 'react';
 import { cn } from '../../index';
-import { IconKurioLogo } from '../../icons/IconKurioLogo';
+import { IconSearch } from '../../icons/IconSearch';
 import { IconCart } from '../../icons/IconCart';
-import { IconMenu } from '../../icons/IconMenu';
-import { Button } from '../primitives/button';
+import { IconLogout } from '../../icons/IconLogout';
 import { Avatar } from '../primitives/avatar';
-import { SearchBar } from './search-bar';
 
 export interface HeaderNavLink {
   label: string;
@@ -27,10 +25,17 @@ export interface HeaderProps {
   onLoginClick?: () => void;
   onLogoutClick?: () => void;
   onCartClick?: () => void;
+  onSearchClick?: () => void;
   onSearchSubmit?: (query: string) => void;
-  onMobileMenuToggle?: () => void;
   className?: string;
 }
+
+export const DEFAULT_HEADER_NAV_LINKS: HeaderNavLink[] = [
+  { label: 'Início', href: '/' },
+  { label: 'Mercado', href: '/mercado' },
+  { label: 'Criadores', href: '/criadores' },
+  { label: 'Aprenda', href: '/aprenda' },
+];
 
 export const Header: React.FC<HeaderProps> = ({
   user,
@@ -40,81 +45,104 @@ export const Header: React.FC<HeaderProps> = ({
   onLoginClick,
   onLogoutClick,
   onCartClick,
+  onSearchClick,
   onSearchSubmit,
-  onMobileMenuToggle,
   className,
 }) => {
-  const defaultNavLinks: HeaderNavLink[] = [
-    { label: 'Explorar', href: '/' },
-    { label: 'Coleções', href: '/colecoes' },
-  ];
+  const links = navLinks ?? DEFAULT_HEADER_NAV_LINKS;
 
-  const links = navLinks ?? defaultNavLinks;
+  const handleSearchAction = () => {
+    if (onSearchClick) {
+      onSearchClick();
+    } else if (onSearchSubmit) {
+      onSearchSubmit('');
+    }
+  };
 
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 w-full border-b border-border-default bg-surface-card/95 backdrop-blur-md font-mono select-none transition-colors',
+        'hidden md:block w-full h-[45px] p-0 bg-transparent border-b border-border-default font-mono select-none transition-colors',
         className
       )}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
-        {/* Left: Brand Logo */}
-        <div className="flex items-center gap-8 shrink-0">
+      <div className="w-full h-[45px] flex items-center justify-between">
+        {/* Coluna 1: Título KURIO com width fixo de 100px, font size 10px, 24px de altura, alinhado ao topo */}
+        <div className="w-[100px] shrink-0 h-[45px] flex items-start">
           <a
             href="/"
             aria-label="Kurio NFT Marketplace - Início"
-            className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs"
+            className="flex items-center h-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs"
           >
-            <IconKurioLogo className="h-8 w-auto text-text-primary" />
+            <span className="font-mono font-bold text-[14px] leading-[24px] h-[24px] tracking-widest text-text-primary">
+              KURIO
+            </span>
           </a>
-
-          {/* Desktop Nav Links */}
-          <nav aria-label="Navegação principal" className="hidden lg:flex items-center gap-6">
-            {links.map((link) => {
-              const isActive = activePath === link.href;
-              return (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={cn(
-                    'text-body-14 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs',
-                    isActive
-                      ? 'text-primary font-bold'
-                      : 'text-text-secondary hover:text-text-primary'
-                  )}
-                >
-                  {link.label}
-                </a>
-              );
-            })}
-          </nav>
         </div>
 
-        {/* Center: Search Bar (Desktop & Tablet) */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
-          <SearchBar onSubmit={onSearchSubmit} />
-        </div>
+        {/* Coluna 2: Links centralizados horizontalmente (justify-center), ocupando altura do header (45px) com gap de 40px */}
+        <nav
+          aria-label="Navegação principal"
+          className="flex-1 flex justify-center items-center h-[45px] gap-[40px]"
+        >
+          {links.map((link) => {
+            const isActive = activePath === link.href;
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  'h-[45px] flex items-start text-[16px] font-medium transition-colors border-b-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs',
+                  isActive
+                    ? 'text-text-accent font-bold border-primary'
+                    : 'text-text-primary hover:text-text-accent border-transparent'
+                )}
+              >
+                {link.label}
+              </a>
+            );
+          })}
+        </nav>
 
-        {/* Right: Actions (Cart & Session) */}
-        <div className="flex items-center gap-3">
-          {/* Cart Button */}
+        {/* Coluna 3: Ações com gap de 28px */}
+        <div className="flex items-start shrink-0 gap-[28px] h-[45px]">
+          {/* Lupa 20px x 20px */}
+          <button
+            type="button"
+            onClick={handleSearchAction}
+            aria-label="Buscar NFTs"
+            className="flex items-center justify-center p-0 pt-[7px] text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
+          >
+            <IconSearch
+              width={20}
+              height={20}
+              className="w-[20px] h-[20px]"
+              aria-hidden="true"
+            />
+          </button>
+
+          {/* Carrinho 24px x 24px */}
           <button
             type="button"
             onClick={onCartClick}
             aria-label={cartCount > 0 ? `Carrinho com ${cartCount} itens` : 'Carrinho de compras'}
-            className="relative flex h-10 w-10 items-center justify-center rounded-md border border-border-default bg-surface-raised text-text-secondary hover:text-text-primary hover:border-border-soft hover:bg-surface-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
+            className="relative flex items-center justify-center p-0 pt-[5px] text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
           >
-            <IconCart className="h-5 w-5" aria-hidden="true" />
+            <IconCart
+              width={24}
+              height={24}
+              className="w-[24px] h-[24px]"
+              aria-hidden="true"
+            />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-tiny-9 font-bold text-text-primary">
+              <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-tiny-9 font-bold text-ink">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
           </button>
 
-          {/* User Session */}
+          {/* Botão Entrar / Logout: bg-primary, text-ink, icon logout 24px x 24px, text font-size 24px, border-radius 6px */}
           {user ? (
             <div className="flex items-center gap-3">
               <a
@@ -128,41 +156,43 @@ export const Header: React.FC<HeaderProps> = ({
                   size="sm"
                   alt={`Foto de ${user.name}`}
                 />
-                <span className="hidden sm:inline text-body-14 font-medium text-text-primary max-w-xs truncate">
+                <span className="text-body-14 font-medium text-text-primary max-w-xs truncate">
                   {user.name}
                 </span>
               </a>
               {onLogoutClick && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={onLogoutClick}
-                  className="hidden sm:inline-flex text-caption-12"
+                  aria-label="Sair"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-[6px] bg-primary text-ink hover:bg-primary-hover font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
                 >
-                  Sair
-                </Button>
+                  <IconLogout
+                    width={24}
+                    height={24}
+                    className="w-[24px] h-[24px]"
+                    aria-hidden="true"
+                  />
+                  <span className="text-[16px] leading-none font-medium">Sair</span>
+                </button>
               )}
             </div>
           ) : (
-            <Button
-              variant="primary"
-              size="md"
+            <button
+              type="button"
               onClick={onLoginClick}
-              className="text-body-14 font-bold"
+              aria-label="Entrar"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-[6px] bg-primary text-ink hover:bg-primary-hover font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
             >
-              Entrar
-            </Button>
+              <IconLogout
+                width={24}
+                height={24}
+                className="w-[24px] h-[24px]"
+                aria-hidden="true"
+              />
+              <span className="text-[16px] leading-none font-medium">Entrar</span>
+            </button>
           )}
-
-          {/* Mobile Menu Trigger (Hamburger) */}
-          <button
-            type="button"
-            onClick={onMobileMenuToggle}
-            aria-label="Abrir menu de navegação"
-            className="flex lg:hidden h-10 w-10 items-center justify-center rounded-md border border-border-default bg-surface-raised text-text-secondary hover:text-text-primary hover:bg-surface-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
-          >
-            <IconMenu className="h-5 w-5" aria-hidden="true" />
-          </button>
         </div>
       </div>
     </header>

@@ -35,3 +35,4 @@ export { IconMenu } from './IconMenu';
 export { IconUser } from './IconUser';
 export { IconGrid } from './IconGrid';
 export { IconExternalLink } from './IconExternalLink';
+export { IconYoutube } from './IconYoutube';

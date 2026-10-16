@@ -18,7 +18,7 @@ const meta: Meta<typeof Header> = {
     activePath: '/',
     onLoginClick: fn(),
     onCartClick: fn(),
-    onSearchSubmit: fn(),
+    onSearchClick: fn(),
   },
 };
 
@@ -43,5 +43,18 @@ export const AuthenticatedUser: Story = {
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80',
     },
     cartCount: 4,
+  },
+};
+
+export const MarketRouteActive: Story = {
+  args: {
+    activePath: '/mercado',
+    cartCount: 0,
+  },
+};
+
+export const WithManyCartItems: Story = {
+  args: {
+    cartCount: 12,
   },
 };

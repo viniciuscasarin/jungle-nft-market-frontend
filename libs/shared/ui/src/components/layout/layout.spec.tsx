@@ -12,6 +12,7 @@ describe('Global Layout Components', () => {
     it('renders logo, active nav route, cart count and unauthenticated login button', () => {
       const handleLogin = vi.fn();
       const handleCart = vi.fn();
+      const handleSearch = vi.fn();
 
       render(
         <Header
@@ -19,14 +20,25 @@ describe('Global Layout Components', () => {
           activePath="/"
           onLoginClick={handleLogin}
           onCartClick={handleCart}
+          onSearchClick={handleSearch}
         />
       );
 
       expect(screen.getByRole('link', { name: /kurio nft marketplace - início/i })).toBeInTheDocument();
+      expect(screen.getByText('KURIO')).toBeInTheDocument();
 
-      const exploreLink = screen.getByRole('link', { name: 'Explorar' });
-      expect(exploreLink).toHaveAttribute('aria-current', 'page');
-      expect(exploreLink.className).toContain('text-primary');
+      const homeLink = screen.getByRole('link', { name: 'Início' });
+      expect(homeLink).toHaveAttribute('aria-current', 'page');
+      expect(homeLink.className).toContain('border-primary');
+
+      expect(screen.getByRole('link', { name: 'Mercado' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Criadores' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Aprenda' })).toBeInTheDocument();
+
+      const searchBtn = screen.getByRole('button', { name: 'Buscar NFTs' });
+      expect(searchBtn).toBeInTheDocument();
+      fireEvent.click(searchBtn);
+      expect(handleSearch).toHaveBeenCalledTimes(1);
 
       const cartBtn = screen.getByRole('button', { name: 'Carrinho com 3 itens' });
       expect(cartBtn).toBeInTheDocument();
@@ -59,30 +71,69 @@ describe('Global Layout Components', () => {
   });
 
   describe('Footer', () => {
-    it('renders navigation links and displays friendly out-of-scope notice on newsletter submit and social click', () => {
+    it('renders the 4 Figma sections with benefits badges, contact bar, navigation columns and copyright', () => {
       render(<Footer />);
 
-      expect(screen.getByText('Todas as Coleções')).toBeInTheDocument();
-      expect(screen.getByText('Minha Conta')).toBeInTheDocument();
+      // Seção 1: Benefícios e Newsletter
+      expect(screen.getByText('Segurança da carteira')).toBeInTheDocument();
+      expect(screen.getByText('Criadores em destaque')).toBeInTheDocument();
+      expect(screen.getByText('Alertas de lançamentos')).toBeInTheDocument();
+      expect(screen.getByText('W')).toBeInTheDocument();
+      expect(screen.getByText('C')).toBeInTheDocument();
+      expect(screen.getByText('D')).toBeInTheDocument();
+      expect(screen.getByText('Antecipe-se ao próximo lançamento')).toBeInTheDocument();
+
+      // Seção 2: Faixa de contato
+      expect(screen.getByText('Feito para colecionadores, criadores e cultura')).toBeInTheDocument();
+      expect(screen.getByText('contato@email.com')).toBeInTheDocument();
+      expect(screen.getByText('+55 11 4002 8922')).toBeInTheDocument();
+
+      // Seção 3: Navegação e Carteiras
+      expect(screen.getByRole('heading', { name: 'Central de ajuda' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Coleções' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Carteiras compatíveis' })).toBeInTheDocument();
+      expect(screen.getByText('METAMASK')).toBeInTheDocument();
+      expect(screen.getByText('WALLETCONNECT')).toBeInTheDocument();
+      expect(screen.getByText('COINBASE')).toBeInTheDocument();
+
+      // Seção 4: Copyright
+      expect(screen.getByText('© 2026 Kurio. Propriedade digital para todos.')).toBeInTheDocument();
+    });
+
+    it('displays friendly out-of-scope notice on social button click and newsletter submit', () => {
+      render(<Footer />);
 
       // Social button click
-      const discordBtn = screen.getByRole('button', { name: 'Seguir no Discord' });
-      fireEvent.click(discordBtn);
+      const fbBtn = screen.getByRole('button', { name: 'Seguir no Facebook' });
+      fireEvent.click(fbBtn);
 
       expect(
-        screen.getByText('Acesso ao Discord indisponível nesta demonstração.')
+        screen.getByText('Acesso ao Facebook indisponível nesta demonstração.')
       ).toBeInTheDocument();
 
       // Newsletter form submit
       const emailInput = screen.getByLabelText('E-mail para newsletter');
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
 
-      const submitBtn = screen.getByRole('button', { name: 'Inscrever-se' });
+      const submitBtn = screen.getByRole('button', { name: 'Enviar' });
       fireEvent.click(submitBtn);
 
       expect(
         screen.getByText('Funcionalidade indisponível nesta demonstração.')
       ).toBeInTheDocument();
+    });
+
+    it('triggers onNewsletterSubmit callback when provided', () => {
+      const handleNewsletter = vi.fn();
+      render(<Footer onNewsletterSubmit={handleNewsletter} />);
+
+      const emailInput = screen.getByLabelText('E-mail para newsletter');
+      fireEvent.change(emailInput, { target: { value: 'newsletter@kurio.art' } });
+
+      const submitBtn = screen.getByRole('button', { name: 'Enviar' });
+      fireEvent.click(submitBtn);
+
+      expect(handleNewsletter).toHaveBeenCalledWith('newsletter@kurio.art');
     });
   });
 

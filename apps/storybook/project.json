@@ -32,6 +32,12 @@
       "outputs": [
         "{workspaceRoot}/dist/apps/storybook"
       ],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/libs/shared/ui/**/*",
+        "{workspaceRoot}/apps/storybook/**/*"
+      ],
       "options": {
         "command": "storybook build -c apps/storybook/.storybook -o dist/apps/storybook --quiet --disable-telemetry"
       }

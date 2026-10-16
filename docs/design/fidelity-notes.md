@@ -57,21 +57,25 @@ Este documento cataloga a comparação visual, tolerâncias de subpixel/1px e de
 ## 4. Fidelidade por Componente
 
 ### 4.1 Header (`libs/shared/ui/src/components/layout/header.tsx`)
-- **Figma Frame**: `#70486:560` (Desktop) e `#14:5226` (Mobile)
+- **Figma Frame**: `#70486:560` (Desktop `2:2`), `#10:244` (Detalhes), `#11:1278` (Carrinho) e `#14:5226` (Mobile)
 - **Fidelidade**:
-  - Logo Kurio com dimensões fixas (32x32) e tipografia `Roboto Mono 700`.
-  - Links de navegação com indicador ativo (`text-text-primary` e border inferior âmbar em desktop).
-  - Contador de carrinho com badge `rounded-full` em cor de destaque âmbar.
-  - No breakpoint mobile (< 768px), os links colapsam para o botão de menu que abre a gaveta de navegação (`Drawer`).
-- **Tolerância**: 0px de desvio em padding vertical (16px / `py-4`) e horizontal (24px a 80px conforme container).
+  - Altura exata de 45px (`h-[45px]`), sem padding interno e fundo transparente (`bg-transparent`).
+  - Estrutura estrita de 3 colunas:
+    - **Coluna 1 (Título)**: Largura fixa de 100px (`w-[100px]`), com texto `KURIO` em fonte tamanho 14px (`text-[14px]`) e altura de 34px (`h-[34px]`), alinhado ao topo da div pai.
+    - **Coluna 2 (Navegação)**: Ocupa toda a largura restante (`flex-1`) com altura de 45px, links centralizados horizontalmente (`justify-center`) e colados verticalmente no topo (`items-start`), com gap de 40px entre links. O link ativo recebe a cor `Text Accent` (`text-text-accent`) e borda sólida inferior de 3px em `Color Primary` (`border-b-[3px] border-primary`) perfeitamente alinhada com a borda inferior do header. Links inativos renderizam na cor `Color Foreground` (`text-text-primary`).
+    - **Coluna 3 (Ações)**: Ícones e controles compactos com gap de 28px (`gap-[28px]`): lupa 20x20 (`IconSearch`), carrinho 24x24 (`IconCart` com badge de contagem) e botão `Entrar` com fundo em `Color Primary` (`bg-primary`), texto em `Color Ink` (`text-ink`), tamanho de fonte 16px (`text-[16px]`), `border-radius` de 6px (`rounded-[6px]`) e ícone de logout 20x20.
+  - No mobile (< 768px), o header desktop é ocultado (`hidden md:block`), sendo a navegação móvel provida pela `MobileTabBar`.
+- **Tolerância**: 0px de desvio em altura de cabeçalho (45px) e alinhamento de bordas.
 
 ### 4.2 Footer (`libs/shared/ui/src/components/layout/footer.tsx`)
 - **Figma Frame**: `#70491:1286`, `#70492:696`
 - **Fidelidade**:
-  - Grid de 3 colunas de benefícios no topo, seguido de caixa de newsletter com input de email e botão de submissão.
-  - Seção inferior com faixa escura `bg-surface-dark` (`#38220f`), links de termos, privacidade e copyright.
-  - Ícones de redes sociais com tamanho 20x20 e transição suave de hover.
-- **Aviso de Demonstração**: A submissão de newsletter não envia requisições a terceiros e apresenta toast explícito de demonstração.
+  - Estrutura rigorosa em 4 seções empilhadas:
+    - **Seção 1 (Benefícios e Newsletter)**: Grade de 4 colunas contendo 3 cards de valor com badges circulares `(W)`, `(C)`, `(D)` para "Segurança da carteira", "Criadores em destaque" e "Alertas de lançamentos", acrescida da coluna de newsletter com título "Antecipe-se ao próximo lançamento", input `digite seu e-mail...`, botão âmbar "Enviar" e legenda explicativa.
+    - **Seção 2 (Faixa Intermediária de Contato)**: Barra horizontal contrastante com classe `bg-surface-dark` (`#38220f`), exibindo o logo tipográfico `KURIO`, o slogan "Feito para colecionadores, criadores e cultura", e-mail institucional (`contato@email.com`) e telefone (`+55 11 4002 8922`).
+    - **Seção 3 (Navegação Inferior e Carteiras)**: 4 colunas organizadas para "Meu perfil", "Central de ajuda", "Coleções" e "Redes sociais" (ícones compactos em caixas para Facebook, Instagram, Twitter, LinkedIn e YouTube) acrescida do bloco de "Carteiras compatíveis" com badges para `METAMASK`, `WALLETCONNECT` e `COINBASE`.
+    - **Seção 4 (Barra de Copyright)**: Barra inferior centralizada com o texto exato do Figma: `© 2026 Kurio. Propriedade digital para todos.`.
+- **Aviso de Demonstração**: Ações fora de escopo (links informativos secundários, submissão da newsletter e cliques sociais) exibem aviso acessível em live region (`role="status" aria-live="polite"`), sem simular requisições falsas a terceiros.
 
 ### 4.3 NftCard (`libs/shared/ui/src/components/widgets/nft-card.tsx`)
 - **Figma Frame**: `#70487:690`, `#70488:750`
