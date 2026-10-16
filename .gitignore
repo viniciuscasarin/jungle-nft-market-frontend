@@ -11,6 +11,8 @@ dist/
 build/
 out/
 .next/
+@mf-types/
+**/@mf-types/
 
 # Environment files
 .env

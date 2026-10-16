@@ -60,6 +60,7 @@ export default [
       '**/coverage',
       '**/.nx',
       '**/*.gen.ts',
+      '**/@mf-types/**',
       'dist',
       'build',
     ],

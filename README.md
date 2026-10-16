@@ -93,6 +93,7 @@ pnpm install
 
 | Comando | Descrição |
 |---|---|
+| `pnpm design:check` | Valida offline a integridade estrutural de tokens, schemas e presença física de ativos do Figma |
 | `pnpm dev:mocks` | Sobe todos os 4 apps simultaneamente com mocks ativos |
 | `pnpm dev:shell` | Executa apenas o host Shell (`http://localhost:4200`) |
 | `pnpm dev:storefront` | Executa o remote Storefront standalone (`http://localhost:4201`) |
@@ -105,6 +106,24 @@ pnpm install
 | `pnpm preview` | Servidor SPA estático com headers de cache servindo `dist/integrated/` |
 | `pnpm e2e` | Executa testes end-to-end com Playwright (`web-e2e`) |
 | `pnpm lighthouse` | Executa auditoria de performance, acessibilidade e SEO |
+
+---
+
+## 🎨 Design System e Extração do Figma
+
+Todos os artefatos visuais, tokens e fontes foram extraídos do arquivo Figma (`dKMJKBVdX6q0Ym4OX5vd3V`) e versionados localmente no repositório, garantindo builds e pipelines de CI 100% autônomos sem chamadas de rede externas ou tokens de API em tempo de execução:
+
+- `design/tokens/tokens.json`: 65 tokens semânticos consolidados (cores, tipografia, espaçamentos, raios e sombras), cada um com seu respectivo `nodeId` de origem no Figma.
+- `design/assets/`: Ícones vetoriais otimizados (`icons/`) e imagens rasterizadas (`images/`), catalogados em `manifest.json` com dimensões, uso e sugestões de `alt` acessível.
+- `design/fonts/`: Família tipográfica Roboto Mono self-hosted (pesos 400, 500 e 700 em `.woff2`), acompanhada de `fonts.css` e documentação de escala.
+- `design/screenshots/`: Capturas dos 15 frames desktop e mobile em escala 1:1 para referência e testes visuais.
+- `design/figma.json`: Registro de proveniência com `fileKey`, timestamp e inventário completo de nós do Figma.
+- `docs/design/`: Documentação aprofundada de telas (`screens.md`), componentes e estados não desenhados (`components.md`), auditoria de contraste WCAG 2.1 AA (`token-audit.md`), responsividade (`responsive.md`), movimento e skeletons (`motion.md`) e decisões arquiteturais de design (`open-questions.md`).
+
+A integridade estrutural e a presença física de todos os arquivos é verificada automaticamente via:
+```bash
+pnpm design:check
+```
 
 ---
 

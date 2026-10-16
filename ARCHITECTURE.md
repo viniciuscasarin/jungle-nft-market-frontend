@@ -291,17 +291,24 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 
 ## 18. Decisões de UX
 
-`[PREENCHER ao final]`
-
-- Ações fora de escopo mostram aviso "indisponível nesta demonstração" e não aparentam sucesso.
-- Mudança de preço ou disponibilidade durante o checkout bloqueia a confirmação até nova revisão do usuário.
+- **Modais como Rotas URL**: Os fluxos de Login (`/login`), Cadastro (`/cadastro`) e Confirmação de Pedido (`/pedido/:orderId`) são modelados como rotas URL completas gerenciadas pelo TanStack Router. No Desktop, essas telas renderizam como modais suspensos centralizados sobre backdrop semi-transparente escurecido; no mobile, adaptam-se para layout de tela cheia vertical. Essa arquitetura permite navegação direta, links compartilháveis de recibo, histórico de navegação e foco controlado (focus trap).
+- **Ações Fora de Escopo**: Seções e controles visuais desenhados no Figma que não possuem suporte de backend no escopo do desafio (login social com Google/Facebook, newsletter no rodapé, seção de blog, promo cards, "Esqueceu a senha?", menus "Aprenda" e "Criadores", e abas da conta como "Downloads" e "Suporte") permanecem visíveis para preservar a fidelidade visual e a pontuação estética. Ao serem acionados, exibem feedback acessível imediato com aviso amigável: *"Funcionalidade indisponível nesta demonstração"*, nunca aparentando sucesso falso.
+- **Formulário de Pagamento e Coleta de Dados**: Todos os campos rotulados com asterisco (`*`) no formulário de Pagamento são obrigatórios e validados tanto no cliente (React Hook Form + Zod) quanto na API simulada (MSW). Os campos "Observação" e "ENS ou carteira secundária" são opcionais, tornando-se obrigatório o campo secundário apenas se a opção "Usar outra carteira?" estiver marcada. Os dados coletados compõem o objeto `collector` do pedido.
+- **Opções de Carteira no Checkout**: A opção combinada estática do frame do Figma ("MetaMask · WalletConnect · Coinbase") foi desmembrada em 3 radio cards acessíveis e independentes (MetaMask, WalletConnect, Coinbase Wallet), cada um com seu respectivo ícone vetorial oficial e seleção individual por teclado e clique.
+- **Avaliações Somente Leitura**: As avaliações de NFTs são estritamente `read-only`. A média (`rating`) e o total (`reviewCount`) são consumidos de `GET /nfts/:id`, e a listagem textual de avaliações é carregada via `GET /nfts/:id/reviews`, sem formulários de criação/edição.
+- **Preço Promocional e Anterior Riscado**: Cards de NFT suportam o campo opcional `previousPriceEth`. Quando presente e divergente do preço atual, o valor anterior é renderizado riscado (`line-through text-muted`) ao lado do preço ativo em destaque (`text-accent`), preservando a fidelidade com os cards promocionais do Figma.
+- **Mudança de Preço ou Disponibilidade**: Caso haja alteração de preço, taxa ou esgotamento de item durante o fluxo de checkout, a confirmação do pedido é bloqueada e o usuário é notificado para revisar os novos valores antes de confirmar.
 
 ## 19. Desvios do Figma e ajustes de acessibilidade
 
-`[PREENCHER ao final]`
-
 | Item | Figma | Entrega | Motivo |
 |---|---|---|---|
-| Estados não desenhados (erro, vazio, skeleton) | ausente | seguem o padrão visual existente | exigência do enunciado |
-| Perfil, carteiras e confirmação em mobile | sem frame | adaptados dos frames desktop | exigência do enunciado |
-| Substituição de assets ou fontes | `[PREENCHER]` | `[PREENCHER]` | `[PREENCHER]` |
+| Estados não desenhados (hover, focus, disabled, erro, vazio, skeleton) | Ausente | Padronizados com os tokens extraídos: foco visível via `ring-2 ring-primary ring-offset-2 ring-offset-ink` (contraste 6.85:1), feedback de erro com texto e ícone (`color.feedback.error`, 7.29:1), skeletons com shimmer desativável sob `prefers-reduced-motion` | Exigência do enunciado e conformidade com WCAG 2.1 AA (2.4.7, 1.4.1) |
+| Telas sem frame mobile (Confirmação, Perfil, Carteiras) | Ausente em mobile (apenas desktop 1440px) | Layout adaptado para coluna única fluida (390px/414px) com botões e formulários empilhados verticalmente | Exigência do enunciado para suporte desktop e mobile completos |
+| Resolução Tablet (768px) | Ausente no Figma | Catálogo colapsado em grade de 2 colunas, filtros colapsados em Sheet/Drawer lateral e formulários em coluna única | Prevenir overflow horizontal e garantir usabilidade em viewports intermediários |
+| Self-hosting de Fontes | Fontes remotas Google Fonts | Família Roboto Mono baixada e servida localmente (`design/fonts/`) nos pesos 400, 500 e 700 em formato woff2 | Eliminar dependência externa de rede no CI e tempo de execução, assegurando estabilidade e métricas Lighthouse |
+| Resolução de Letter-Spacing | Valor percentual sem unidade (`letterSpacing: 10`) | Convertido proporcionalmente para `0.1em` (ou `1.4px` sobre base de 14px) | Fidelidade geométrica aos estilos tipográficos do Figma |
+| Contraste de Bordas de Formulário | Bordas `#55321f` e `#3f2319` com contraste 1.34:1 a 1.71:1 sobre `ink` | Mantida estilização do Figma com preenchimento diferenciado de container (`surface-card`/`surface-dark`), disponibilização do token `color.border.accessible` (`#8a583e`, 3.4:1) e anel de foco de alto contraste (6.85:1) | Sinalização de não-conformidade com WCAG 1.4.11 (< 3:1) e mitigação via indicadores de foco e preenchimento |
+| Nomenclatura de Camadas no Figma | Layers com identificadores divergentes do texto visível (`Bio Field` exibindo `"E-mail"`) | Prevalência estrita do rótulo visível para o usuário sobre identificadores internos de camadas do Figma | Evitar ambiguidades conceituais e garantir correspondência exata com o que o usuário visualiza |
+| Seleção de Carteiras no Pagamento | Imagem única combinando 3 carteiras | 3 Radio cards independentes com ícones vetoriais individuais | Acessibilidade por teclado (teclas direcionais e barra de espaço), suporte a leitores de tela e usabilidade Web3 |
+

@@ -17,7 +17,8 @@
     "build:apps": "nx run-many -t build",
     "preview": "node scripts/preview.js",
     "e2e": "nx e2e web-e2e",
-    "lighthouse": "node scripts/lighthouse.js"
+    "lighthouse": "node scripts/lighthouse.js",
+    "design:check": "node scripts/design-check.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
