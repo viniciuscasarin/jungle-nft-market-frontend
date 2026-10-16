@@ -123,7 +123,7 @@ export default defineConfig(({ command, mode }) => {
       environment: 'jsdom',
       include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       alias: {
-        'storefront/HomePage': path.resolve(__dirname, '../storefront/src/App.tsx'),
+        'storefront/HomePage': path.resolve(__dirname, '../storefront/src/HomePage.tsx'),
         'storefront/PdpPage': path.resolve(__dirname, '../storefront/src/PdpPage.tsx'),
         'checkout/CartPage': path.resolve(__dirname, '../checkout/src/CartPage.tsx'),
         'checkout/PaymentPage': path.resolve(__dirname, '../checkout/src/PaymentPage.tsx'),
