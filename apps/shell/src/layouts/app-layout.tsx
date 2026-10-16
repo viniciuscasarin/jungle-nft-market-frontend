@@ -8,7 +8,6 @@ import {
 } from '@nft/shared-router';
 import {
   Header,
-  SearchBar,
   MobileTabBar,
   Breadcrumb,
   Footer,
@@ -32,11 +31,9 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
   const location = useLocation();
   const authContext = useOptionalAuth();
   const { notifyUnavailable } = useUnavailable();
-  const { breadcrumbLabel, filtersHandler } = usePageChrome();
+  const { breadcrumbLabel } = usePageChrome();
 
   const pathname = location.pathname;
-  const searchObj = location.search as Record<string, unknown> | undefined;
-  const qParam = typeof searchObj?.['q'] === 'string' ? searchObj['q'] : '';
 
   const isSessionResolving = authContext?.status === 'loading';
   const session = authContext?.session
@@ -130,29 +127,6 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
     void navigate({ to: ROUTES.WALLETS } as never);
   };
 
-  const handleMobileSearchSubmit = (query: string) => {
-    const trimmed = query.trim();
-    if (trimmed) {
-      void navigate({
-        to: ROUTES.HOME,
-        search: (prev: Record<string, unknown>) => ({
-          ...prev,
-          q: trimmed,
-          page: 1,
-        }),
-      } as never);
-    } else {
-      void navigate({
-        to: ROUTES.HOME,
-        search: (prev: Record<string, unknown>) => {
-          const next = { ...prev };
-          delete next['q'];
-          return next;
-        },
-      } as never);
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-background font-mono text-text-primary antialiased overflow-x-hidden w-full max-w-full">
       {/* 1. Skip Link acessível como primeiro elemento focável */}
@@ -163,7 +137,7 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
         Pular para o conteúdo
       </a>
 
-      {/* 2. Chrome Desktop (>= 1024px): Header */}
+      {/* 2. Chrome Desktop (>= 1024px): Header (oculto no mobile) */}
       <Header
         className="hidden lg:block w-full border-b border-border-default px-6 bg-surface-default"
         user={headerUser}
@@ -183,26 +157,6 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
         onWalletsClick={handleWalletsClick}
         onUnavailable={notifyUnavailable}
       />
-
-      {/* 3. Chrome Mobile (< 1024px): Top SearchBar */}
-      <header className="block lg:hidden w-full border-b border-border-default bg-surface-default p-4">
-        <SearchBar
-          defaultValue={qParam}
-          onSubmit={handleMobileSearchSubmit}
-          filterSlot={
-            filtersHandler ? (
-              <button
-                type="button"
-                onClick={filtersHandler}
-                aria-label="Abrir filtros"
-                className="flex items-center justify-center h-10 px-3 rounded-md bg-surface-raised border border-border-default text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer text-body-14"
-              >
-                Filtros
-              </button>
-            ) : undefined
-          }
-        />
-      </header>
 
       {/* 4. Breadcrumb container */}
       {breadcrumbItems.length > 0 && (

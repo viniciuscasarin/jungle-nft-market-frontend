@@ -50,23 +50,22 @@ test.describe('Shell Navigation, Layouts e Responsividade', () => {
       await expect(mainContent).toBeFocused();
     });
 
-    test('768px Tablet: exibe SearchBar no topo e MobileTabBar na base sem overflow horizontal', async ({
+    test('768px Tablet: oculta Header desktop e exibe MobileTabBar na base sem overflow horizontal', async ({
       page,
     }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto('/');
 
-      // SearchBar mobile visível
-      const mobileSearchBar = page.locator('header.lg\\:hidden');
-      await expect(mobileSearchBar).toBeVisible();
+      // Header desktop oculto
+      const desktopHeader = page.locator('header.hidden.lg\\:block');
+      await expect(desktopHeader).not.toBeVisible();
+
+      // Shell não inventa header mobile
+      await expect(page.locator('header.lg\\:hidden')).toHaveCount(0);
 
       // MobileTabBar visível
       const mobileTabBar = page.locator('nav[aria-label="Navegação móvel"]');
       await expect(mobileTabBar).toBeVisible();
-
-      // Header desktop oculto
-      const desktopHeader = page.locator('header.hidden.lg\\:block');
-      await expect(desktopHeader).not.toBeVisible();
 
       // Sem overflow horizontal
       const hasHorizontalScroll = await page.evaluate(() => {
@@ -75,13 +74,18 @@ test.describe('Shell Navigation, Layouts e Responsividade', () => {
       expect(hasHorizontalScroll).toBe(false);
     });
 
-    test('390px Mobile: exibe SearchBar e MobileTabBar sem overflow horizontal', async ({ page }) => {
+    test('390px Mobile: oculta Header desktop e exibe MobileTabBar sem overflow horizontal nem header mobile no shell', async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto('/');
 
-      const mobileSearchBar = page.locator('header.lg\\:hidden');
-      await expect(mobileSearchBar).toBeVisible();
+      // Header desktop oculto
+      const desktopHeader = page.locator('header.hidden.lg\\:block');
+      await expect(desktopHeader).not.toBeVisible();
 
+      // Shell não inventa header mobile
+      await expect(page.locator('header.lg\\:hidden')).toHaveCount(0);
+
+      // MobileTabBar visível
       const mobileTabBar = page.locator('nav[aria-label="Navegação móvel"]');
       await expect(mobileTabBar).toBeVisible();
 
@@ -89,6 +93,11 @@ test.describe('Shell Navigation, Layouts e Responsividade', () => {
         return document.documentElement.scrollWidth > document.documentElement.clientWidth;
       });
       expect(hasHorizontalScroll).toBe(false);
+
+      // Garante que em outras páginas (ex: carrinho) o header também permanece ausente no mobile
+      await page.goto('/carrinho');
+      await expect(page.locator('header.hidden.lg\\:block')).not.toBeVisible();
+      await expect(page.locator('header.lg\\:hidden')).toHaveCount(0);
     });
   });
 
@@ -195,17 +204,20 @@ test.describe('Shell Navigation, Layouts e Responsividade', () => {
       await expect(page.getByText(/indisponível nesta demonstração/i).first()).toBeVisible();
     });
 
-    test('Busca mobile na SearchBar navega para /?q=termo sem recarregar o shell', async ({ page }) => {
+    test('Botão de filtros mobile na Home abre o Drawer e o Shell não inventa header mobile', async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto('/');
 
-      const searchInput = page.getByRole('searchbox', { name: /Buscar NFTs/i });
-      await expect(searchInput).toBeVisible();
-      await searchInput.fill('cyberpunk');
-      await searchInput.press('Enter');
+      // Shell não deve renderizar header mobile
+      await expect(page.locator('header.lg\\:hidden')).toHaveCount(0);
 
-      // Deve navegar para a Home com query param q=cyberpunk
-      await expect(page).toHaveURL(/\/\?.*q=cyberpunk/);
+      // Botão de filtros exclusivo da Home mobile
+      const filterButton = page.getByTestId('mobile-filter-button');
+      await expect(filterButton).toBeVisible();
+      await filterButton.click();
+
+      // Drawer de filtros abre acessivelmente
+      await expect(page.getByRole('dialog')).toBeVisible();
     });
 
     test('Isolamento de remote offline: exibe ErrorState acessível no chrome com retry', async ({
@@ -236,7 +248,7 @@ test.describe('Shell Navigation, Layouts e Responsividade', () => {
       await retryBtn.click();
 
       // Remote recupera
-      await expect(page.getByRole('heading', { level: 1, name: 'Storefront Remote' })).toBeVisible({ timeout: 15000 });
+      await expect(page.getByTestId('home-page-content')).toBeVisible({ timeout: 15000 });
     });
   });
 });
