@@ -29,20 +29,22 @@ function getCacheControl(filePath) {
   const fileName = path.basename(filePath).toLowerCase();
 
   if (
+    fileName === 'mockserviceworker.js' ||
     fileName === 'remoteentry.js' ||
     fileName.startsWith('remoteentry') ||
     fileName === 'mf-manifest.json' ||
     fileName.startsWith('mf-manifest') ||
-    fileName === 'index.html'
+    fileName === 'index.html' ||
+    fileName.endsWith('.html')
   ) {
-    return 'public, max-age=0, must-revalidate';
+    return 'no-cache, no-store, must-revalidate';
   }
 
   if (filePath.includes(`${path.sep}assets${path.sep}`) || filePath.includes('/assets/')) {
     return 'public, max-age=31536000, immutable';
   }
 
-  return 'public, max-age=0, must-revalidate';
+  return 'no-cache, no-store, must-revalidate';
 }
 
 function serveFile(filePath, res) {

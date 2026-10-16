@@ -4,11 +4,20 @@
   "outputDirectory": "dist/integrated",
   "headers": [
     {
+      "source": "/mockServiceWorker.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/(.*)remoteEntry\\.js",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     },
@@ -35,7 +44,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     },
@@ -53,7 +62,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }
@@ -74,6 +83,10 @@
     {
       "source": "/assets/:path*",
       "destination": "/assets/:path*"
+    },
+    {
+      "source": "/mockServiceWorker.js",
+      "destination": "/mockServiceWorker.js"
     },
     {
       "source": "/(.*)",

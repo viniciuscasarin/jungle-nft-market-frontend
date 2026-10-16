@@ -127,12 +127,13 @@ export function generateThemeCss({ rootDir = DEFAULT_ROOT } = {}) {
     }
   }
 
-  // 6. Breakpoints
+  // 6. Breakpoints (390, 768, 1024, 1440)
   lines.push('');
-  lines.push('  /* --- Breakpoints (390, 768, 1440) --- */');
+  lines.push('  /* --- Breakpoints (390, 768, 1024, 1440) --- */');
   lines.push('  --breakpoint-sm: 390px;');
   lines.push('  --breakpoint-md: 768px;');
-  lines.push('  --breakpoint-lg: 1440px;');
+  lines.push('  --breakpoint-lg: 1024px;');
+  lines.push('  --breakpoint-xl: 1440px;');
   lines.push('  --breakpoint-mobile: 390px;');
   lines.push('  --breakpoint-tablet: 768px;');
   lines.push('  --breakpoint-desktop: 1440px;');
