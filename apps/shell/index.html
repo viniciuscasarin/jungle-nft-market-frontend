@@ -25,6 +25,26 @@
       type="font/woff2"
       crossorigin
     />
+    <script>
+      (function() {
+        var g = typeof globalThis !== 'undefined' ? globalThis : window;
+        g.__FEDERATION__ = g.__FEDERATION__ || {};
+        g.__FEDERATION__.__GLOBAL_PLUGIN__ = g.__FEDERATION__.__GLOBAL_PLUGIN__ || [];
+        g.__FEDERATION__.__GLOBAL_PLUGIN__.push({
+          name: 'mf-retry-plugin',
+          loadEntryError: async function(args) {
+            var remoteInfo = args.remoteInfo;
+            if (!remoteInfo || !remoteInfo.entry) return undefined;
+            var sep = remoteInfo.entry.indexOf('?') >= 0 ? '&' : '?';
+            var retryEntry = remoteInfo.entry + sep + 'mf_retry=' + Date.now();
+            return await args.getRemoteEntry({
+              origin: args.origin,
+              remoteInfo: Object.assign({}, remoteInfo, { entry: retryEntry })
+            });
+          }
+        });
+      })();
+    </script>
   </head>
   <body class="min-h-screen bg-ink text-text-primary font-mono antialiased">
     <div id="root"></div>

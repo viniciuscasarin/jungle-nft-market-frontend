@@ -9,4 +9,6 @@ export {
   useSearch,
   useParams,
   Outlet,
+  createMemoryHistory,
+  createBrowserHistory,
 } from '@tanstack/react-router';

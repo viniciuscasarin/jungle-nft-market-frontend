@@ -20,12 +20,14 @@ export default defineConfig(({ mode }) => {
         filename: 'remoteEntry.js',
         exposes: {
           './HomePage': path.resolve(__dirname, 'src/App.tsx'),
+          './PdpPage': path.resolve(__dirname, 'src/PdpPage.tsx'),
         },
         shared: {
           react: { singleton: true, requiredVersion: '^19.0.0' },
           'react-dom': { singleton: true, requiredVersion: '^19.0.0' },
           '@tanstack/react-router': { singleton: true },
           '@tanstack/react-query': { singleton: true },
+          'socket.io-client': { singleton: true },
           '@nft/shell-kit': { singleton: true },
         },
       }),

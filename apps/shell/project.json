@@ -25,7 +25,7 @@
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["storefront:build"],
+      "dependsOn": ["storefront:build", "checkout:build", "account:build"],
       "options": {
         "outputPath": "dist/apps/shell",
         "configFile": "apps/shell/vite.config.ts"

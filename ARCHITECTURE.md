@@ -110,21 +110,29 @@ Violações falham no lint (`no-restricted-imports`).
 
 ## 5. Module Federation
 
-A infraestrutura e viabilidade técnica foram comprovadas e validadas empiricamente no spike documentado em [`docs/spikes/module-federation.md`](docs/spikes/module-federation.md) com decisão formal de **GO**.
+A infraestrutura e viabilidade técnica foram comprovadas e validadas empiricamente no spike documentado em [`docs/spikes/module-federation.md`](docs/spikes/module-federation.md) com decisão formal de **GO**, e o contrato completo operacionalizado e documentado em [`docs/federation.md`](docs/federation.md).
 
 - **Biblioteca e Runtime:** `@module-federation/vite` (v1.23.5) integrado ao Vite 6.2, React 19.0, TanStack Router 1.114 e Tailwind CSS v4.
-- **Contrato de Exposição:** Remotes expõem apenas componentes de página: `HomePage`, `PdpPage`, `CartPage`, `PaymentPage`, `ConfirmationPage`, `ProfilePage`, `WalletsPage`.
-- **Roteamento e Governança:** O host shell (`apps/shell`) é proprietário único da tabela de rotas, dos guards `requireAuth` e dos schemas de validação de search params (em `shared/contracts`). Páginas remotas são consumidas de forma preguiçosa via `lazyRouteComponent(() => import('remote/Page'))`.
-- **Singletons Estritos:** `react`, `react-dom`, `@tanstack/react-router`, `@tanstack/react-query` e pacotes compartilhados do workspace (`@nft/shell-kit`) são configurados como singletons estritos (`singleton: true`, `requiredVersion` explícito e `eager: true` no host).
-- **Garantia de Instância Única (`singletonProbe`):** Implementada em `@nft/shell-kit/singleton-probe` com identificador global `Symbol.for('nft.singleton.probe')` e fallback em `globalThis`, garantindo que múltiplas cargas de chunks reutilizem a mesma instância em memória (comprovado com contagem sequencial Shell=1, Storefront=2).
-- **Injeção de Contexto (`ShellContext`):** O host injeta `QueryClient`, `HttpClient`, `RealtimeClient`, sessão e `navigate` por `ShellContext` (`shell-kit`). Remotes atuam puramente como consumidores e nunca criam clientes ou service workers duplicados.
-- **Resiliência a Falhas do Remote (`RemoteErrorComponent` / `RemoteBoundary`):** Rota encapsulada com captura de falha de dynamic import, exibindo estado de erro acessível (`role="alert"`, `aria-live="assertive"`, botão de retry e link para Home), mantendo cabeçalho, navegação e rodapé do shell operacionais mesmo se o remote estiver indisponível.
-- **Centralização de Estilos Tailwind v4:** O compilador do host escaneia os arquivos fonte do remote através da diretiva `@source "../../storefront/src"` em `apps/shell/src/styles.css`. O componente exposto pelo remote não injeta folhas de estilo duplicadas no `<head>`. Para desenvolvimento isolado (`pnpm dev:storefront`), o remote possui seu próprio `styles.css`.
-- **Resolução Dinâmica e Build Consolidado:**
-  - Desenvolvimento: `http://localhost:4201/remoteEntry.js` (com `server.origin` e `cors: true`).
-  - Produção / Preview: `/remotes/storefront/remoteEntry.js` com `base: '/remotes/storefront/'`.
-  - Servidor de preview com SPA fallback para `/index.html` e políticas de cache estritas: `Cache-Control: public, max-age=0, must-revalidate` para `remoteEntry.js` e `Cache-Control: public, max-age=31536000, immutable` para chunks com hash sob `/assets/`.
-- **Execução Standalone:** `bootstrapStandalone(page)` roda um remote isolado em dev, com MSW e providers, reutilizando o código do host.
+- **Topologia de Aplicações e Portas:**
+  - `apps/shell` (Host): porta fixa `4200`, dono do layout, rotas globais, orquestração e clientes únicos.
+  - `apps/storefront` (Remote): porta fixa `4201`, base `/remotes/storefront/`, expondo `./HomePage` e `./PdpPage`.
+  - `apps/checkout` (Remote): porta fixa `4202`, base `/remotes/checkout/`, expondo `./CartPage`, `./PaymentPage` e `./ConfirmationPage`.
+  - `apps/account` (Remote): porta fixa `4203`, base `/remotes/account/`, expondo `./ProfilePage` e `./WalletsPage`.
+- **Roteamento Centralizado no Host:** O host shell (`apps/shell`) é proprietário único da tabela de rotas (`routes.tsx`), dos guards `requireAuth` e dos schemas de validação de search params (`@nft/shared-contracts`). Páginas remotas são carregadas dinamicamente via `createRemoteRouteComponent` com `RemoteBoundary`.
+- **Preload Preditivo:** O layout do Shell configura `preload="intent"` nos links principais de navegação para pré-carregamento imediato no hover/foco.
+- **Singletons Estritos e Compartilhamento:**
+  - Configuração estrita de shared scope: `react`, `react-dom`, `react-dom/client`, `react/jsx-runtime`, `@tanstack/react-router`, `@tanstack/react-query`, `socket.io-client` e `@nft/shell-kit` configurados com `singleton: true`, `requiredVersion` explícito e `eager: true` no host.
+  - Verificação de instâncias em tempo de execução via `singletonRegistry` (`Symbol.for('nft.singleton.registry')`) e `singletonProbe` (`Symbol.for('nft.singleton.probe')`), assegurando que `QueryClient`, `HttpClient`, `RealtimeClient` e Service Worker MSW existam em instância estritamente única no browser.
+- **Injeção de Contexto (`ShellContext`):** Disponibilizado via `ShellProvider` em `@nft/shell-kit`. Remotes consomem `useShell()` e `useSession()` sem recriar clientes ou bibliotecas encapsuladas.
+- **Resiliência e Recuperação sem Recarregar a Janela (`RemoteBoundary`):**
+  - Integra `Suspense` com fallback visual `DefaultRemoteSkeleton` (shimmer com desativação automática sob `prefers-reduced-motion`).
+  - Timeout de carregamento configurável via `withRemoteTimeout` (padrão de 10s).
+  - ErrorBoundary com anúncio acessível (`role="alert"`, `aria-live="assertive"`) e botão de retry que reexecuta o carregamento dinâmico sem necessidade de recarregar a janela do Shell (`window.location.reload()`).
+- **Execução Standalone dos Remotes (`bootstrapStandalone`):** Cada remote possui ponto de entrada autônomo em `src/main.tsx` invocando `bootstrapStandalone(Page, options)` de `@nft/shell-kit`, provendo `ShellProvider` mockado, router mínimo em memória e suporte opcional a MSW para desenvolvimento isolado nas portas 4201, 4202 e 4203.
+- **Distribuição Consolidada de Produção:**
+  - Build consolidado via `scripts/build-integrated.js` (`pnpm build`) gerando `dist/integrated/` com Shell na raiz e remotes sob `/remotes/<app>/`.
+  - Servidor de preview (`pnpm preview`) escutando na porta 4200 com SPA fallback total para qualquer subrota e headers de cache apropriados (`no-cache` em `remoteEntry.js` e imutável para assets com hash).
+
 
 ## 6. Contratos REST e eventos
 
