@@ -18,6 +18,7 @@ Esta change resolve esses pontos, dividindo a entrega em **P0 (Deploy Único Zer
   - Permitir caminhos relativos e URLs absolutas nos endpoints de remotes (`VITE_REMOTE_STOREFRONT_URL`, `VITE_REMOTE_CHECKOUT_URL`, `VITE_REMOTE_ACCOUNT_URL`).
   - Fornecer fallbacks seguros de demonstração (`VITE_ENABLE_MOCKS=true`, `VITE_DEFAULT_SCENARIO='default'`, caminhos relativos `/remotes/<nome>/remoteEntry.js`, `VITE_API_BASE_URL='/api'`, `VITE_SOCKET_URL=''`), permitindo preview deployments dinâmicos da Vercel (`*.vercel.app`) sem CORS e sem setup prévio no painel.
 - **Configuração de Deploy Vercel (`vercel.json`)**:
+  - Desativar `cleanUrls` para preservar o destino `/index.html` do fallback SPA e evitar o 404 da hospedagem no acesso direto a `/perfil`.
   - Headers `Cache-Control: no-cache, no-store, must-revalidate` para `/mockServiceWorker.js` e `/remotes/:remote/remoteEntry.js`.
   - Headers `Cache-Control: public, max-age=31536000, immutable` para `/assets/*` e `/remotes/:remote/assets/*`.
   - Rewrite de SPA fallback para `/index.html` com bypasses estritos para `/storybook/*`, `/remotes/*`, `/assets/*` e `/mockServiceWorker.js`.

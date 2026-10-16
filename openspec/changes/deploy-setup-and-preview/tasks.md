@@ -28,3 +28,4 @@
 ## 6. Final Verification & Quality Gates
 
 - [ ] 6.1 Executar a validação completa de qualidade nos projetos afetados (`pnpm typecheck`, `pnpm lint`, `pnpm test` e `pnpm build`), confirmando saída com zero erros e build consolidado íntegro em `dist/integrated/`.
+- [x] 6.2 Corrigir o 404 de deep links na Vercel desativando `cleanUrls` e documentar a compatibilidade com destinos `.html`. JSON e OpenSpec strict validados; `nx affected -t typecheck,lint,test,build --files=...` não selecionou projetos para a alteração de configuração e documentação. E2E existente `module-federation.spec.ts` / `guard requireAuth` passou no preview integrado, cobrindo acesso direto a `/perfil` e redirecionamento para login (1 teste). A confirmação do roteamento na Vercel depende do próximo deploy.

@@ -41,6 +41,7 @@ Para garantir deploys automatizados e estáveis sob o prazo crítico, a arquitet
 - **Rationale**: Usar caminhos relativos do mesmo domínio elimina 100% dos problemas de CORS e permite que preview deployments da Vercel funcionem sem qualquer configuração externa.
 
 ### Decisão 2 (P0): Cabeçalhos rigorosos de Cache-Control em `vercel.json` e `preview.js`
+- **Compatibilidade de roteamento**: manter `cleanUrls: false` para que os rewrites destinados a `/index.html` e `/storybook/index.html` resolvam os arquivos HTML na Vercel. Com `cleanUrls: true`, os destinos precisam omitir a extensão; manter a extensão causou 404 da hospedagem antes de iniciar o Shell.
 - **Escolha**:
   - `/(.*)remoteEntry.js` e `/mockServiceWorker.js`: `Cache-Control: no-cache, no-store, must-revalidate`.
   - `/assets/(.*)` e `/remotes/(.*)/assets/(.*)`: `Cache-Control: public, max-age=31536000, immutable`.

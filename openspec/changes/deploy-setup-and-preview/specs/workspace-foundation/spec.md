@@ -30,6 +30,7 @@ The workspace build system SHALL consolidate application build artifacts into a 
 The consolidated build script SHALL compile remotes (`storefront`, `checkout`, `account`) before the host (`shell`), placing host artifacts and `mockServiceWorker.js` at the root `/` and remotes at `/remotes/<remoteName>/`.
 The hosting configuration (`vercel.json`) and preview server (`scripts/preview.js`) SHALL enforce strict cache policies (`no-cache, no-store, must-revalidate` for `mockServiceWorker.js` and `remoteEntry.js`; `public, max-age=31536000, immutable` for hashed assets).
 Routing rules SHALL deliver single-page application fallback to `/index.html` for deep routes while bypassing static files (`/mockServiceWorker.js`, `/storybook/*`, `/remotes/*`, `/assets/*`).
+The Vercel configuration SHALL disable `cleanUrls` while rewrite destinations use explicit `.html` extensions.
 The standard `pnpm build` SHALL not require Storybook compilation to succeed, while `pnpm build:deploy:full` SHALL compile and integrate the full suite including Storybook.
 
 #### Scenario: Integrated build artifact distribution
@@ -39,6 +40,10 @@ The standard `pnpm build` SHALL not require Storybook compilation to succeed, wh
 #### Scenario: Vercel routing and cache policies
 - **WHEN** deploying using `vercel.json`
 - **THEN** SPA rewrite fallback to `/index.html` SHALL be configured, and headers SHALL specify immutable long-term caching for hashed assets while prohibiting long-term caching for `remoteEntry.js`.
+
+#### Scenario: Direct profile navigation on Vercel
+- **WHEN** a visitor opens or refreshes `/perfil` on the deployed application
+- **THEN** hosting SHALL serve the Shell HTML through the SPA fallback, allowing the authentication guard to redirect to `/login` instead of returning a hosting 404.
 
 #### Scenario: Storybook static assets deployment
 - **WHEN** the command `pnpm build` is executed
