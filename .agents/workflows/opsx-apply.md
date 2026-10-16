@@ -103,13 +103,16 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Before editing, confirm the checkbox at the returned `sourcePath` and `line` still matches the task description; if it does not, rerun the apply instructions and use the refreshed location
    - Mark the task complete at its returned `sourcePath` and `line`: `- [ ]` → `- [x]`
    - Rerun the apply instructions and confirm that task is now done and progress changed
-   - **Immediately pause and call the `ask_question` tool**:
-     - Do NOT continue to the next task automatically in a single loop.
+   - **Immediately pause and call the `ask_question` tool** (unless the user already chose to run all remaining tasks):
+     - Do NOT continue to the next task automatically in a single loop unless "Sim, executar todas as próximas tasks nesta mesma sessão" was chosen.
      - Ask: "Deseja continuar com a próxima task nesta mesma sessão?"
      - Options:
        - `"(Recommended) Sim, continuar com a próxima task nesta mesma sessão"`
+       - `"Sim, executar todas as próximas tasks nesta mesma sessão"`
        - `"Não, prefiro abrir um novo chat para manter o contexto limpo"`
-     - If the user confirms ("Sim"), proceed to the next task. If "Não", stop and display current progress.
+     - If the user selects "Sim, continuar com a próxima task nesta mesma sessão", proceed to the next task and ask again after it completes.
+     - If the user selects "Sim, executar todas as próximas tasks nesta mesma sessão", proceed to execute all remaining tasks sequentially in this session without prompting again between tasks (unless an error or blocker occurs).
+     - If the user selects "Não", stop and display current progress.
 
    **Pause if:**
    - Task is unclear → ask for clarification
@@ -179,7 +182,7 @@ What would you like to do?
 ```
 
 **Guardrails**
-- Execute exactly one task at a time; after checking off a task, pause immediately and call `ask_question` with Yes/No options to confirm whether to proceed in the current session or start a new chat
+- Execute tasks incrementally; after checking off a task, pause immediately and call `ask_question` with options to continue one by one, execute all remaining tasks in the same session, or start a new chat (unless executing all remaining tasks was already chosen)
 - Always read context files before starting (from the apply instructions output)
 - If task is ambiguous, pause and ask before implementing
 - If implementation reveals issues, pause and suggest artifact updates

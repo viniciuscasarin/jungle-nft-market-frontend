@@ -131,15 +131,16 @@ Se o lint bloquear um import, corrija a arquitetura. Nunca desative a regra com 
 
 ### Orquestração de Execução (Apply)
 Quando estiver executando a skill `opsx-apply-change` (via `/opsx-apply`):
-- NÃO execute todas as tarefas em um loop contínuo único.
+- NÃO execute todas as tarefas em um loop contínuo único por padrão.
 - Execute exatamente UMA tarefa por vez.
-- Após implementar a tarefa e marcá-la como concluída (`[x]`), PAUSE a execução imediatamente.
-- Use obrigatoriamente a tool interativa `ask_question` para perguntar com opções de Sim / Não se o usuário deseja prosseguir:
+- Após implementar a tarefa e marcá-la como concluída (`[x]`), a menos que o usuário já tenha escolhido executar todas as tarefas restantes, PAUSE a execução imediatamente.
+- Use obrigatoriamente a tool interativa `ask_question` para perguntar se o usuário deseja prosseguir:
   - Pergunta: "Deseja continuar com a próxima task nesta mesma sessão?"
   - Opções:
     - "(Recommended) Sim, continuar com a próxima task nesta mesma sessão"
+    - "Sim, executar todas as próximas tasks nesta mesma sessão"
     - "Não, prefiro abrir um novo chat para manter o contexto limpo"
-- Aguarde a resposta do usuário antes de prosseguir para a próxima tarefa.
+- Aguarde a resposta do usuário antes de prosseguir para a próxima tarefa. Se o usuário escolher "Sim, executar todas as próximas tasks nesta mesma sessão", continue executando as tasks subsequentes nesta mesma sessão sem perguntar novamente entre as tarefas (a menos que ocorra um erro ou bloqueador).
 
 ### Finalização de Arquivamento (Archive)
 Quando estiver executando a skill `openspec-archive-change` (via `/opsx-archive`):
