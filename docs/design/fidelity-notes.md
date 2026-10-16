@@ -64,7 +64,7 @@ Este documento cataloga a comparação visual, tolerâncias de subpixel/1px e de
     - **Coluna 1 (Título)**: Largura fixa de 100px (`w-[100px]`), com texto `KURIO` em fonte tamanho 14px (`text-[14px]`) e altura de 34px (`h-[34px]`), alinhado ao topo da div pai.
     - **Coluna 2 (Navegação)**: Ocupa toda a largura restante (`flex-1`) com altura de 45px, links centralizados horizontalmente (`justify-center`) e colados verticalmente no topo (`items-start`), com gap de 40px entre links. O link ativo recebe a cor `Text Accent` (`text-text-accent`) e borda sólida inferior de 3px em `Color Primary` (`border-b-[3px] border-primary`) perfeitamente alinhada com a borda inferior do header. Links inativos renderizam na cor `Color Foreground` (`text-text-primary`).
     - **Coluna 3 (Ações)**: Ícones e controles compactos com gap de 28px (`gap-[28px]`): lupa 20x20 (`IconSearch`), carrinho 24x24 (`IconCart` com badge de contagem) e botão `Entrar` com fundo em `Color Primary` (`bg-primary`), texto em `Color Ink` (`text-ink`), tamanho de fonte 16px (`text-[16px]`), `border-radius` de 6px (`rounded-[6px]`) e ícone de logout 20x20.
-  - No mobile (< 768px), o header desktop é ocultado (`hidden md:block`), sendo a navegação móvel provida pela `MobileTabBar`.
+  - Abaixo de 1024px (`hidden lg:block`), o header desktop é ocultado, sendo a navegação móvel provida pela `SearchBar` no topo e `MobileTabBar` fixa na base.
 - **Tolerância**: 0px de desvio em altura de cabeçalho (45px) e alinhamento de bordas.
 
 ### 4.2 Footer (`libs/shared/ui/src/components/layout/footer.tsx`)

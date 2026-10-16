@@ -1,8 +1,44 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import { ESLint } from 'eslint';
 
 describe('Architectural Boundaries & Encapsulation Enforcement', () => {
   const eslint = new ESLint();
+
+  // Load ESLint and the Nx project graph once, outside behavioral test timing.
+  beforeAll(async () => {
+    await eslint.lintText("import { useShell } from '@nft/shell-kit';\nexport { useShell };\n", {
+      filePath: 'libs/catalog/feature/src/boundary-setup.ts',
+    });
+  }, 30000);
+
+  it.each([
+    'libs/catalog/feature/src/standalone-boundary.ts',
+    'libs/profile/feature/src/standalone-boundary.ts',
+    'libs/wallets/feature/src/standalone-boundary.ts',
+    'apps/storefront/src/standalone-boundary.ts',
+    'apps/account/src/standalone-boundary.ts',
+    'apps/checkout/src/standalone-boundary.ts',
+  ])('permite contextos do shell-kit e proíbe imports diretos de mocks em %s', async (filePath) => {
+    const allowed = await eslint.lintText(
+      "import { useShell } from '@nft/shell-kit';\nexport { useShell };\n", { filePath },
+    );
+    expect(allowed[0]?.messages).toEqual([]);
+
+    for (const scope of ['core', 'handlers', 'fixtures', 'socket']) {
+      const blocked = await eslint.lintText(
+        `import * as mocks from '@nft/mocks-${scope}';\nexport { mocks };\n`, { filePath },
+      );
+      expect(blocked[0]?.messages.map((message) => message.ruleId)).toContain('@nx/enforce-module-boundaries');
+    }
+  });
+
+  it('permite ao shell-kit inicializar mocks pela API pública', async () => {
+    const results = await eslint.lintText(
+      "import { getMockDatabase } from '@nft/mocks-core';\nexport { getMockDatabase };\n",
+      { filePath: 'libs/shell-kit/src/standalone-boundary.ts' },
+    );
+    expect(results[0]?.messages).toEqual([]);
+  });
 
   it('deve proibir importações relativas cross-app (apps/storefront -> apps/checkout)', async () => {
     const results = await eslint.lintText("import '../../checkout/src/index';\n", {

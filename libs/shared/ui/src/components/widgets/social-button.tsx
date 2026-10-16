@@ -11,6 +11,7 @@ export interface SocialButtonProps extends React.ButtonHTMLAttributes<HTMLButton
   label?: string;
   noticeText?: string;
   onNotice?: (message: string) => void;
+  onUnavailable?: (feature?: string) => void;
 }
 
 export const SocialButton: React.FC<SocialButtonProps> = ({
@@ -18,11 +19,10 @@ export const SocialButton: React.FC<SocialButtonProps> = ({
   label,
   noticeText = 'Autenticação social indisponível nesta demonstração.',
   onNotice,
+  onUnavailable,
   className,
   ...props
 }) => {
-  const [showNotice, setShowNotice] = React.useState(false);
-
   const providerNames: Record<SocialProvider, string> = {
     google: 'Google',
     facebook: 'Facebook',
@@ -52,8 +52,9 @@ export const SocialButton: React.FC<SocialButtonProps> = ({
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setShowNotice(true);
+    onUnavailable?.(displayLabel);
     onNotice?.(noticeText);
+    props.onClick?.(e);
   };
 
   return (
@@ -73,16 +74,6 @@ export const SocialButton: React.FC<SocialButtonProps> = ({
         <span className="shrink-0 text-text-primary">{providerIcons[provider]}</span>
         <span>{displayLabel}</span>
       </button>
-
-      {showNotice && (
-        <p
-          role="status"
-          aria-live="polite"
-          className="text-tiny-10 text-accent bg-surface-card p-2 rounded-xs border border-accent/30 text-center"
-        >
-          {noticeText}
-        </p>
-      )}
     </div>
   );
 };

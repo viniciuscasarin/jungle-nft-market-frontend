@@ -10,74 +10,101 @@ export interface TabBarItem {
   label: string;
   icon: React.ReactNode;
   href?: string;
-  badge?: number;
+  badge?: number | undefined;
   onClick?: () => void;
 }
 
 export interface MobileTabBarProps {
   activeId?: string;
-  cartCount?: number;
+  activePath?: string;
+  cartCount?: number | undefined;
   items?: TabBarItem[];
   onTabSelect?: (id: string) => void;
   className?: string;
 }
 
+export const DEFAULT_MOBILE_TAB_BAR_ITEMS: TabBarItem[] = [
+  {
+    id: 'catalog',
+    label: 'Catálogo',
+    icon: <IconGrid className="h-5 w-5" aria-hidden="true" />,
+    href: '/',
+  },
+  {
+    id: 'search',
+    label: 'Buscar',
+    icon: <IconSearch className="h-5 w-5" aria-hidden="true" />,
+    href: '/#busca',
+  },
+  {
+    id: 'cart',
+    label: 'Carrinho',
+    icon: <IconCart className="h-5 w-5" aria-hidden="true" />,
+    href: '/carrinho',
+  },
+  {
+    id: 'account',
+    label: 'Conta',
+    icon: <IconUser className="h-5 w-5" aria-hidden="true" />,
+    href: '/perfil',
+  },
+];
+
 export const MobileTabBar: React.FC<MobileTabBarProps> = ({
-  activeId = 'catalog',
-  cartCount = 0,
+  activeId,
+  activePath,
+  cartCount,
   items,
   onTabSelect,
   className,
 }) => {
-  const defaultItems: TabBarItem[] = [
-    {
-      id: 'catalog',
-      label: 'Catálogo',
-      icon: <IconGrid className="h-5 w-5" aria-hidden="true" />,
-      href: '/',
-    },
-    {
-      id: 'search',
-      label: 'Buscar',
-      icon: <IconSearch className="h-5 w-5" aria-hidden="true" />,
-      href: '/busca',
-    },
-    {
-      id: 'cart',
-      label: 'Carrinho',
-      icon: <IconCart className="h-5 w-5" aria-hidden="true" />,
-      href: '/carrinho',
-      badge: cartCount,
-    },
-    {
-      id: 'account',
-      label: 'Conta',
-      icon: <IconUser className="h-5 w-5" aria-hidden="true" />,
-      href: '/perfil',
-    },
-  ];
+  const baseItems = items ?? DEFAULT_MOBILE_TAB_BAR_ITEMS;
 
-  const navItems = items ?? defaultItems;
+  // Resolve activeId from activePath if activeId not explicitly provided
+  const resolvedActiveId = React.useMemo(() => {
+    if (activeId) return activeId;
+    if (!activePath) return 'catalog';
+
+    if (activePath === '/') return 'catalog';
+    if (activePath === '/#busca') return 'search';
+    if (activePath === '/carrinho') return 'cart';
+    if (activePath.startsWith('/perfil') || activePath.startsWith('/carteiras')) return 'account';
+
+    const match = baseItems.find((item) => item.href === activePath);
+    return match ? match.id : 'catalog';
+  }, [activeId, activePath, baseItems]);
+
+  const navItems = React.useMemo(() => {
+    return baseItems.map((item) => {
+      if (item.id === 'cart' && cartCount !== undefined) {
+        return {
+          ...item,
+          badge: typeof cartCount === 'number' && cartCount > 0 ? cartCount : undefined,
+        };
+      }
+      return item;
+    });
+  }, [baseItems, cartCount]);
 
   return (
     <nav
       aria-label="Navegação móvel"
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-border-default bg-surface-card/95 backdrop-blur-md px-2 md:hidden font-mono',
+        'fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-border-default bg-surface-card/95 backdrop-blur-md px-2 lg:hidden font-mono',
         className
       )}
     >
       {navItems.map((item) => {
-        const isActive = activeId === item.id;
+        const isActive = resolvedActiveId === item.id;
 
         const content = (
           <div className="relative flex flex-col items-center justify-center gap-1 w-full py-1">
             <div className="relative">
               {item.icon}
-              {item.badge !== undefined && item.badge > 0 && (
+              {typeof item.badge === 'number' && item.badge > 0 && (
                 <span
                   aria-label={`${item.badge} itens`}
-                  className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-tiny-9 font-bold text-text-primary"
+                  className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-tiny-9 font-bold text-ink"
                 >
                   {item.badge > 99 ? '99+' : item.badge}
                 </span>
@@ -105,7 +132,10 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
                   e.preventDefault();
                   item.onClick();
                 }
-                onTabSelect?.(item.id);
+                if (onTabSelect) {
+                  e.preventDefault();
+                  onTabSelect(item.id);
+                }
               }}
               aria-current={isActive ? 'page' : undefined}
               className={commonClasses}

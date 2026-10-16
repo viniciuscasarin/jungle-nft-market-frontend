@@ -23,6 +23,14 @@ import { Tooltip } from './tooltip';
 import { Pagination } from './pagination';
 import { Avatar } from './avatar';
 import { Skeleton } from './skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from './dropdown-menu';
 
 describe('Layout & Overlays Primitives', () => {
   describe('Card', () => {
@@ -232,6 +240,35 @@ describe('Layout & Overlays Primitives', () => {
       expect(skeleton.style.height).toBe('280px');
       expect(skeleton.className).toContain('motion-reduce:animate-none');
       expect(screen.getByText('Carregando NFT...')).toBeInTheDocument();
+    });
+  });
+
+  describe('DropdownMenu', () => {
+    it('opens dropdown menu on trigger click and allows keyboard navigation and item selection', () => {
+      const handleSelect = vi.fn();
+      render(
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button">Abrir Menu</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleSelect}>Perfil</DropdownMenuItem>
+            <DropdownMenuItem>Sair</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Abrir Menu' });
+      fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+
+      expect(screen.getByText('Ações')).toBeInTheDocument();
+      const perfilItem = screen.getByRole('menuitem', { name: 'Perfil' });
+      expect(perfilItem).toBeInTheDocument();
+
+      fireEvent.click(perfilItem);
+      expect(handleSelect).toHaveBeenCalledTimes(1);
     });
   });
 });

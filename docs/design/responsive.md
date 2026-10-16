@@ -43,9 +43,10 @@ Não existe frame desenhado para tablet no Figma. O comportamento responsivo par
 2. **Carrinho e Checkout:**
    - Transição do layout horizontal para layout empilhado (`flex-col`).
    - A tabela do carrinho mantém a visualização em tabela ou cartões compactos; o card de resumo de pedido é renderizado imediatamente abaixo com largura total.
-3. **Navegação (Header):**
-   - Os links de navegação principais (Início, Mercado, Criadores, Aprenda) colapsam em menu gaveta (Sheet).
-   - O cabeçalho exibe: Wordmark KURIO, botão de busca, ícone do carrinho com badge e botão de acesso rápido à conta.
+3. **Navegação e Chrome Responsivo (Breakpoint 1024 px):**
+   - O chrome do host utiliza o breakpoint estrito de **1024 px (`lg:`)**:
+     - **>= 1024 px (Desktop)**: Renderiza o `Header` desktop completo (Wordmark KURIO, links Início, Mercado, Criadores e Aprenda, âncora da lupa, link do carrinho e área do usuário). `SearchBar` e `MobileTabBar` não são renderizados.
+     - **< 1024 px (Tablet 768 px e Mobile 390 px)**: Renderiza o chrome mobile composto por `SearchBar` no topo (com suporte a busca e botão dinâmico de filtros) e `MobileTabBar` fixa na base (Início, Buscar, Carrinho e Conta). O `Header` desktop é ocultado (`hidden lg:block`), eliminando overflow e garantindo ergonomia de toque.
 4. **Perfil e Carteiras:**
    - A barra lateral de conta é convertida em um componente de **Abas horizontais com rolagem suave** (`Tabs` com overflow horizontal sem barra de rolagem visível), permitindo alternar entre "Perfil", "Carteiras" e opções adicionais.
    - Os formulários e cards de carteira conectada ocupam a largura total de 720px centralizada.

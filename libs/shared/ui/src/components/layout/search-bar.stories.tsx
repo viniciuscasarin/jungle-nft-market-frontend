@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, within, fn } from '@storybook/test';
-import { SearchBar } from './search-bar';
+import { SearchBar, MobileSearchBar } from './search-bar';
 
 const meta: Meta<typeof SearchBar> = {
   title: 'Layout/SearchBar',
@@ -14,6 +14,7 @@ const meta: Meta<typeof SearchBar> = {
   },
   args: {
     onSubmit: fn(),
+    onClear: fn(),
   },
 };
 
@@ -27,5 +28,27 @@ export const Default: Story = {
     await expect(input).toBeInTheDocument();
     await userEvent.type(input, 'Cyber Ape{enter}');
     await expect(args.onSubmit).toHaveBeenCalledWith('Cyber Ape');
+  },
+};
+
+export const WithClearAction: Story = {
+  args: {
+    defaultValue: 'Monkey',
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const clearBtn = canvas.getByRole('button', { name: 'Limpar busca' });
+    await expect(clearBtn).toBeInTheDocument();
+    await userEvent.click(clearBtn);
+    await expect(args.onClear).toHaveBeenCalled();
+  },
+};
+
+export const MobileVariant: Story = {
+  render: (args) => <MobileSearchBar {...args} />,
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile',
+    },
   },
 };

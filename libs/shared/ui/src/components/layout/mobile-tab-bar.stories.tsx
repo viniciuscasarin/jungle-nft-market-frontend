@@ -28,9 +28,23 @@ type Story = StoryObj<typeof MobileTabBar>;
 export const Default: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const cartTab = canvas.getByRole('button', { name: /Carrinho/i });
+    const cartTab = canvas.getByRole('link', { name: /Carrinho/i });
     await expect(cartTab).toBeInTheDocument();
     await userEvent.click(cartTab);
     await expect(args.onTabSelect).toHaveBeenCalledWith('cart');
+  },
+};
+
+export const WithoutBadge: Story = {
+  args: {
+    cartCount: 0,
+    activeId: 'account',
+  },
+};
+
+export const ActiveByPath: Story = {
+  args: {
+    activePath: '/perfil',
+    cartCount: 5,
   },
 };

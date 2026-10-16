@@ -7,7 +7,7 @@ export interface ErrorStateProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   message?: React.ReactNode;
   description?: React.ReactNode;
-  onRetry?: () => void;
+  onRetry?: (() => void) | undefined;
   retryLabel?: string;
   isRetrying?: boolean;
   icon?: React.ReactNode;

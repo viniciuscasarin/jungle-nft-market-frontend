@@ -14,7 +14,7 @@ describe('Global Layout Components', () => {
       const handleCart = vi.fn();
       const handleSearch = vi.fn();
 
-      render(
+      const { container } = render(
         <Header
           cartCount={3}
           activePath="/"
@@ -23,6 +23,9 @@ describe('Global Layout Components', () => {
           onSearchClick={handleSearch}
         />
       );
+
+      const headerEl = container.querySelector('header');
+      expect(headerEl?.className).toContain('hidden lg:block');
 
       expect(screen.getByRole('link', { name: /kurio nft marketplace - início/i })).toBeInTheDocument();
       expect(screen.getByText('KURIO')).toBeInTheDocument();
@@ -35,16 +38,18 @@ describe('Global Layout Components', () => {
       expect(screen.getByRole('link', { name: 'Criadores' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Aprenda' })).toBeInTheDocument();
 
-      const searchBtn = screen.getByRole('button', { name: 'Buscar NFTs' });
-      expect(searchBtn).toBeInTheDocument();
-      fireEvent.click(searchBtn);
+      const searchLink = screen.getByRole('link', { name: 'Ir para busca de NFTs' });
+      expect(searchLink).toBeInTheDocument();
+      expect(searchLink).toHaveAttribute('href', '/#busca');
+      fireEvent.click(searchLink);
       expect(handleSearch).toHaveBeenCalledTimes(1);
 
-      const cartBtn = screen.getByRole('button', { name: 'Carrinho com 3 itens' });
-      expect(cartBtn).toBeInTheDocument();
+      const cartLink = screen.getByRole('link', { name: 'Carrinho com 3 itens' });
+      expect(cartLink).toBeInTheDocument();
+      expect(cartLink).toHaveAttribute('href', '/carrinho');
       expect(screen.getByText('3')).toBeInTheDocument();
 
-      fireEvent.click(cartBtn);
+      fireEvent.click(cartLink);
       expect(handleCart).toHaveBeenCalledTimes(1);
 
       const loginBtn = screen.getByRole('button', { name: 'Entrar' });
@@ -52,7 +57,8 @@ describe('Global Layout Components', () => {
       expect(handleLogin).toHaveBeenCalledTimes(1);
     });
 
-    it('renders user session with name and avatar when user is provided', () => {
+    it('renders user session with DropdownMenu containing profile, wallets and logout', () => {
+      const handleLogout = vi.fn();
       render(
         <Header
           user={{
@@ -60,13 +66,25 @@ describe('Global Layout Components', () => {
             avatarUrl: 'https://example.com/avatar.png',
             walletAddress: '0x1234...5678',
           }}
-          onLogoutClick={vi.fn()}
+          onLogoutClick={handleLogout}
         />
       );
 
       expect(screen.getByText('Alice Cooper')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument();
+
+      const userMenuTrigger = screen.getByRole('button', { name: 'Menu de Alice Cooper' });
+      expect(userMenuTrigger).toBeInTheDocument();
+
+      fireEvent.keyDown(userMenuTrigger, { key: 'ArrowDown' });
+
+      expect(screen.getByRole('menuitem', { name: 'Perfil' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Carteiras' })).toBeInTheDocument();
+
+      const logoutItem = screen.getByRole('menuitem', { name: 'Sair' });
+      expect(logoutItem).toBeInTheDocument();
+      fireEvent.click(logoutItem);
+      expect(handleLogout).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -100,16 +118,15 @@ describe('Global Layout Components', () => {
       expect(screen.getByText('© 2026 Kurio. Propriedade digital para todos.')).toBeInTheDocument();
     });
 
-    it('displays friendly out-of-scope notice on social button click and newsletter submit', () => {
-      render(<Footer />);
+    it('triggers onUnavailable callback on social button click and newsletter submit without local live region', () => {
+      const handleUnavailable = vi.fn();
+      render(<Footer onUnavailable={handleUnavailable} />);
 
       // Social button click
       const fbBtn = screen.getByRole('button', { name: 'Seguir no Facebook' });
       fireEvent.click(fbBtn);
 
-      expect(
-        screen.getByText('Acesso ao Facebook indisponível nesta demonstração.')
-      ).toBeInTheDocument();
+      expect(handleUnavailable).toHaveBeenCalledWith('Rede social (Facebook)');
 
       // Newsletter form submit
       const emailInput = screen.getByLabelText('E-mail para newsletter');
@@ -118,9 +135,10 @@ describe('Global Layout Components', () => {
       const submitBtn = screen.getByRole('button', { name: 'Enviar' });
       fireEvent.click(submitBtn);
 
-      expect(
-        screen.getByText('Funcionalidade indisponível nesta demonstração.')
-      ).toBeInTheDocument();
+      expect(handleUnavailable).toHaveBeenCalledWith('Newsletter');
+
+      // Verify no local status live region is rendered in the footer
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
     it('triggers onNewsletterSubmit callback when provided', () => {
@@ -159,12 +177,23 @@ describe('Global Layout Components', () => {
   describe('MobileTabBar', () => {
     it('renders navigation items and cart count badge', () => {
       const handleSelect = vi.fn();
-      render(<MobileTabBar activeId="cart" cartCount={2} onTabSelect={handleSelect} />);
+      const { container } = render(<MobileTabBar activeId="cart" cartCount={2} onTabSelect={handleSelect} />);
+
+      const navEl = container.querySelector('nav');
+      expect(navEl?.className).toContain('lg:hidden');
 
       expect(screen.getByRole('navigation', { name: 'Navegação móvel' })).toBeInTheDocument();
       const cartLink = screen.getByRole('link', { name: /carrinho/i });
       expect(cartLink).toHaveAttribute('aria-current', 'page');
       expect(screen.getByText('2')).toBeInTheDocument();
+    });
+
+    it('resolves active tab from activePath and hides badge when cartCount is zero', () => {
+      render(<MobileTabBar activePath="/perfil" cartCount={0} />);
+
+      const accountLink = screen.getByRole('link', { name: /conta/i });
+      expect(accountLink).toHaveAttribute('aria-current', 'page');
+      expect(screen.queryByLabelText(/0 itens/i)).not.toBeInTheDocument();
     });
   });
 

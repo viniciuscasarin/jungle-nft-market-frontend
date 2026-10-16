@@ -36,3 +36,4 @@ export { IconUser } from './IconUser';
 export { IconGrid } from './IconGrid';
 export { IconExternalLink } from './IconExternalLink';
 export { IconYoutube } from './IconYoutube';
+export { IconThankYou } from './IconThankYou';

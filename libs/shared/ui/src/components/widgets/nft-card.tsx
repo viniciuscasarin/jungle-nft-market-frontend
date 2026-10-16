@@ -22,6 +22,7 @@ export interface NftCardProps {
   onAddToCart?: (id: string) => void;
   href?: string;
   className?: string;
+  priority?: boolean;
 }
 
 export const NftCard: React.FC<NftCardProps> = ({
@@ -38,6 +39,7 @@ export const NftCard: React.FC<NftCardProps> = ({
   onAddToCart,
   href,
   className,
+  priority = false,
 }) => {
   const hasDiscount = Boolean(previousPriceEth && previousPriceEth !== priceEth);
 
@@ -66,7 +68,8 @@ export const NftCard: React.FC<NftCardProps> = ({
         <img
           src={imageUrl}
           alt={title}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          {...(priority ? { fetchPriority: 'high' as const } : {})}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none"
         />
 

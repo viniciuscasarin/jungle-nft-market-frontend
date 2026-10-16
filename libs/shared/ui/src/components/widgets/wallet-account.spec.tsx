@@ -87,12 +87,14 @@ describe('Wallet, Account & Modal Widgets', () => {
   });
 
   describe('SocialButton', () => {
-    it('renders provider button and reveals out-of-scope notice on click', () => {
+    it('renders provider button and triggers onUnavailable on click without local live region', () => {
+      const handleUnavailable = vi.fn();
       const handleNotice = vi.fn();
       render(
         <SocialButton
           provider="google"
           noticeText="Login com Google indisponível nesta demonstração."
+          onUnavailable={handleUnavailable}
           onNotice={handleNotice}
         />
       );
@@ -101,10 +103,9 @@ describe('Wallet, Account & Modal Widgets', () => {
       expect(btn).toBeInTheDocument();
 
       fireEvent.click(btn);
+      expect(handleUnavailable).toHaveBeenCalledWith('Continuar com Google');
       expect(handleNotice).toHaveBeenCalledWith('Login com Google indisponível nesta demonstração.');
-      expect(
-        screen.getByText('Login com Google indisponível nesta demonstração.')
-      ).toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
   });
 

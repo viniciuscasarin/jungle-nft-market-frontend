@@ -17,6 +17,7 @@ const meta: Meta<typeof Header> = {
     cartCount: 2,
     activePath: '/',
     onLoginClick: fn(),
+    onLogoutClick: fn(),
     onCartClick: fn(),
     onSearchClick: fn(),
   },
@@ -28,14 +29,14 @@ type Story = StoryObj<typeof Header>;
 export const Guest: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const cartButton = canvas.getByRole('button', { name: /carrinho/i });
-    await expect(cartButton).toBeInTheDocument();
-    await userEvent.click(cartButton);
+    const cartLink = canvas.getByRole('link', { name: /carrinho/i });
+    await expect(cartLink).toBeInTheDocument();
+    await userEvent.click(cartLink);
     await expect(args.onCartClick).toHaveBeenCalled();
   },
 };
 
-export const AuthenticatedUser: Story = {
+export const AuthenticatedWithDropdown: Story = {
   args: {
     user: {
       name: 'Vinicius Casarin',
@@ -43,6 +44,16 @@ export const AuthenticatedUser: Story = {
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80',
     },
     cartCount: 4,
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const userMenuButton = canvas.getByRole('button', { name: /menu de vinicius/i });
+    await expect(userMenuButton).toBeInTheDocument();
+    await userEvent.click(userMenuButton);
+    const logoutItem = await within(document.body).findByRole('menuitem', { name: /sair/i });
+    await expect(logoutItem).toBeInTheDocument();
+    await userEvent.click(logoutItem);
+    await expect(args.onLogoutClick).toHaveBeenCalled();
   },
 };
 
@@ -55,6 +66,12 @@ export const MarketRouteActive: Story = {
 
 export const WithManyCartItems: Story = {
   args: {
-    cartCount: 12,
+    cartCount: 120,
+  },
+};
+
+export const WithoutCartBadge: Story = {
+  args: {
+    cartCount: 0,
   },
 };

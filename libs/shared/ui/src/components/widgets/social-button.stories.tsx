@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, within } from '@storybook/test';
+import { expect, userEvent, within, fn } from '@storybook/test';
 import { SocialButton } from './social-button';
 
 const meta: Meta<typeof SocialButton> = {
@@ -12,6 +12,9 @@ const meta: Meta<typeof SocialButton> = {
       url: 'https://www.figma.com/design/dKMJKBVdX6q0Ym4OX5vd3V?node-id=3:127',
     },
   },
+  args: {
+    onUnavailable: fn(),
+  },
 };
 
 export default meta;
@@ -21,13 +24,12 @@ export const Google: Story = {
   args: {
     provider: 'google',
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: /Continuar com Google/i });
     await expect(button).toBeInTheDocument();
     await userEvent.click(button);
-    const notice = await canvas.findByRole('status');
-    await expect(notice).toHaveTextContent(/indisponível nesta demonstração/i);
+    await expect(args.onUnavailable).toHaveBeenCalledWith('Continuar com Google');
   },
 };
 

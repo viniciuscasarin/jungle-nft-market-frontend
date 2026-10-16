@@ -9,41 +9,49 @@ import { Button } from '../primitives/button';
 
 export interface FooterProps {
   onNewsletterSubmit?: (email: string) => void;
+  onUnavailable?: (feature?: string) => void;
   className?: string;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   onNewsletterSubmit,
+  onUnavailable,
   className,
 }) => {
   const [email, setEmail] = React.useState('');
-  const [notice, setNotice] = React.useState<string | null>(null);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onNewsletterSubmit) {
       onNewsletterSubmit(email);
     } else {
-      setNotice('Funcionalidade indisponível nesta demonstração.');
+      onUnavailable?.('Newsletter');
     }
   };
 
   const handleSocialClick = (network: string) => {
-    setNotice(`Acesso ao ${network} indisponível nesta demonstração.`);
+    onUnavailable?.(`Rede social (${network})`);
+  };
+
+  const handleUnavailableLink = (label: string) => (e: React.MouseEvent) => {
+    if (onUnavailable) {
+      e.preventDefault();
+      onUnavailable(label);
+    }
   };
 
   return (
     <footer
       className={cn(
-        'w-full bg-surface-card font-mono text-text-secondary select-none',
+        'w-full bg-surface-card font-mono text-text-secondary select-none overflow-x-hidden',
         className
       )}
     >
-      <div className="mx-auto max-w-7xl px-[32px]">
-        {/* Seção 1: Benefícios e Newsletter (4 Colunas com spacers de 1px) */}
-        <div className="flex flex-col md:flex-row items-stretch pt-[32px] pb-[16px] border-b border-border-default">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-[32px]">
+        {/* Seção 1: Benefícios e Newsletter (grid no tablet/mobile, flex-row no desktop) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row items-stretch pt-[32px] pb-[16px] border-b border-border-default gap-6 lg:gap-0">
           {/* Card 1: Segurança da carteira */}
-          <div className="flex-1 flex flex-col px-[16px] gap-[12px]">
+          <div className="flex-1 flex flex-col px-0 lg:px-[16px] gap-[12px]">
             <span
               className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-full bg-primary text-ink text-[24px] font-bold"
               aria-hidden="true"
@@ -58,11 +66,10 @@ export const Footer: React.FC<FooterProps> = ({
             </p>
           </div>
 
-          <div className="hidden md:block w-[1px] bg-border-default shrink-0 self-stretch" aria-hidden="true" />
-          <div className="md:hidden h-[1px] bg-border-default w-full my-6" aria-hidden="true" />
+          <div className="hidden lg:block w-[1px] bg-border-default shrink-0 self-stretch" aria-hidden="true" />
 
           {/* Card 2: Criadores em destaque */}
-          <div className="flex-1 flex flex-col px-[16px] gap-[12px]">
+          <div className="flex-1 flex flex-col px-0 lg:px-[16px] gap-[12px]">
             <span
               className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-full bg-primary text-ink text-[24px] font-bold"
               aria-hidden="true"
@@ -77,11 +84,10 @@ export const Footer: React.FC<FooterProps> = ({
             </p>
           </div>
 
-          <div className="hidden md:block w-[1px] bg-border-default shrink-0 self-stretch" aria-hidden="true" />
-          <div className="md:hidden h-[1px] bg-border-default w-full my-6" aria-hidden="true" />
+          <div className="hidden lg:block w-[1px] bg-border-default shrink-0 self-stretch" aria-hidden="true" />
 
           {/* Card 3: Alertas de lançamentos */}
-          <div className="flex-1 flex flex-col px-[16px] gap-[12px]">
+          <div className="flex-1 flex flex-col px-0 lg:px-[16px] gap-[12px]">
             <span
               className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-full bg-primary text-ink text-[24px] font-bold"
               aria-hidden="true"
@@ -96,11 +102,10 @@ export const Footer: React.FC<FooterProps> = ({
             </p>
           </div>
 
-          <div className="hidden md:block w-[1px] bg-border-default shrink-0 self-stretch" aria-hidden="true" />
-          <div className="md:hidden h-[1px] bg-border-default w-full my-6" aria-hidden="true" />
+          <div className="hidden lg:block w-[1px] bg-border-default shrink-0 self-stretch" aria-hidden="true" />
 
           {/* Card 4: Newsletter */}
-          <div className="flex-1 flex flex-col px-[16px] gap-[12px]">
+          <div className="flex-1 flex flex-col px-0 lg:px-[16px] gap-[12px]">
             <h4 className="text-[18px] font-bold text-text-primary">
               Antecipe-se ao próximo lançamento
             </h4>
@@ -116,7 +121,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="digite seu e-mail..."
                   aria-label="E-mail para newsletter"
-                  className="h-10 flex-1 px-3 rounded-l-md rounded-r-none bg-surface-raised border border-r-0 border-border-default text-text-primary placeholder:text-text-muted text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+                  className="h-10 flex-1 min-w-0 px-3 rounded-l-md rounded-r-none bg-surface-raised border border-r-0 border-border-default text-text-primary placeholder:text-text-muted text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
                 />
                 <Button
                   type="submit"
@@ -134,7 +139,7 @@ export const Footer: React.FC<FooterProps> = ({
 
       {/* Seção 2: Faixa Intermediária de Contato */}
       <div className="w-full bg-surface-dark border-b border-border-default">
-        <div className="mx-auto max-w-7xl px-[32px] py-[32px] flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-[92px] text-text-primary">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-[32px] py-[32px] flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-[92px] text-text-primary">
           <div className="flex-1">
             <span className="font-mono font-bold text-[14px] tracking-widest text-text-primary">
               KURIO
@@ -156,7 +161,7 @@ export const Footer: React.FC<FooterProps> = ({
             </a>
           </div>
 
-          <div className="w-full md:w-[228px] shrink-0">
+          <div className="w-full lg:w-[228px] shrink-0">
             <a
               href="tel:+551140028922"
               className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs"
@@ -167,9 +172,9 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-[32px] py-[32px]">
-        {/* Seção 3: Navegação Inferior e Carteiras (3 colunas flex-1 + 1 coluna 228px com gap de 92px) */}
-        <div className="flex flex-col md:flex-row items-start gap-8 md:gap-[92px] text-text-primary">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-[32px] py-[32px]">
+        {/* Seção 3: Navegação Inferior e Carteiras (grid no tablet, flex-row no desktop) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row items-start gap-8 lg:gap-[92px] text-text-primary">
           {/* Coluna 1: Meu perfil */}
           <div className="flex-1">
             <h4 className="text-[18px] font-bold text-text-primary mb-4">Meu perfil</h4>
@@ -180,22 +185,22 @@ export const Footer: React.FC<FooterProps> = ({
                 </a>
               </li>
               <li>
-                <a href="/perfil/colecao" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/perfil/colecao" onClick={handleUnavailableLink('Minha coleção')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Minha coleção
                 </a>
               </li>
               <li>
-                <a href="/perfil/atividade" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/perfil/atividade" onClick={handleUnavailableLink('Atividade')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Atividade
                 </a>
               </li>
               <li>
-                <a href="/criadores" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/criadores" onClick={handleUnavailableLink('Estúdio do criador')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Estúdio do criador
                 </a>
               </li>
               <li>
-                <a href="/favoritos" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/favoritos" onClick={handleUnavailableLink('Lista de interesse')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Lista de interesse
                 </a>
               </li>
@@ -207,27 +212,27 @@ export const Footer: React.FC<FooterProps> = ({
             <h4 className="text-[18px] font-bold text-text-primary mb-4">Central de ajuda</h4>
             <ul className="space-y-2 text-[14px]">
               <li>
-                <a href="/ajuda" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/ajuda" onClick={handleUnavailableLink('Central de ajuda')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Central de ajuda
                 </a>
               </li>
               <li>
-                <a href="/como-comprar" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/como-comprar" onClick={handleUnavailableLink('Como comprar NFTs')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Como comprar NFTs
                 </a>
               </li>
               <li>
-                <a href="/seguranca" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/seguranca" onClick={handleUnavailableLink('Carteira e segurança')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Carteira e segurança
                 </a>
               </li>
               <li>
-                <a href="/termos" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/termos" onClick={handleUnavailableLink('Política do mercado')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Política do mercado
                 </a>
               </li>
               <li>
-                <a href="/denunciar" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/denunciar" onClick={handleUnavailableLink('Denunciar item')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Denunciar item
                 </a>
               </li>
@@ -239,27 +244,27 @@ export const Footer: React.FC<FooterProps> = ({
             <h4 className="text-[18px] font-bold text-text-primary mb-4">Coleções</h4>
             <ul className="space-y-2 text-[14px]">
               <li>
-                <a href="/colecoes?categoria=arte" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/colecoes?categoria=arte" onClick={handleUnavailableLink('Arte digital')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Arte digital
                 </a>
               </li>
               <li>
-                <a href="/colecoes?categoria=fotografia" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/colecoes?categoria=fotografia" onClick={handleUnavailableLink('Fotografia')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Fotografia
                 </a>
               </li>
               <li>
-                <a href="/colecoes?categoria=musica" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/colecoes?categoria=musica" onClick={handleUnavailableLink('Música')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Música
                 </a>
               </li>
               <li>
-                <a href="/colecoes?categoria=3d" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/colecoes?categoria=3d" onClick={handleUnavailableLink('Arte 3D')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Arte 3D
                 </a>
               </li>
               <li>
-                <a href="/colecoes?categoria=utilidade" className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
+                <a href="/colecoes?categoria=utilidade" onClick={handleUnavailableLink('Utilidade')} className="text-[14px] font-normal text-text-primary hover:text-text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-xs">
                   Utilidade
                 </a>
               </li>
@@ -303,22 +308,11 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Live Region de Notificação Acessível */}
-        {notice && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="mt-6 mb-2 p-3 rounded-md border border-accent/40 bg-surface-raised text-caption-12 text-accent"
-          >
-            {notice}
-          </div>
-        )}
       </div>
 
       {/* Seção 4: Barra Inferior de Copyright */}
-      <div className="w-full bg-surface-default h-[30px] flex items-center justify-center">
-        <p className="text-[14px] text-text-primary">
+      <div className="w-full bg-surface-default min-h-[30px] py-2 px-4 flex items-center justify-center text-center">
+        <p className="text-[12px] sm:text-[14px] text-text-primary text-center">
           © 2026 Kurio. Propriedade digital para todos.
         </p>
       </div>
