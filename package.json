@@ -5,11 +5,12 @@
   "packageManager": "pnpm@12.11.2",
   "type": "module",
   "scripts": {
-    "dev:mocks": "nx run-many -t dev",
+    "dev:mocks": "node scripts/copy-mock-worker.js && nx run-many -t dev",
     "dev:shell": "nx dev shell",
-    "dev:storefront": "nx dev storefront",
-    "dev:checkout": "nx dev checkout",
-    "dev:account": "nx dev account",
+    "dev:storefront": "node scripts/copy-mock-worker.js && nx dev storefront",
+    "dev:checkout": "node scripts/copy-mock-worker.js && nx dev checkout",
+    "dev:account": "node scripts/copy-mock-worker.js && nx dev account",
+
     "typecheck": "nx run-many -t typecheck",
     "lint": "eslint .",
     "test": "nx run-many -t test",
@@ -22,7 +23,8 @@
     "lighthouse": "node scripts/lighthouse.js",
     "design:check": "node scripts/design-check.js",
     "design:tokens": "node scripts/generate-tokens.js",
-    "design:icons": "node scripts/generate-icons.js"
+    "design:icons": "node scripts/generate-icons.js",
+    "mocks:hash": "node --experimental-strip-types tools/mocks-hash.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

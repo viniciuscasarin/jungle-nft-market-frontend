@@ -8,6 +8,7 @@ import { createRealtimeClient } from '@nft/shared-realtime';
 import {
   ShellProvider,
   singletonRegistry,
+  startMocks,
   type ShellContextValue,
 } from '@nft/shell-kit';
 import { router } from './routes';
@@ -15,6 +16,8 @@ import './styles.css';
 
 // Validate environment variables on application startup
 validateEnv(import.meta.env);
+
+const MocksDevPanel = React.lazy(() => import('./components/mocks-dev-panel'));
 
 // Initialize factories as strict runtime singletons
 export const queryClient = singletonRegistry.assertSingleton(
@@ -42,14 +45,28 @@ export const shellValue: ShellContextValue = {
   },
 };
 
+async function prepareApp(): Promise<void> {
+  if (import.meta.env['VITE_ENABLE_MOCKS'] === 'true') {
+    await startMocks();
+  }
+}
+
 const rootElement = document.getElementById('root');
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <ShellProvider value={shellValue}>
-        <RouterProvider router={router} />
-      </ShellProvider>
-    </React.StrictMode>,
-  );
+
+  void prepareApp().then(() => {
+    root.render(
+      <React.StrictMode>
+        <ShellProvider value={shellValue}>
+          <RouterProvider router={router} />
+          {import.meta.env['VITE_ENABLE_MOCKS'] === 'true' && (
+            <React.Suspense fallback={null}>
+              <MocksDevPanel />
+            </React.Suspense>
+          )}
+        </ShellProvider>
+      </React.StrictMode>,
+    );
+  });
 }

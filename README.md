@@ -132,6 +132,48 @@ pnpm design:check
 
 ---
 
+## 🎭 Simulação de Backend (MSW) e Cenários
+
+O marketplace utiliza um backend 100% simulado via Mock Service Worker (MSW), com repositório em memória atômico, relógio e PRNG determinísticos e pipeline de rede universal.
+
+### Cenários Disponíveis
+São 16 cenários prontos para testes e validação da UI:
+- `default`: Catálogo completo com 48 NFTs, 2 usuários e rede sem falhas.
+- `empty`: Catálogo, avaliações, pedidos e carrinhos vazios (estados de empty state).
+- `slow-network`: Latência de 2000ms para inspecionar skeletons e shimmers.
+- `variable-latency`: Latência variável pseudo-aleatória entre 300ms e 1500ms.
+- `out-of-order`: Inversão determinística de respostas concorrentes.
+- `connection-down`: Falha universal de rede (`HttpResponse.error()`).
+- `http-4xx` e `http-5xx`: Erros simulados com payload `ApiError` estruturado.
+- `recovering-5xx`: Falha transitória 503 com recuperação automática na 3ª tentativa.
+- `session-expired`: Tokens expirados retornando HTTP 401 `SESSION_EXPIRED`.
+- `forbidden-access`: Acesso negado retornando HTTP 403 `FORBIDDEN`.
+- `price-changed-at-checkout`: Cotação com preço alterado (409 `PRICE_CHANGED`).
+- `sold-out-at-checkout`: Estoque esgotado no checkout (409 `AVAILABILITY_CONFLICT`).
+- `order-timeout-after-create`: Timeout de rede após gravar o pedido no banco (testa recuperação idempotente).
+- `payment-confirmed` e `payment-rejected`: Confirmação ou recusa terminal de pagamentos.
+
+### Como Acionar
+1. **Via URL**: Acesse `http://localhost:3000/?scenario=<id>` (ex.: `?scenario=slow-network`). A URL é sanitizada limpa e imediatamente via `history.replaceState`.
+2. **Via Dev Panel**: Pressione `Ctrl+Alt+M` (ou `Cmd+Alt+M` no Mac) ou acesse `/?mocks-panel=1` para abrir o modal de controle.
+3. **Via Automação (`window.__mocks`)**:
+   ```javascript
+   window.__mocks.setScenario('sold-out-at-checkout');
+   window.__mocks.reset(); // Restaura integralmente o snapshot inicial
+   window.__mocks.expireSession(); // Força expiração imediata
+   window.__mocks.advanceClock(3600000); // Avança relógio em 1 hora
+   ```
+
+### Credenciais Fictícias de Demonstração
+As senhas são exclusivamente armazenadas na forma de `passwordHash` e `passwordSalt` via PBKDF2/SHA-256 (nunca em texto claro).
+- **Alice**: `alice@example.com` | Senha: `Password123!`
+- **Bob**: `bob@example.com` | Senha: `Password123!`
+
+Para gerar novos hashes: `pnpm mocks:hash <senha>`
+
+
+---
+
 ## 📦 Build Consolidado e Deploy (Vercel)
 
 A execução de `pnpm build` orquestra a compilação de todas as aplicações e monta uma distribuição única pronta para deploy em `dist/integrated/`:

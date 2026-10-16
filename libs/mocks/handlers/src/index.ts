@@ -18,7 +18,7 @@ export const catalogHandlers = [
     return HttpResponse.json({ items: mockNfts, total: mockNfts.length });
   }),
   http.get('/api/nfts/:id', ({ params }) => {
-    const nft = mockNfts.find((item) => item.id === params['id']);
+    const nft = mockNfts.find((item: { id: string }) => item.id === params['id']);
     if (!nft) {
       return new HttpResponse(null, { status: 404 });
     }

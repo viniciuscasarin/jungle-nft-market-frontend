@@ -92,7 +92,8 @@ Tags: `scope:*` (domínio), `type:*` (app, feature, ui, data-access, domain, uti
 - `feature` depende das camadas do próprio scope, de `shared/*`, `shell-kit` e do `index.ts` público de outros scopes.
 - Apps nunca importam outros apps.
 - `feature` e `ui` com `flow:X` só são importáveis por `apps/X`. `domain` e `data-access` são compartilháveis.
-- `mocks/*` só é importável por `apps/shell`, `shell-kit` e `apps/web-e2e`.
+- `mocks/*` só é importável por `apps/shell`, `shell-kit`, `shared-testing` (para testes) e `apps/web-e2e`. Bibliotecas de `feature`, `ui` e `data-access` permanecem estritamente proibidas de importar mocks.
+- `@nft/shared-testing` é restrito exclusivamente a arquivos de teste (`*.spec.*`, `*.test.*`) e stories (`*.stories.*`, `.storybook/**`). O código de produção falha no lint se importar `shared-testing`.
 - Sem imports circulares e sem deep imports. Cada lib expõe apenas `index.ts`.
 
 ### Encapsulamento de terceiros
@@ -103,10 +104,11 @@ Tags: `scope:*` (domínio), `type:*` (app, feature, ui, data-access, domain, uti
 | `socket.io-client` | `shared/realtime` |
 | `decimal.js` | `shared/money` |
 | `@radix-ui/*` e primitivos shadcn | `shared/ui` |
-| `msw`, `@mswjs/socket.io-binding` | `mocks/*`, `shell-kit`, `web-e2e` |
+| `msw`, `@mswjs/socket.io-binding` | `mocks/*`, `shell-kit`, `shared-testing`, `web-e2e` |
 | `@tanstack/react-query` | `shared/query`, `data-access`, `feature` |
 
 Violações falham no lint (`no-restricted-imports`).
+
 
 ## 5. Module Federation
 
@@ -237,14 +239,19 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 
 ## 13. Mocking (MSW)
 
-- Handlers por domínio em `mocks/handlers`, banco em memória com persistência local em `mocks/core`, fixtures em `mocks/fixtures`.
+- Handlers por domínio em `mocks/handlers`, banco em memória reativo com transações atômicas `transaction(fn)` e versionamento monotônico incremental em `mocks/core`, fixtures canônicas em `mocks/fixtures`.
+- Determinismo absoluto: gerador pseudo-aleatório PRNG Mulberry32 com semente fixa (`next`, `int`, `pick`, `uuid`, gerador de hashes e tokens) e relógio injetável `Clock` (`system` e `controlled`), eliminando qualquer dependência descontrolada de `Math.random` ou `Date.now()`.
+- Pipeline de rede universal configurável com perfis `NetworkProfile`: regras em duas fases (`phase: 'before'` e `phase: 'after'`), com suporte a latência (fixa ou intervalo PRNG), `outOfOrder` determinístico, `timeout` (honrando `AbortSignal`), `connectionError`, `httpError` normalizado com `ApiError`, `failTimes(n)` e sequenciamento.
 - Estado consistente entre catálogo, favoritos, carrinho, perfil, carteiras e pedidos. Mudanças refletem em REST e em eventos.
-- Reset restaura integralmente o cenário conhecido.
-- Ativado por `VITE_ENABLE_MOCKS`, disponível no build de demonstração. Cenário padrão por `VITE_DEFAULT_SCENARIO`, selecionável em runtime.
-- Condições de rede configuráveis e reproduzíveis: lentidão, latência variável, timeout, queda de conexão, respostas 4xx/5xx.
-- Fixtures: variedade para filtros e paginação, ao menos dois usuários e cenários determinísticos para sucesso e vazio, latência variável e respostas fora de ordem, falhas de conexão e HTTP, sessão expirada e acesso não autorizado, conflito de cadastro e validação, cupom inválido ou expirado, preço alterado ou esgotamento durante a compra, timeout após criação do pedido, pagamento confirmado e recusado.
+- Persistência e resiliência via `StorageAdapter`: namespace versionado `nft-mocks:v1:state` no `localStorage`, com degradação graciosa para memória (`MemoryStorageAdapter`, `persistenceDegraded: true`) em caso de quota excedida ou restrição de storage.
+- Reset integral via `resetMockDatabase()`: restaura o estado profundo idêntico ao snapshot inicial do cenário ativo.
+- Ativado por `VITE_ENABLE_MOCKS` no boot do Shell via dynamic import (removendo 100% de `msw` do bundle de produção com `VITE_ENABLE_MOCKS=false`). Cenário padrão por `VITE_DEFAULT_SCENARIO`, selecionável em runtime via `?scenario=<id>`, storage local ou console (`window.__mocks`).
+- Mocks Dev Panel acessível (`MocksDevPanel`) carregado sob demanda (`lazy`) em `apps/shell`, ativado estritamente por atalho de teclado `Ctrl+Alt+M` (ou `Cmd+Alt+M`) ou `?mocks-panel=1`, sem interferência visual na página ou impacto no Lighthouse.
+- Fixtures ricas: ao menos 48 NFTs, 5 coleções, 3 redes (`ethereum`, `polygon`, `solana`), avaliações paginadas (>= 25) e vazias, 2 usuários com senhas armazenadas estritamente na forma de `passwordHash` e `passwordSalt` gerados via PBKDF2/SHA-256 (`tools/mocks-hash.ts`), cupons válidos, expirados e inválidos.
+- 16 cenários obrigatórios mapeados conforme o §6 do `challenge.md` (detalhes em [`docs/mocks.md`](docs/mocks.md)).
 
 ### Socket.IO simulado
+
 
 - Transporte: `@mswjs/socket.io-binding` sobre a interceptação de WebSocket do MSW. O `socket.io-client` real conecta no mock.
 - Limitações `[PREENCHER na implementação]`: esperado o uso apenas do transporte WebSocket (sem long-polling), cobertura de recursos do protocolo limitada ao que a binding suporta, e o servidor simulado vive no navegador (ou no processo de teste), sem broadcast entre abas além do que a persistência local permitir.
@@ -298,11 +305,11 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 
 ## 17. Limitações conhecidas
 
-`[PREENCHER ao final]`
+- **Persistência local do mock em múltiplas abas**: O estado em memória reside no processo do Service Worker do navegador e é persistido via `localStorage`. Abas abertas simultaneamente não compartilham eventos de mutação em memória em tempo real de forma cruzada, reconciliando o estado apenas ao recarregar (refresh).
+- **Escopo do Service Worker**: O Service Worker é registrado com escopo raiz `/` pelo Shell ou na porta de dev do remote em modo standalone. Remotes servidos em `/remotes/<remoteName>/` no build integrado não registram workers próprios para evitar colisões de escopo.
+- **Limitações do transporte Socket.IO no ambiente de mocks**: O transporte no ambiente de mocks utiliza `@mswjs/socket.io-binding` sobre interceptação de WebSocket; recursos avançados do Socket.IO não cobertos pela biblioteca binding dependem de fallback.
+- **Simulação de Blockchain e Gateways**: Todas as carteiras, assinaturas de transação, transferências de tokens e pagamentos são estritamente simulados, sem interação com redes reais de blockchain (Ethereum, Polygon, Solana).
 
-- Limitações do transporte Socket.IO no ambiente de mocks.
-- Persistência local do mock: escopo por navegador, sem sincronização entre dispositivos.
-- Integrações de blockchain, carteira e pagamento são simuladas.
 
 ## 18. Decisões de UX
 

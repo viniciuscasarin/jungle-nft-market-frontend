@@ -4,7 +4,7 @@
   "sourceRoot": "libs/shared/testing/src",
   "projectType": "library",
   "tags": [
-    "scope:shared",
+    "scope:testing",
     "type:util",
     "flow:shared"
   ],
