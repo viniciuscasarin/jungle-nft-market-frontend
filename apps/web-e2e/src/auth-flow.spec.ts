@@ -17,11 +17,10 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
 
     // Preenche o formulário de cadastro
     const uniqueEmail = `novo_${Date.now()}@example.com`;
-    await page.getByLabel(/Nome de Exibição/i).fill('Novo Colecionador');
-    await page.getByLabel(/Nome de Usuário/i).fill(`user_${Date.now()}`);
-    await page.getByLabel(/^E-mail$/i).fill(uniqueEmail);
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
-    await page.getByLabel(/Confirmar Senha/i).fill('Password123!');
+    await page.getByLabel(/Nome de exibição/i).fill('Novo Colecionador');
+    await page.getByLabel(/^Username/i).fill(`user_${Date.now()}`);
+    await page.getByLabel(/^Email/i).fill(uniqueEmail);
+    await page.getByLabel(/^Senha/i).fill('Password123!');
 
     // Submete o formulário
     await page.getByRole('button', { name: /^Criar conta$/i }).click();
@@ -35,8 +34,8 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
 
     await expect(page.getByRole('heading', { level: 1, name: 'Entrar na Conta' })).toBeVisible();
 
-    await page.getByLabel(/E-mail ou Usuário/i).fill('alice@example.com');
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
+    await page.getByLabel(/Email ou username/i).fill('alice@example.com');
+    await page.getByLabel(/^Senha/i).fill('Password123!');
 
     await page.getByRole('button', { name: /^Entrar$/i }).click();
 
@@ -53,8 +52,8 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
     await expect(page.getByRole('heading', { level: 1, name: 'Entrar na Conta' })).toBeVisible();
 
     // Faz login com Alice
-    await page.getByLabel(/E-mail ou Usuário/i).fill('alice@example.com');
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
+    await page.getByLabel(/Email ou username/i).fill('alice@example.com');
+    await page.getByLabel(/^Senha/i).fill('Password123!');
     await page.getByRole('button', { name: /^Entrar$/i }).click();
 
     // Após login, é redirecionado de volta para /perfil
@@ -64,8 +63,8 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
 
   test('deve manter a sessão ativa após refresh da página (F5)', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel(/E-mail ou Usuário/i).fill('alice@example.com');
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
+    await page.getByLabel(/Email ou username/i).fill('alice@example.com');
+    await page.getByLabel(/^Senha/i).fill('Password123!');
     await page.getByRole('button', { name: /^Entrar$/i }).click();
 
     await expect(page.getByText('Alice Silva')).toBeVisible({ timeout: 10000 });
@@ -79,14 +78,17 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
 
   test('deve realizar logout com sucesso e limpar sessão no Header', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel(/E-mail ou Usuário/i).fill('alice@example.com');
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
+    await page.getByLabel(/Email ou username/i).fill('alice@example.com');
+    await page.getByLabel(/^Senha/i).fill('Password123!');
     await page.getByRole('button', { name: /^Entrar$/i }).click();
 
     await expect(page.getByText('Alice Silva')).toBeVisible({ timeout: 10000 });
 
-    // Clica no botão de logout no header
-    const logoutBtn = page.getByRole('button', { name: /Desconectar|Sair/i });
+    // Clica no menu do usuário e seleciona Sair
+    const userMenu = page.getByRole('button', { name: /Menu de/i });
+    await expect(userMenu).toBeVisible();
+    await userMenu.click();
+    const logoutBtn = page.getByRole('menuitem', { name: /Sair/i });
     await expect(logoutBtn).toBeVisible();
     await logoutBtn.click();
 
@@ -98,20 +100,22 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
   test('deve isolar cache na troca de usuário A para B sem vazamento de dados', async ({ page }) => {
     // 1. Login com Alice
     await page.goto('/login');
-    await page.getByLabel(/E-mail ou Usuário/i).fill('alice@example.com');
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
+    await page.getByLabel(/Email ou username/i).fill('alice@example.com');
+    await page.getByLabel(/^Senha/i).fill('Password123!');
     await page.getByRole('button', { name: /^Entrar$/i }).click();
     await expect(page.getByText('Alice Silva')).toBeVisible({ timeout: 10000 });
 
     // 2. Logout de Alice
-    const logoutBtn = page.getByRole('button', { name: /Desconectar|Sair/i });
+    const userMenu = page.getByRole('button', { name: /Menu de/i });
+    await userMenu.click();
+    const logoutBtn = page.getByRole('menuitem', { name: /Sair/i });
     await logoutBtn.click();
     await expect(page.getByRole('button', { name: /^Entrar$/i })).toBeVisible();
 
     // 3. Login com Bob
     await page.goto('/login');
-    await page.getByLabel(/E-mail ou Usuário/i).fill('bob@example.com');
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
+    await page.getByLabel(/Email ou username/i).fill('bob@example.com');
+    await page.getByLabel(/^Senha/i).fill('Password123!');
     await page.getByRole('button', { name: /^Entrar$/i }).click();
 
     // Verifica que agora Bob Santos é o usuário ativo
@@ -126,8 +130,8 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
 
     // Realiza login na aba 1
     await page1.goto('/login');
-    await page1.getByLabel(/E-mail ou Usuário/i).fill('alice@example.com');
-    await page1.getByLabel(/^Senha$/i).fill('Password123!');
+    await page1.getByLabel(/Email ou username/i).fill('alice@example.com');
+    await page1.getByLabel(/^Senha/i).fill('Password123!');
     await page1.getByRole('button', { name: /^Entrar$/i }).click();
     await expect(page1.getByText('Alice Silva')).toBeVisible({ timeout: 10000 });
 
@@ -135,8 +139,10 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
     await page2.goto('/');
     await expect(page2.getByText('Alice Silva')).toBeVisible({ timeout: 10000 });
 
-    // Aba 2 realiza logout
-    const logoutBtnPage2 = page2.getByRole('button', { name: /Desconectar|Sair/i });
+    // Aba 2 realiza logout pelo menu do usuário
+    const userMenuPage2 = page2.getByRole('button', { name: /Menu de/i });
+    await userMenuPage2.click();
+    const logoutBtnPage2 = page2.getByRole('menuitem', { name: /Sair/i });
     await logoutBtnPage2.click();
     await expect(page2.getByRole('button', { name: /^Entrar$/i })).toBeVisible();
 
@@ -153,14 +159,14 @@ test.describe('Fluxo 3: Autenticação, Ciclo de Sessão e Resiliência', () => 
     await page.goto('/login?redirect=%2Fcheckout&reason=expired');
 
     // Valida anúncio acessível de sessão expirada
-    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByRole('dialog').getByRole('alert')).toBeVisible();
     await expect(
       page.getByText(/Sua sessão expirou\. Faça login novamente para continuar\./i),
     ).toBeVisible();
 
     // Faz login novamente
-    await page.getByLabel(/E-mail ou Usuário/i).fill('alice@example.com');
-    await page.getByLabel(/^Senha$/i).fill('Password123!');
+    await page.getByLabel(/Email ou username/i).fill('alice@example.com');
+    await page.getByLabel(/^Senha/i).fill('Password123!');
     await page.getByRole('button', { name: /^Entrar$/i }).click();
 
     // Retoma para o destino pretendido (/checkout)

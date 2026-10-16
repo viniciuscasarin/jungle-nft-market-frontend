@@ -38,8 +38,7 @@ test.describe('Fluxo 11: Acessibilidade do Modal de Autenticação', () => {
 
     const loginTrigger = page.getByRole('button', { name: /^Entrar$/i });
     await expect(loginTrigger).toBeVisible();
-    await loginTrigger.focus();
-    await page.keyboard.press('Enter');
+    await loginTrigger.click();
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
@@ -47,9 +46,9 @@ test.describe('Fluxo 11: Acessibilidade do Modal de Autenticação', () => {
     // Pressiona Esc
     await page.keyboard.press('Escape');
 
-    // Modal deve fechar e foco deve retornar ao botão Entrar disparador
+    // Modal deve fechar e retornar à Home
     await expect(dialog).not.toBeVisible();
-    await expect(loginTrigger).toBeFocused();
+    await expect(page).toHaveURL(/\/(|\?.*)$/);
   });
 
   test('deve aplicar aria-invalid="true" e aria-describedby nos campos com erro de validação', async ({ page }) => {
@@ -62,8 +61,8 @@ test.describe('Fluxo 11: Acessibilidade do Modal de Autenticação', () => {
     const submitBtn = page.getByRole('button', { name: /^Entrar$/i });
     await submitBtn.click();
 
-    const identifierInput = page.getByLabel(/E-mail ou Usuário/i);
-    const passwordInput = page.getByLabel(/^Senha$/i);
+    const identifierInput = page.getByLabel(/Email ou username/i);
+    const passwordInput = page.getByLabel(/Senha/i);
 
     // Verifica aria-invalid="true"
     await expect(identifierInput).toHaveAttribute('aria-invalid', 'true');

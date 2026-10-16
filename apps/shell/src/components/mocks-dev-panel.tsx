@@ -18,6 +18,10 @@ import {
   resetMockDatabase,
   getNetworkProfile,
   getClock,
+  emitNftUpdated,
+  emitOrderUpdated,
+  simulateSocketDisconnect,
+  simulateSocketReconnect,
 } from '@nft/mocks-core';
 
 export function MocksDevPanel(): React.JSX.Element {
@@ -76,6 +80,42 @@ export function MocksDevPanel(): React.JSX.Element {
     refreshState();
   };
 
+  const handleEmitNftUpdatedPrice = () => {
+    const currentPrice = Number(getMockDatabase().nfts[0]?.price ?? '1.00');
+    const newPrice = (currentPrice + 0.25).toFixed(2);
+    emitNftUpdated({
+      nftId: 'nft-01',
+      price: newPrice,
+    });
+    refreshState();
+  };
+
+  const handleEmitNftUpdatedSoldOut = () => {
+    emitNftUpdated({
+      nftId: 'nft-01',
+      availableSupply: 0,
+    });
+    refreshState();
+  };
+
+  const handleEmitOrderUpdated = () => {
+    const db = getMockDatabase();
+    const lastOrder = db.orders[db.orders.length - 1];
+    emitOrderUpdated({
+      orderId: lastOrder?.id ?? 'ord_dev_001',
+      userId: lastOrder?.userId ?? db.users[0]?.id ?? 'usr_collector_01',
+      status: 'confirmed',
+    });
+    refreshState();
+  };
+
+  const handleSimulateReconnect = () => {
+    simulateSocketDisconnect();
+    setTimeout(() => {
+      simulateSocketReconnect();
+    }, 300);
+  };
+
   const activeDef = scenarioRegistry[selectedScenario] ?? scenarioRegistry.default;
   const activeProfile = getNetworkProfile();
 
@@ -131,7 +171,7 @@ export function MocksDevPanel(): React.JSX.Element {
 
           {/* Quick Actions */}
           <div className="space-y-2">
-            <span className="text-body-14 font-medium block">Ações Rápidas</span>
+            <span className="text-body-14 font-medium block">Ações Rápidas (REST & Cenários)</span>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={handleApplyScenario}>
                 Aplicar Cenário
@@ -144,6 +184,25 @@ export function MocksDevPanel(): React.JSX.Element {
               </Button>
               <Button size="sm" variant="outline" onClick={handleAdvanceClock1Hour}>
                 Avançar Relógio (+1h)
+              </Button>
+            </div>
+          </div>
+
+          {/* Realtime Events & Socket Controls */}
+          <div className="space-y-2">
+            <span className="text-body-14 font-medium block">Tempo Real (Socket.IO MSW)</span>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={handleEmitNftUpdatedPrice}>
+                ⚡ Emitir Preço Alterado (nft.updated)
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleEmitNftUpdatedSoldOut}>
+                ⚡ Emitir Esgotado (nft.updated)
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleEmitOrderUpdated}>
+                📦 Emitir Pedido Confirmado (order.updated)
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleSimulateReconnect}>
+                🔄 Simular Reconexão Socket
               </Button>
             </div>
           </div>

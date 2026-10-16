@@ -4,9 +4,10 @@ import {
   createRoute,
   createRouter,
   redirect,
-  useNavigate,
   Link,
   Outlet,
+  ScrollRestoration,
+  useRouterState,
   type ErrorComponentProps,
 } from '@tanstack/react-router';
 import { z } from 'zod';
@@ -23,11 +24,13 @@ import {
   DefaultRemoteSkeleton,
   RemoteBoundary,
   withRemoteTimeout,
-  toShellUserSession,
+  useShell,
   type ShellUserSession,
 } from '@nft/shell-kit';
-import { Header, type HeaderUser } from '@nft/shared-ui';
-import { LoginPage, SignUpPage, useOptionalAuth } from '@nft/auth-feature';
+import { ROUTES } from '@nft/shared-router';
+import { ErrorState } from '@nft/shared-ui';
+import { LoginPage, SignUpPage } from '@nft/auth-feature';
+import { AppLayout, ModalLayout } from './layouts';
 
 export interface RouterContext {
   session?: ShellUserSession | null;
@@ -38,36 +41,139 @@ export const LoginSearchSchema = z.object({
   reason: z.string().optional().catch(undefined),
 });
 
+export function sanitizeRedirect(url: string | undefined): string {
+  if (!url) return ROUTES.HOME;
+  // Discard external or invalid targets (open redirect prevention)
+  if (!url.startsWith('/') || url.startsWith('//') || url.includes('\\')) {
+    return ROUTES.HOME;
+  }
+  return url;
+}
+
+export function requireAuth({
+  context,
+  location,
+}: {
+  context: RouterContext;
+  location: { href: string };
+}) {
+  if (!context?.session) {
+    throw redirect({
+      to: ROUTES.LOGIN,
+      search: {
+        redirect: location.href,
+      },
+    });
+  }
+}
+
+export function requireGuest({
+  context,
+  search,
+}: {
+  context: RouterContext;
+  search: { redirect?: string | undefined; reason?: string | undefined };
+}) {
+  if (context?.session) {
+    const target = sanitizeRedirect(search?.redirect);
+    throw redirect({
+      href: target,
+    });
+  }
+}
+
 export function NotFoundComponent() {
+  React.useEffect(() => {
+    document.title = 'Página Não Encontrada | Jungle NFT';
+    let metaRobots = document.querySelector('meta[name="robots"]');
+    const created = !metaRobots;
+    if (!metaRobots) {
+      metaRobots = document.createElement('meta');
+      metaRobots.setAttribute('name', 'robots');
+      document.head.appendChild(metaRobots);
+    }
+    const originalContent = metaRobots.getAttribute('content');
+    metaRobots.setAttribute('content', 'noindex');
+
+    return () => {
+      if (created && metaRobots && metaRobots.parentNode) {
+        metaRobots.parentNode.removeChild(metaRobots);
+      } else if (metaRobots && originalContent !== null) {
+        metaRobots.setAttribute('content', originalContent);
+      } else if (metaRobots) {
+        metaRobots.removeAttribute('content');
+      }
+    };
+  }, []);
+
   return (
-    <main
+    <div
       role="region"
       aria-label="Página não encontrada"
-      className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center"
+      className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center font-mono"
     >
       <div
         role="alert"
         aria-live="polite"
-        className="max-w-md rounded-2xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl backdrop-blur"
+        className="max-w-md w-full rounded-lg border border-border-default bg-surface-card p-8 shadow-xl"
       >
-        <span className="inline-block text-5xl">🧭</span>
-        <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-emerald-400">404</h1>
-        <h2 className="mt-2 text-2xl font-bold text-slate-100">Página Não Encontrada</h2>
-        <p className="mt-4 text-sm leading-relaxed text-slate-400">
+        <span className="inline-block text-5xl" aria-hidden="true">🧭</span>
+        <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-primary">404</h1>
+        <h2 className="mt-2 text-2xl font-bold text-text-primary">Página Não Encontrada</h2>
+        <p className="mt-4 text-sm leading-relaxed text-text-secondary">
           A página solicitada não existe ou foi removida nesta demonstração. Verifique a URL informada
           ou retorne à página inicial.
         </p>
         <div className="mt-6">
           <Link
-            to="/"
+            to={ROUTES.HOME}
             preload="intent"
-            className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+            className="inline-flex items-center justify-center rounded-sm bg-primary px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-ink"
           >
             Voltar para o Início
           </Link>
         </div>
       </div>
-    </main>
+    </div>
+  );
+}
+
+export function RootErrorBoundary({ error, reset }: ErrorComponentProps) {
+  const { feedback } = useShell();
+
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : 'Ocorreu um erro inesperado na aplicação.';
+
+  React.useEffect(() => {
+    feedback.announce(`Erro na aplicação: ${errorMessage}`, 'assertive');
+  }, [feedback, errorMessage]);
+
+  const handleReload = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    } else {
+      reset();
+    }
+  };
+
+  return (
+    <div
+      role="region"
+      aria-label="Erro na aplicação"
+      className="flex min-h-screen flex-col items-center justify-center p-6 bg-background font-mono text-text-primary"
+    >
+      <ErrorState
+        title="Falha Crítica na Aplicação"
+        message={errorMessage}
+        retryLabel="Recarregar"
+        onRetry={handleReload}
+        className="max-w-md w-full shadow-2xl"
+      />
+    </div>
   );
 }
 
@@ -80,10 +186,10 @@ export function RemoteErrorComponent({ error, reset }: ErrorComponentProps) {
         : 'Não foi possível conectar ao serviço remoto.';
 
   return (
-    <main
+    <div
       role="region"
       aria-label="Falha ao carregar catálogo"
-      className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center"
+      className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center font-mono"
     >
       <RemoteBoundary
         title="Módulo Indisponível"
@@ -93,34 +199,34 @@ export function RemoteErrorComponent({ error, reset }: ErrorComponentProps) {
         <div
           role="alert"
           aria-live="assertive"
-          className="max-w-md rounded-2xl border border-rose-900/50 bg-slate-900/90 p-8 shadow-2xl backdrop-blur"
+          className="max-w-md rounded-lg border border-rose-900/50 bg-surface-card p-8 shadow-2xl backdrop-blur"
         >
           <span className="inline-block text-5xl">⚠️</span>
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-rose-400">
             Módulo Indisponível
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-text-secondary">
             {errorMessage}
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               type="button"
               onClick={reset}
-              className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+              className="inline-flex items-center justify-center rounded-sm bg-primary px-4 py-2 text-xs font-semibold text-ink transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-ink cursor-pointer"
             >
               Tentar Novamente
             </button>
             <Link
-              to="/"
+              to={ROUTES.HOME}
               preload="intent"
-              className="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+              className="inline-flex items-center justify-center rounded-sm border border-border-default bg-surface-raised px-4 py-2 text-xs font-semibold text-text-primary transition hover:bg-surface-raised/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-ink"
             >
               Voltar para o Início
             </Link>
           </div>
         </div>
       </RemoteBoundary>
-    </main>
+    </div>
   );
 }
 
@@ -194,122 +300,122 @@ export function createRemoteRouteComponent<T extends Record<string, unknown>>(
   return RemoteRouteComponent;
 }
 
-export function requireAuth({
-  context,
-  location,
-}: {
-  context: RouterContext;
-  location: { href: string };
-}) {
-  if (!context?.session) {
-    throw redirect({
-      to: '/login',
-      search: {
-        redirect: location.href,
-      },
-    });
+export const LoginComponent = LoginPage;
+
+export const ROUTE_TITLES: Record<string, string> = {
+  [ROUTES.HOME]: 'Jungle NFT Marketplace - Início',
+  [ROUTES.CART]: 'Carrinho de Compras | Jungle NFT',
+  [ROUTES.PAYMENT]: 'Pagamento | Jungle NFT',
+  [ROUTES.PROFILE]: 'Meu Perfil | Jungle NFT',
+  [ROUTES.WALLETS]: 'Minhas Carteiras | Jungle NFT',
+  [ROUTES.LOGIN]: 'Entrar | Jungle NFT',
+  [ROUTES.REGISTER]: 'Criar Conta | Jungle NFT',
+};
+
+export function getRouteTitle(pathname: string): string {
+  if (ROUTE_TITLES[pathname]) {
+    return ROUTE_TITLES[pathname]!;
   }
+  if (pathname.startsWith('/nft/')) {
+    return 'Detalhes do NFT | Jungle NFT';
+  }
+  if (pathname.startsWith('/pedido/')) {
+    return 'Confirmação de Pedido | Jungle NFT';
+  }
+  return 'Página Não Encontrada | Jungle NFT';
 }
 
-export const LoginComponent = LoginPage;
+export function NavigationAnnouncer() {
+  const routerState = useRouterState();
+  const { feedback } = useShell();
+  const isFirstLoad = React.useRef(true);
+  const prevPathname = React.useRef(routerState.location.pathname);
+
+  React.useEffect(() => {
+    const currentPath = routerState.location.pathname;
+    const title = getRouteTitle(currentPath);
+    document.title = title;
+
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      prevPathname.current = currentPath;
+      return;
+    }
+
+    if (prevPathname.current !== currentPath) {
+      prevPathname.current = currentPath;
+
+      // Foco no main (tabIndex={-1})
+      const mainElement = document.getElementById('main-content');
+      if (mainElement) {
+        mainElement.focus();
+      }
+
+      // Anúncio do novo título na live region polite global
+      feedback.announce(title, 'polite');
+    }
+  }, [routerState.location.pathname, feedback]);
+
+  return null;
+}
 
 export function RootComponent() {
   useEffect(() => {
     singletonProbe.increment('apps/shell');
   }, []);
 
-  const navigate = useNavigate();
-  const authContext = useOptionalAuth();
-  const routeContext = rootRoute.useRouteContext();
-  const session = authContext?.session
-    ? toShellUserSession(authContext.session)
-    : (routeContext?.session ?? null);
-
-  const handleLoginClick = () => {
-    void navigate({ to: '/login' as never });
-  };
-
-  const handleLogoutClick = async () => {
-    if (authContext) {
-      await authContext.logout();
-    }
-    void navigate({ to: '/login' as never });
-  };
-
-  const handleCartClick = () => {
-    void navigate({ to: '/carrinho' as never });
-  };
-
-  const headerUser: HeaderUser | null = session
-    ? {
-        name: session.name,
-        avatarUrl: session.avatarUrl ?? undefined,
-      }
-    : null;
-
-  const shellNavLinks = [
-    { label: 'Início', href: '/' },
-    { label: 'Catálogo', href: '/catalogo' },
-    { label: 'Carrinho', href: '/carrinho' },
-    { label: 'Perfil', href: '/perfil' },
-    { label: 'Carteiras', href: '/carteiras' },
-  ];
-
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100 font-mono">
-      <Header
-        className="block w-full border-b border-border-default px-4 bg-surface-default"
-        user={headerUser}
-        navLinks={shellNavLinks}
-        onLoginClick={handleLoginClick}
-        onLogoutClick={handleLogoutClick}
-        onCartClick={handleCartClick}
-      />
-
-      <div className="flex-1">
-        <Outlet />
-      </div>
-
-      <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        <p>© 2026 Jungle NFT Market. Demonstração de Frontend.</p>
-      </footer>
-    </div>
+    <>
+      <NavigationAnnouncer />
+      <ScrollRestoration />
+      <Outlet />
+    </>
   );
 }
 
 export function HomeComponent() {
   return (
-    <main className="container mx-auto px-4 py-12">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 shadow-xl backdrop-blur sm:p-12">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+    <div className="container mx-auto px-4 py-12 font-mono">
+      <div className="rounded-2xl border border-border-default bg-surface-card p-8 shadow-xl sm:p-12">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           Host Shell v1.0
         </div>
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-100 sm:text-5xl">
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-text-primary sm:text-5xl">
           Jungle NFT Marketplace
         </h1>
-        <p className="mt-4 max-w-2xl text-base text-slate-400 sm:text-lg">
+        <p className="mt-4 max-w-2xl text-base text-text-secondary sm:text-lg">
           Ambiente integrado para descoberta, compra e gestão de NFTs com arquitetura de Module
           Federation e simulação completa via MSW.
         </p>
       </div>
-    </main>
+    </div>
   );
 }
 
+// 1. Rota Raiz
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
+  errorComponent: RootErrorBoundary,
 });
 
+// 2. Layouts Estruturais sem path
+export const appLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_app',
+  component: AppLayout,
+});
+
+export const modalLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_modal',
+  component: ModalLayout,
+});
+
+// 3. Rotas sob _app (Chrome completo)
 export const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: HomeComponent,
-});
-
-export const catalogRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/catalogo',
+  getParentRoute: () => appLayoutRoute,
+  path: ROUTES.HOME,
   validateSearch: (search: Record<string, unknown>): Partial<CatalogSearchParams> =>
     CatalogSearchParamsSchema.parse(search),
   component: createRemoteRouteComponent(() => import('storefront/HomePage')),
@@ -318,16 +424,16 @@ export const catalogRoute = createRoute({
 });
 
 export const pdpRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/nft/$nftId',
+  getParentRoute: () => appLayoutRoute,
+  path: ROUTES.NFT_DETAILS,
   component: createRemoteRouteComponent(() => import('storefront/PdpPage')),
   errorComponent: RemoteErrorComponent,
   pendingComponent: DefaultRemoteSkeleton,
 });
 
 export const cartRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/carrinho',
+  getParentRoute: () => appLayoutRoute,
+  path: ROUTES.CART,
   validateSearch: (search: Record<string, unknown>): Partial<CartSearchParams> =>
     CartSearchParamsSchema.parse(search),
   component: createRemoteRouteComponent(() => import('checkout/CartPage')),
@@ -335,9 +441,9 @@ export const cartRoute = createRoute({
   pendingComponent: DefaultRemoteSkeleton,
 });
 
-export const checkoutRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/checkout',
+export const paymentRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: ROUTES.PAYMENT,
   validateSearch: (search: Record<string, unknown>): Partial<CheckoutSearchParams> =>
     CheckoutSearchParamsSchema.parse(search),
   beforeLoad: requireAuth,
@@ -346,18 +452,9 @@ export const checkoutRoute = createRoute({
   pendingComponent: DefaultRemoteSkeleton,
 });
 
-export const confirmationRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/pedidos/$orderId/confirmacao',
-  beforeLoad: requireAuth,
-  component: createRemoteRouteComponent(() => import('checkout/ConfirmationPage')),
-  errorComponent: RemoteErrorComponent,
-  pendingComponent: DefaultRemoteSkeleton,
-});
-
 export const profileRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/perfil',
+  getParentRoute: () => appLayoutRoute,
+  path: ROUTES.PROFILE,
   beforeLoad: requireAuth,
   component: createRemoteRouteComponent(() => import('account/ProfilePage')),
   errorComponent: RemoteErrorComponent,
@@ -365,39 +462,66 @@ export const profileRoute = createRoute({
 });
 
 export const walletsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/carteiras',
+  getParentRoute: () => appLayoutRoute,
+  path: ROUTES.WALLETS,
   beforeLoad: requireAuth,
   component: createRemoteRouteComponent(() => import('account/WalletsPage')),
   errorComponent: RemoteErrorComponent,
   pendingComponent: DefaultRemoteSkeleton,
 });
 
+// 4. Rotas sob _modal (Sem chrome)
 export const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/login',
-  validateSearch: (search) => LoginSearchSchema.parse(search),
+  getParentRoute: () => modalLayoutRoute,
+  path: ROUTES.LOGIN,
+  validateSearch: (search: Record<string, unknown>) => LoginSearchSchema.parse(search),
+  beforeLoad: requireGuest,
   component: LoginComponent,
 });
 
 export const registerRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/cadastro',
-  validateSearch: (search) => LoginSearchSchema.parse(search),
+  getParentRoute: () => modalLayoutRoute,
+  path: ROUTES.REGISTER,
+  validateSearch: (search: Record<string, unknown>) => LoginSearchSchema.parse(search),
+  beforeLoad: requireGuest,
   component: SignUpPage,
 });
 
+export const confirmationRoute = createRoute({
+  getParentRoute: () => modalLayoutRoute,
+  path: ROUTES.ORDER_CONFIRMATION,
+  beforeLoad: requireAuth,
+  component: createRemoteRouteComponent(() => import('checkout/ConfirmationPage')),
+  errorComponent: RemoteErrorComponent,
+  pendingComponent: DefaultRemoteSkeleton,
+});
+
+export const notFoundRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: '$',
+  component: NotFoundComponent,
+});
+
+// Backward-compatible route aliases
+export const checkoutRoute = paymentRoute;
+export const catalogRoute = indexRoute;
+
+// 5. Árvore de rotas
 export const routeTree = rootRoute.addChildren([
-  indexRoute,
-  catalogRoute,
-  pdpRoute,
-  cartRoute,
-  checkoutRoute,
-  confirmationRoute,
-  profileRoute,
-  walletsRoute,
-  loginRoute,
-  registerRoute,
+  appLayoutRoute.addChildren([
+    indexRoute,
+    pdpRoute,
+    cartRoute,
+    paymentRoute,
+    profileRoute,
+    walletsRoute,
+    notFoundRoute,
+  ]),
+  modalLayoutRoute.addChildren([
+    loginRoute,
+    registerRoute,
+    confirmationRoute,
+  ]),
 ]);
 
 export const router = createRouter({

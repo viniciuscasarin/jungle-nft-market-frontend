@@ -34,14 +34,18 @@ const mockUserB: Session = {
 };
 
 function createMockRealtimeClient(): RealtimeClient {
-  return {
+  const client = {
     connect: vi.fn(),
     disconnect: vi.fn(),
-    auth: {},
+    auth: {} as Record<string, unknown>,
+    setAuthToken: vi.fn((token: string | null) => {
+      client.auth['token'] = token;
+    }),
     on: vi.fn(),
     off: vi.fn(),
     emit: vi.fn(),
-  } as unknown as RealtimeClient;
+  };
+  return client as unknown as RealtimeClient;
 }
 
 function createInMemoryStorage(): Storage {
@@ -98,7 +102,7 @@ describe('SessionController (@nft/auth-feature)', () => {
   });
 
   describe('User Switching & Cache Purging (A -> B)', () => {
-    it('sets initial session, connects socket, and stores token', async () => {
+    it('sets initial session, sets socket token without connecting, and stores token', async () => {
       await controller.setSession(mockUserA);
 
       expect(controller.getState()).toEqual({
@@ -106,7 +110,8 @@ describe('SessionController (@nft/auth-feature)', () => {
         session: mockUserA,
       });
       expect(tokenStore.getToken()).toBe('token_user_a');
-      expect(realtimeClient.connect).toHaveBeenCalled();
+      expect(realtimeClient.connect).not.toHaveBeenCalled();
+      expect(realtimeClient.auth['token']).toBe('token_user_a');
     });
 
     it('cancels queries, clears private cache for user A and reconnects socket when user B authenticates', async () => {

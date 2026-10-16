@@ -40,10 +40,17 @@ export {
 export {
   bootstrapStandalone,
   StandaloneNotFound,
+  resolveStandaloneDestination,
+  resolveStandaloneHref,
+  isSafeInternalPath,
+  StandaloneLink,
   type StandaloneBootstrapConfig,
   type StandalonePageDescriptor,
   type StandaloneHistoryType,
   type StandaloneNotFoundProps,
+  type ResolveDestinationOptions,
+  type ResolvedStandaloneDestination,
+  type StandaloneLinkProps,
 } from './bootstrap';
 
 export {

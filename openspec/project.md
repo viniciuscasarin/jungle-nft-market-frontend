@@ -22,9 +22,11 @@ Um único monorepo Nx com 4 apps React/Vite integrados por Module Federation:
 4. Nenhum app importa outro app. O compartilhamento ocorre apenas por libs.
 5. Tags `flow:shell|storefront|checkout|account|shared` restringem quais `feature` e `ui` cada app pode importar. `domain` e `data-access` são compartilháveis.
 6. MSW é iniciado só pelo host (e pelo bootstrap standalone, que reutiliza o código de `shell-kit`). Remotes nunca contêm mocks.
+   O lint permite consumir `shell-kit` sem tratar seus consumidores como importadores de mocks: features e remotes usam restrições positivas de tipos nos imports diretos, excluindo `type:mocks`; as demais regras de fluxo e hierarquia continuam aplicáveis.
 7. Falha ao carregar um remote exibe ErrorState com retry, sem derrubar o shell.
 8. O build de produção gera uma única pasta de deploy: shell em `/` e remotes em `/remotes/<nome>/`, com SPA fallback e headers de cache corretos para `remoteEntry`.
 9. Sem publicação de pacotes: as libs são consumidas por path alias (`@nft/<scope>-<lib>`).
+10. Dev integrado usa quatro processos simultâneos (`dev:mocks`, `--parallel=4`), portas estritas, `.env` da raiz e caches Vite separados por app. O host usa `loaded-first` em dev e `version-first` em produção. CSS global entra pelo HTML para manter dependências de observação do Tailwind fora do aquecimento JavaScript de Federation.
 
 ## Arquitetura de libs
 Libs por domínio em 4 camadas (`domain`, `data-access`, `feature`, `ui`), além de `shared/*`, `shell-kit` e `mocks/*`. Fronteiras, direção de dependências e encapsulamento de terceiros em [`ARCHITECTURE.md`](../ARCHITECTURE.md) §4.

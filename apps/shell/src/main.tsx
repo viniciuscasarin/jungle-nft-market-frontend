@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from '@tanstack/react-router';
 import { validateEnv } from '@nft/shared-contracts';
-import { createQueryClient } from '@nft/shared-query';
+import { createQueryClient, QueryClientProvider } from '@nft/shared-query';
 import { createHttpClient } from '@nft/shared-http';
 import { createRealtimeClient } from '@nft/shared-realtime';
 import {
@@ -10,6 +10,11 @@ import {
   singletonRegistry,
   startMocks,
   useSession,
+  globalFeedback,
+  GlobalLiveRegions,
+  ShellToastProvider,
+  ShellPageChromeProvider,
+  RealtimeSync,
   type ShellContextValue,
 } from '@nft/shell-kit';
 import {
@@ -20,7 +25,6 @@ import {
 } from '@nft/auth-data-access';
 import { SessionController, SessionProvider } from '@nft/auth-feature';
 import { router } from './routes';
-import './styles.css';
 
 // Validate environment variables on application startup
 validateEnv(import.meta.env);
@@ -67,9 +71,10 @@ export const shellValue: ShellContextValue = {
   navigate: (to: string) => {
     void router.navigate({ to });
   },
+  feedback: globalFeedback,
 };
 
-async function prepareApp(): Promise<void> {
+export async function prepareApp(): Promise<void> {
   if (import.meta.env['VITE_ENABLE_MOCKS'] === 'true') {
     await startMocks();
   }
@@ -81,7 +86,10 @@ async function prepareApp(): Promise<void> {
       await sessionController.setSession(session);
     } catch {
       tokenStore.clearToken();
+      sessionController.setUnauthenticated();
     }
+  } else {
+    sessionController.setUnauthenticated();
   }
 }
 
@@ -97,16 +105,24 @@ if (rootElement && !rootElement.innerHTML) {
   void prepareApp().then(() => {
     root.render(
       <React.StrictMode>
-        <ShellProvider value={shellValue}>
-          <SessionProvider controller={sessionController}>
-            <ShellApp />
-            {import.meta.env['VITE_ENABLE_MOCKS'] === 'true' && (
-              <React.Suspense fallback={null}>
-                <MocksDevPanel />
-              </React.Suspense>
-            )}
-          </SessionProvider>
-        </ShellProvider>
+        <QueryClientProvider client={queryClient}>
+          <ShellProvider value={shellValue}>
+            <ShellToastProvider>
+              <ShellPageChromeProvider>
+                <GlobalLiveRegions />
+                <RealtimeSync />
+                <SessionProvider controller={sessionController}>
+                  <ShellApp />
+                  {import.meta.env['VITE_ENABLE_MOCKS'] === 'true' && (
+                    <React.Suspense fallback={null}>
+                      <MocksDevPanel />
+                    </React.Suspense>
+                  )}
+                </SessionProvider>
+              </ShellPageChromeProvider>
+            </ShellToastProvider>
+          </ShellProvider>
+        </QueryClientProvider>
       </React.StrictMode>,
     );
   });

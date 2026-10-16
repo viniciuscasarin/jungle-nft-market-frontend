@@ -10,10 +10,10 @@ O monorepo é estruturado em 4 aplicações integradas via Module Federation mai
 
 | Aplicação | Papel | Porta Fixa | Base Path em Prod | Módulos Expostos / Páginas |
 |---|---|---|---|---|
-| `apps/shell` | **Host Shell** (orquestrador, layout, rotas, sessão, MSW, singletons) | `4200` | `/` | Consome todos os remotes |
-| `apps/storefront` | **Remote Catálogo** (Home e PDP) | `4201` | `/remotes/storefront/` | `./HomePage`, `./PdpPage` |
-| `apps/checkout` | **Remote Checkout** (Carrinho, Pagamento e Confirmação) | `4202` | `/remotes/checkout/` | `./CartPage`, `./PaymentPage`, `./ConfirmationPage` |
-| `apps/account` | **Remote Conta** (Perfil e Carteiras) | `4203` | `/remotes/account/` | `./ProfilePage`, `./WalletsPage` |
+| `apps/shell` | **Host Shell** (orquestrador, layout, rotas, sessão, MSW, singletons) | `4200` | `/` | Consome todos os remotes (`/`, `/nft/$nftId`, `/carrinho`, `/pagamento`, `/perfil`, `/carteiras`, `/pedido/$orderId`) |
+| `apps/storefront` | **Remote Catálogo** (Home `/` e PDP `/nft/$nftId`) | `4201` | `/remotes/storefront/` | `./HomePage`, `./PdpPage` |
+| `apps/checkout` | **Remote Checkout** (Carrinho `/carrinho`, Pagamento `/pagamento` e Confirmação `/pedido/$orderId`) | `4202` | `/remotes/checkout/` | `./CartPage`, `./PaymentPage`, `./ConfirmationPage` |
+| `apps/account` | **Remote Conta** (Perfil `/perfil` e Carteiras `/carteiras`) | `4203` | `/remotes/account/` | `./ProfilePage`, `./WalletsPage` |
 | `apps/storybook` | **Design System** (Storybook consolidado) | `6006` | `/storybook/` | Catálogo visual de componentes UI |
 
 ---
@@ -49,7 +49,7 @@ Para iniciar o host e os 3 remotes simultaneamente em portas dedicadas:
 ```bash
 pnpm dev:mocks
 ```
-Este comando utiliza `nx run-many -t dev` e sobe:
+Este comando utiliza `nx run-many -t dev -p shell storefront checkout account --parallel=4` e sobe os quatro processos persistentes simultaneamente:
 - Host Shell: `http://localhost:4200`
 - Storefront: `http://localhost:4201`
 - Checkout: `http://localhost:4202`
@@ -63,6 +63,18 @@ pnpm dev:storefront   # Apenas Storefront (standalone)
 pnpm dev:checkout     # Apenas Checkout (standalone)
 pnpm dev:account      # Apenas Account (standalone)
 ```
+
+`dev:shell` inicia somente o host. Para navegar nas páginas federadas, use `pnpm dev:mocks` ou mantenha os três comandos dos remotes em terminais separados. Uma porta ocupada interrompe o servidor com erro explícito (`strictPort`), em vez de alterar silenciosamente o endereço do remote.
+
+Cada app lê o `.env` da raiz (`envDir`) e mantém seu próprio cache em `node_modules/.vite/<app>`. O shell resolve também as URLs de remotes desse arquivo. No desenvolvimento, o host usa `shareStrategy: 'loaded-first'` para consumir seus singletons e carregar remotes sob demanda; produção mantém `version-first`.
+
+O CSS de cada app é carregado por `<link rel="stylesheet">` no HTML. Isso evita que o aquecimento do grafo JavaScript de Federation percorra os arquivos observados pelo Tailwind para gerar classes (incluindo testes e configurações), sem alterar a geração de CSS ou remover assets.
+
+`pnpm test:dev` inicia quatro servidores em portas de teste 4300–4303 com caches temporários, verifica o isolamento das configurações e valida no Chromium catálogo, reload, carrinho, login, perfil, integridade dos singletons e os três bootstraps standalone. Requer o navegador Playwright instalado; os servidores e caches de teste são encerrados/removidos ao terminar.
+
+Os runtimes `react/jsx-runtime` e `react/jsx-dev-runtime` são singletons explícitos com `eager: true` nos quatro apps. Isso permite avaliar componentes que criam elementos JSX durante a importação (por exemplo, a configuração de ícones de `Alert`) antes do bootstrap standalone, sem depender de um host para inicializar esses exports.
+
+O storefront registra antecipadamente em `optimizeDeps.include` as dependências do bootstrap standalone (UI, HTTP, contratos e MSW). Com Vite 6.4.4 e `@module-federation/vite` 1.23.5, descobri-las somente durante o scan pode causar `Cannot read properties of undefined (reading 'browserHash')` em `commitProcessing`, inclusive com cache vazio. A descoberta automática permanece ativa. Para verificar o cold start com cache isolado, execute `node --test --test-force-exit scripts/storefront-dev.test.js` (o plugin de Federation pode manter workers de tipos abertos após fechar o servidor).
 
 ---
 

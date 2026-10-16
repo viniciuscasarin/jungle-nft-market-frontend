@@ -100,6 +100,7 @@ pnpm install
 | `pnpm storybook` | Inicializa o servidor interativo do Storybook na porta 6006 (`apps/storybook`) |
 | `pnpm build:storybook` | Compila o catálogo estático do Storybook para `dist/apps/storybook/` |
 | `pnpm dev:mocks` | Sobe todos os 4 apps simultaneamente com mocks ativos |
+| `pnpm test:dev` | Valida no Chromium o cold start, reload e remotes reais em quatro servidores dev isolados |
 | `pnpm dev:shell` | Executa apenas o host Shell (`http://localhost:4200`) |
 | `pnpm dev:storefront` | Executa o remote Storefront standalone (`http://localhost:4201`) |
 | `pnpm dev:checkout` | Executa o remote Checkout standalone (`http://localhost:4202`) |
@@ -111,6 +112,8 @@ pnpm install
 | `pnpm preview` | Servidor estático Node.js servindo `dist/integrated/` com headers de cache simulados |
 | `pnpm e2e` | Executa testes end-to-end e de regressão visual com Playwright (`web-e2e`) |
 | `pnpm lighthouse` | Executa auditoria de performance, acessibilidade e SEO |
+
+Para navegar pelo marketplace integrado, use `pnpm dev:mocks`. `dev:shell` requer os remotes em execução em outros terminais. Os quatro apps leem o `.env` da raiz, usam portas fixas estritas e caches Vite separados; após mudar a configuração de dev, reinicie os processos e recarregue o navegador.
 
 ---
 
@@ -185,13 +188,30 @@ Para gerar novos hashes de senha: `pnpm mocks:hash <senha>`
 3. O `SessionController` limpa o `tokenStore`, cancela queries pendentes e executa `queryClient.removeQueries()` para todas as chaves privadas vinculadas a `user_alice`.
 4. Faça login com Bob (`bob@example.com`).
 5. O Header e as rotas privadas exibem exclusivamente os dados de Bob Santos, garantindo isolamento total sem resquícios ou vazamento de dados do usuário anterior.
-
+#### Como Testar Eventos em Tempo Real (Socket.IO + MSW)
+1. Inicie a aplicação com mocks via `pnpm dev:mocks` ou `pnpm preview`.
+2. Abra o **Mocks Dev Panel** pelo atalho `Ctrl+Alt+M` (ou acesse `/?mocks-panel=1`).
+3. Clique em **⚡ Emitir Preço Alterado (nft.updated)**:
+   - O preço do item é atualizado no banco em memória com `version` incrementada e emitido pelo WebSocket via `@mswjs/socket.io-binding`.
+   - O `socket.io-client` recebe o evento, o `RealtimeSync` invalida as queries ativas do TanStack Query e um toast/live region anuncia a mudança.
+4. Clique em **⚡ Emitir Esgotado (nft.updated)**:
+   - A disponibilidade do NFT cai para 0 e a alteração é propagada em tempo real com anúncio acessível.
+5. Em testes ou console DevTools, utilize os helpers determinísticos:
+   ```js
+   window.__mocks.emitNftUpdated({ nftId: 'nft-01', price: '5.20' });
+   window.__mocks.emitDuplicateEvent(); // Descartado silenciosamente por deduplicação
+   window.__mocks.emitStaleEvent({ nftId: 'nft-01', price: '0.10' }); // Descartado por versionamento monotônico
+   window.__mocks.simulateSocketDisconnect(); // Simula queda do socket
+   window.__mocks.simulateSocketReconnect(); // Reconcilia catálogo com a API REST
+   ```
 
 ---
 
 ## 📦 Build Consolidado e Deploy (Vercel)
 
 A execução de `pnpm build` orquestra a compilação de todas as aplicações e monta uma distribuição única pronta para deploy em `dist/integrated/`:
+
+O build mantém a verificação de tipos habilitada. Na infraestrutura de mocks, `parseBody` preserva os tipos de saída do Zod (incluindo defaults e transforms); o bootstrap consome o contrato de controles de `mocks-core` e registra o handler WebSocket de `mocks-socket` no MSW.
 
 - `apps/shell` é colocado na raiz `/` (com `index.html` e `assets/`).
 - Remotes são agrupados sob `remotes/<nome>/` (`remotes/storefront`, `remotes/checkout`, `remotes/account`).
@@ -208,3 +228,17 @@ O pipeline configurado em `.github/workflows/ci.yml` executa a cada push e pull 
 1. Cache de dependências pnpm e cache do Nx (`.nx/cache`).
 2. Jobs paralelos via `nx affected` para `typecheck`, `lint`, `test` e `build`.
 3. Job isolado de `e2e` rodando Playwright no Chromium com upload automático dos relatórios e traces de execução.
+
+---
+
+## 📋 Débitos Técnicos e Simplificações P1
+
+Para atender ao prazo crítico de entrega, algumas funcionalidades foram deliberadamente simplificadas e registradas como débito técnico. Todos os débitos estão documentados em [`ARCHITECTURE.md` §17](./ARCHITECTURE.md#17-limitações-conhecidas).
+
+### Débitos Técnicos da Home (`storefront-home-catalog`)
+
+- **Stories CSF3 Mínimos**: Criado apenas o story principal `home-page-content.stories.tsx` cobrindo a composição completa da Home (Hero, Catálogo, Filtros, Promo e Blog) com cenários de loading, empty, error e filtros aplicados. A expansão de stories individuais granulares por subcomponente (`HomeHeroBanner`, `CatalogFilterSidebar`, `HomePromoSection`, `HomeBlogSection`) e pseudo-estados interativos está registrada como débito técnico para iterações futuras.
+
+- **Contagens de Facetas Fixas por Cenário**: O handler `GET /api/nfts` retorna as contagens de itens por coleção e por rede (`facets`) calculadas sobre o conjunto base do cenário ativo no MSW. O recálculo cruzado dinâmico facetado (N×M contagens por combinação de filtros ativos) está registrado como débito técnico.
+
+- **Hero e Featured NFT Determinísticos**: O Hero Banner e o banner lateral "NFT EM DESTAQUE" apontam para NFTs fixos da fixture (`nft-01` e `nft-02`). Os dots de navegação do Hero alternam slides visuais fixos sem carrossel dinâmico de dados. A implementação de carrossel dinâmico com rotação de NFTs em destaque baseada em metadados da API está registrada como débito técnico.

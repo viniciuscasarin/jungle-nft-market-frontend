@@ -2,3 +2,8 @@
 @import "../../../libs/shared/ui/src/styles/theme.css";
 @source "../../storefront/src";
 @source "../../../libs";
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}

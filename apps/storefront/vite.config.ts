@@ -11,6 +11,17 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: __dirname,
+    cacheDir: path.resolve(__dirname, '../../node_modules/.vite/storefront'),
+    envDir: path.resolve(__dirname, '../..'),
+    optimizeDeps: {
+      // Seed dynamic mock imports before Federation consumes shared modules.
+      include: [
+        'zod', 'decimal.js', 'axios', 'msw', 'msw/browser', '@mswjs/socket.io-binding',
+        '@radix-ui/react-slot', '@radix-ui/react-dropdown-menu', '@radix-ui/react-dialog',
+        'lucide-react', 'clsx', 'tailwind-merge', 'react-hook-form', '@hookform/resolvers/zod',
+      ],
+      exclude: ['@tailwindcss/oxide'],
+    },
     base: isProduction ? '/remotes/storefront/' : '/',
 
     plugins: [
@@ -19,10 +30,12 @@ export default defineConfig(({ mode }) => {
         name: 'storefront',
         filename: 'remoteEntry.js',
         exposes: {
-          './HomePage': path.resolve(__dirname, 'src/App.tsx'),
+          './HomePage': path.resolve(__dirname, 'src/HomePage.tsx'),
           './PdpPage': path.resolve(__dirname, 'src/PdpPage.tsx'),
         },
         shared: {
+          'react/jsx-runtime': { singleton: true, requiredVersion: '^19.0.0', eager: true },
+          'react/jsx-dev-runtime': { singleton: true, requiredVersion: '^19.0.0', eager: true },
           react: { singleton: true, requiredVersion: '^19.0.0' },
           'react-dom': { singleton: true, requiredVersion: '^19.0.0' },
           '@tanstack/react-router': { singleton: true },
@@ -36,6 +49,7 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       port: 4201,
+      strictPort: true,
       host: 'localhost',
       origin: 'http://localhost:4201',
       cors: true,

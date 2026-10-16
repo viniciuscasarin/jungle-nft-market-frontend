@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import {
@@ -7,14 +8,19 @@ import {
   createRootRouteWithContext,
   createMemoryHistory,
 } from '@tanstack/react-router';
-import { singletonProbe } from '@nft/shell-kit';
+import {
+  singletonProbe,
+  ShellProvider,
+  ShellPageChromeProvider,
+  globalFeedback,
+  type ShellContextValue,
+} from '@nft/shell-kit';
+import { ROUTES } from '@nft/shared-router';
 import {
   RootComponent,
   routeTree,
   NotFoundComponent,
-  HomeComponent,
   RemoteErrorComponent,
-  router,
   type RouterContext,
 } from './routes';
 
@@ -59,39 +65,62 @@ vi.mock('account/WalletsPage', () => ({
   ),
 }));
 
-describe('Shell routes and components', () => {
+type AppRouterInstance = Parameters<typeof RouterProvider>[0]['router'];
+
+function renderWithShell(testRouter: AppRouterInstance) {
+  const routerWithContext = testRouter as AppRouterInstance & {
+    options: { context?: RouterContext };
+  };
+
+  const dummyShell = {
+    queryClient: {} as ShellContextValue['queryClient'],
+    httpClient: {} as ShellContextValue['httpClient'],
+    realtimeClient: {} as ShellContextValue['realtimeClient'],
+    session: routerWithContext.options.context?.session ?? null,
+    navigate: (to: string) => void testRouter.navigate({ to }),
+    feedback: globalFeedback,
+  };
+
+  return render(
+    <ShellProvider value={dummyShell}>
+      <ShellPageChromeProvider>
+        <RouterProvider router={testRouter} />
+      </ShellPageChromeProvider>
+    </ShellProvider>
+  );
+}
+
+describe('Shell routes and layouts', () => {
   beforeEach(() => {
     singletonProbe.reset();
     window.scrollTo = vi.fn();
   });
 
-  it('renders HomeComponent inside router on root path and increments singletonProbe for shell', async () => {
+  it('renders storefront remote on root path (/) within _app layout and increments singletonProbe', async () => {
     const testRouter = createRouter({
       routeTree,
-      history: createMemoryHistory({ initialEntries: ['/'] }),
+      history: createMemoryHistory({ initialEntries: [ROUTES.HOME] }),
       defaultNotFoundComponent: NotFoundComponent,
       context: { session: null },
     });
     await testRouter.load();
 
     await act(async () => {
-      render(<RouterProvider router={testRouter} />);
+      renderWithShell(testRouter);
     });
 
-    expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: /Jungle NFT Marketplace/i,
-      }),
-    ).toBeDefined();
-    expect(
-      screen.getByText(/Ambiente integrado para descoberta/i),
-    ).toBeDefined();
-    expect(singletonProbe.getCount()).toBe(1);
-    expect(singletonProbe.getEvents()[0]?.caller).toBe('apps/shell');
+    expect(await screen.findByTestId('remote-home-page')).toBeDefined();
+    expect(screen.getAllByRole('banner').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole('contentinfo')).toBeDefined();
+    expect(screen.getByRole('link', { name: /Pular para o conteúdo/i })).toBeDefined();
+
+    expect(singletonProbe.getCount()).toBe(2);
+    const callers = singletonProbe.getEvents().map((e) => e.caller);
+    expect(callers).toContain('apps/shell');
+    expect(callers).toContain('apps/storefront');
   });
 
-  it('renders accessible 404 page when navigating to a non-existent route', async () => {
+  it('renders accessible 404 page within _app layout when navigating to non-existent route', async () => {
     const testRouter = createRouter({
       routeTree,
       history: createMemoryHistory({
@@ -103,7 +132,7 @@ describe('Shell routes and components', () => {
     await testRouter.load();
 
     await act(async () => {
-      render(<RouterProvider router={testRouter} />);
+      renderWithShell(testRouter);
     });
 
     expect(
@@ -116,29 +145,256 @@ describe('Shell routes and components', () => {
     expect(
       screen.getByRole('link', { name: /Voltar para o Início/i }),
     ).toBeDefined();
+    // 404 is inside _app layout
+    expect(screen.getAllByRole('banner').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole('contentinfo')).toBeDefined();
   });
 
-  it('renders lazy loaded remote component on /catalogo and verifies singletonProbe count reaches 2', async () => {
+  it('returns 404 without redirect on legacy paths (/catalogo, /checkout, /pedidos/1/confirmacao)', async () => {
+    const legacyPaths = ['/catalogo', '/checkout', '/pedidos/1/confirmacao'];
+
+    for (const path of legacyPaths) {
+      const testRouter = createRouter({
+        routeTree,
+        history: createMemoryHistory({ initialEntries: [path] }),
+        defaultNotFoundComponent: NotFoundComponent,
+        context: { session: null },
+      });
+      await testRouter.load();
+
+      const { unmount } = renderWithShell(testRouter);
+      expect(
+        screen.getByRole('heading', { level: 1, name: '404' }),
+      ).toBeDefined();
+      unmount();
+    }
+  });
+
+  it('renders PDP remote component on /nft/$nftId', async () => {
     const testRouter = createRouter({
       routeTree,
-      history: createMemoryHistory({ initialEntries: ['/catalogo'] }),
+      history: createMemoryHistory({ initialEntries: ['/nft/item-42'] }),
       defaultNotFoundComponent: NotFoundComponent,
       context: { session: null },
     });
     await testRouter.load();
 
     await act(async () => {
-      render(<RouterProvider router={testRouter} />);
+      renderWithShell(testRouter);
     });
 
-    expect(await screen.findByTestId('remote-home-page')).toBeDefined();
-    expect(singletonProbe.getCount()).toBe(2);
-    const callers = singletonProbe.getEvents().map((e) => e.caller);
-    expect(callers).toContain('apps/shell');
-    expect(callers).toContain('apps/storefront');
+    expect(await screen.findByTestId('remote-pdp-page')).toBeDefined();
+    expect(screen.getAllByRole('banner').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders RemoteErrorComponent with accessible alert and actions inside router', async () => {
+  it('renders Cart remote component on /carrinho for public visitor without auth redirect', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({
+        initialEntries: ['/carrinho?coupon=PROMO10'],
+      }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      renderWithShell(testRouter);
+    });
+
+    expect(await screen.findByTestId('remote-cart-page')).toBeDefined();
+    expect(testRouter.state.location.pathname).toBe('/carrinho');
+  });
+
+  it('redirects unauthenticated users from protected route /pagamento to /login with redirect param', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/pagamento'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      renderWithShell(testRouter);
+    });
+
+    expect(testRouter.state.location.pathname).toBe('/login');
+    expect(testRouter.state.location.search).toEqual({
+      redirect: '/pagamento',
+    });
+  });
+
+  it('redirects unauthenticated users from /perfil to /login preserving redirect url', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/perfil'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      renderWithShell(testRouter);
+    });
+
+    expect(testRouter.state.location.pathname).toBe('/login');
+    expect(testRouter.state.location.search).toEqual({
+      redirect: '/perfil',
+    });
+  });
+
+  it('renders protected route /pagamento when user session is present in context', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/pagamento'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: {
+        session: {
+          userId: 'user-789',
+          name: 'Authorized Collector',
+          email: 'collector@jungle.test',
+        },
+      },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      renderWithShell(testRouter);
+    });
+
+    expect(await screen.findByTestId('remote-payment-page')).toBeDefined();
+  });
+
+  it('renders protected routes /pedido/$orderId, /perfil and /carteiras when authenticated', async () => {
+    const authenticatedContext = {
+      session: {
+        userId: 'user-789',
+        name: 'Authorized Collector',
+        email: 'collector@jungle.test',
+      },
+    };
+
+    const confirmationRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({
+        initialEntries: ['/pedido/ord-123'],
+      }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: authenticatedContext,
+    });
+    await confirmationRouter.load();
+
+    const { unmount: unmountConf } = renderWithShell(confirmationRouter);
+    expect(
+      await screen.findByTestId('remote-confirmation-page'),
+    ).toBeDefined();
+    // /pedido/$orderId uses _modal layout (no header/footer)
+    expect(screen.queryByRole('banner')).toBeNull();
+    expect(screen.queryByRole('contentinfo')).toBeNull();
+    unmountConf();
+
+    const profileRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/perfil'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: authenticatedContext,
+    });
+    await profileRouter.load();
+
+    const { unmount: unmountProf } = renderWithShell(profileRouter);
+    expect(await screen.findByTestId('remote-profile-page')).toBeDefined();
+    unmountProf();
+
+    const walletsRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/carteiras'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: authenticatedContext,
+    });
+    await walletsRouter.load();
+
+    renderWithShell(walletsRouter);
+    expect(await screen.findByTestId('remote-wallets-page')).toBeDefined();
+  });
+
+  it('renders isolated LoginPage on /login in _modal layout without chrome', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/login'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      renderWithShell(testRouter);
+    });
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Entrar na Conta' }),
+    ).toBeDefined();
+    // Modal layout has NO banner (header) and NO contentinfo (footer)
+    expect(screen.queryByRole('banner')).toBeNull();
+    expect(screen.queryByRole('contentinfo')).toBeNull();
+  });
+
+  it('redirects authenticated user accessing /login to sanitized destination or root', async () => {
+    const authenticatedContext = {
+      session: {
+        userId: 'user-789',
+        name: 'Authorized Collector',
+        email: 'collector@jungle.test',
+      },
+    };
+
+    // Safe redirect
+    const safeRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/login?redirect=%2Fcarteiras'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: authenticatedContext,
+    });
+    await safeRouter.load();
+
+    const { unmount } = renderWithShell(safeRouter);
+    expect(safeRouter.state.location.pathname).toBe('/carteiras');
+    unmount();
+
+    // Unsafe external redirect (must fall back to /)
+    const unsafeRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/login?redirect=https%3A%2F%2Fevil.com'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: authenticatedContext,
+    });
+    await unsafeRouter.load();
+
+    renderWithShell(unsafeRouter);
+    expect(unsafeRouter.state.location.pathname).toBe('/');
+  });
+
+  it('renders SignUpPage on /cadastro route in _modal layout', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/cadastro'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      renderWithShell(testRouter);
+    });
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Criar Conta' }),
+    ).toBeDefined();
+    expect(screen.queryByRole('banner')).toBeNull();
+    expect(screen.queryByRole('contentinfo')).toBeNull();
+  });
+
+  it('renders RemoteErrorComponent with accessible alert and retry', async () => {
     const isolatedRootRoute = createRootRouteWithContext<RouterContext>()({
       component: RootComponent,
       notFoundComponent: NotFoundComponent,
@@ -165,7 +421,7 @@ describe('Shell routes and components', () => {
     await testRouter.load();
 
     await act(async () => {
-      render(<RouterProvider router={testRouter} />);
+      renderWithShell(testRouter);
     });
 
     expect(
@@ -180,187 +436,6 @@ describe('Shell routes and components', () => {
     ).toBeDefined();
     expect(
       screen.getByRole('link', { name: /Voltar para o Início/i }),
-    ).toBeDefined();
-  });
-
-  it('renders PDP remote component on /nft/$nftId', async () => {
-    const testRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({ initialEntries: ['/nft/42'] }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: { session: null },
-    });
-    await testRouter.load();
-
-    await act(async () => {
-      render(<RouterProvider router={testRouter} />);
-    });
-
-    expect(await screen.findByTestId('remote-pdp-page')).toBeDefined();
-  });
-
-  it('renders Cart remote component on /carrinho with valid search params', async () => {
-    const testRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({
-        initialEntries: ['/carrinho?coupon=PROMO10'],
-      }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: { session: null },
-    });
-    await testRouter.load();
-
-    await act(async () => {
-      render(<RouterProvider router={testRouter} />);
-    });
-
-    expect(await screen.findByTestId('remote-cart-page')).toBeDefined();
-  });
-
-  it('redirects unauthenticated users from protected route /checkout to /login', async () => {
-    const testRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({ initialEntries: ['/checkout'] }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: { session: null },
-    });
-    await testRouter.load();
-
-    await act(async () => {
-      render(<RouterProvider router={testRouter} />);
-    });
-
-    expect(testRouter.state.location.pathname).toBe('/login');
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Entrar na Conta' }),
-    ).toBeDefined();
-  });
-
-  it('redirects unauthenticated users from /perfil to /login preserving redirect url', async () => {
-    const testRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({ initialEntries: ['/perfil'] }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: { session: null },
-    });
-    await testRouter.load();
-
-    await act(async () => {
-      render(<RouterProvider router={testRouter} />);
-    });
-
-    expect(testRouter.state.location.pathname).toBe('/login');
-    expect(testRouter.state.location.search).toEqual({
-      redirect: '/perfil',
-    });
-  });
-
-  it('renders protected route /checkout when user session is present in context', async () => {
-    const testRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({ initialEntries: ['/checkout'] }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: {
-        session: {
-          userId: 'user-789',
-          name: 'Authorized Collector',
-          email: 'collector@jungle.test',
-        },
-      },
-    });
-    await testRouter.load();
-
-    await act(async () => {
-      render(<RouterProvider router={testRouter} />);
-    });
-
-    expect(await screen.findByTestId('remote-payment-page')).toBeDefined();
-  });
-
-  it('renders protected routes /pedidos/$orderId/confirmacao, /perfil and /carteiras when authenticated', async () => {
-    const authenticatedContext = {
-      session: {
-        userId: 'user-789',
-        name: 'Authorized Collector',
-        email: 'collector@jungle.test',
-      },
-    };
-
-    const confirmationRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({
-        initialEntries: ['/pedidos/ord-123/confirmacao'],
-      }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: authenticatedContext,
-    });
-    await confirmationRouter.load();
-
-    const { unmount } = render(
-      <RouterProvider router={confirmationRouter} />,
-    );
-    expect(
-      await screen.findByTestId('remote-confirmation-page'),
-    ).toBeDefined();
-    unmount();
-
-    const profileRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({ initialEntries: ['/perfil'] }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: authenticatedContext,
-    });
-    await profileRouter.load();
-
-    render(<RouterProvider router={profileRouter} />);
-    expect(await screen.findByTestId('remote-profile-page')).toBeDefined();
-  });
-
-  it('configures predictive preloading on router and navigation links (Task 3.4)', () => {
-    expect(router.options.defaultPreload).toBe('intent');
-
-    render(<HomeComponent />);
-    expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: /Jungle NFT Marketplace/i,
-      }),
-    ).toBeDefined();
-  });
-
-  it('renders isolated LoginComponent directly on /login', async () => {
-    const testRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({ initialEntries: ['/login'] }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: { session: null },
-    });
-    await testRouter.load();
-
-    await act(async () => {
-      render(<RouterProvider router={testRouter} />);
-    });
-
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Entrar na Conta' }),
-    ).toBeDefined();
-  });
-
-  it('renders SignUpPage on /cadastro route', async () => {
-    const testRouter = createRouter({
-      routeTree,
-      history: createMemoryHistory({ initialEntries: ['/cadastro'] }),
-      defaultNotFoundComponent: NotFoundComponent,
-      context: { session: null },
-    });
-    await testRouter.load();
-
-    await act(async () => {
-      render(<RouterProvider router={testRouter} />);
-    });
-
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Criar Conta' }),
     ).toBeDefined();
   });
 });

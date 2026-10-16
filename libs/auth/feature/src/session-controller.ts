@@ -97,11 +97,12 @@ export class SessionController {
 
     this.tokenStore.setToken(newSession.token);
 
-    // Update socket token and reconnect
-    if (this.deps.realtimeClient.auth && typeof this.deps.realtimeClient.auth === 'object') {
+    // Update socket token (connection is managed on-demand by active subscriptions)
+    if (typeof this.deps.realtimeClient.setAuthToken === 'function') {
+      this.deps.realtimeClient.setAuthToken(newSession.token);
+    } else if (this.deps.realtimeClient.auth && typeof this.deps.realtimeClient.auth === 'object') {
       (this.deps.realtimeClient.auth as Record<string, unknown>)['token'] = newSession.token;
     }
-    this.deps.realtimeClient.connect();
 
     this.state = { status: 'authenticated', session: newSession };
     this.notify();
@@ -130,6 +131,12 @@ export class SessionController {
   public async logout(): Promise<void> {
     const prevUserId = this.state.session?.user.id;
     await this.cleanupPreviousUser(prevUserId);
+
+    if (typeof this.deps.realtimeClient.setAuthToken === 'function') {
+      this.deps.realtimeClient.setAuthToken(null);
+    } else if (this.deps.realtimeClient.auth && typeof this.deps.realtimeClient.auth === 'object') {
+      delete (this.deps.realtimeClient.auth as Record<string, unknown>)['token'];
+    }
 
     this.tokenStore.clearToken();
     this.resumeStore.clearContext();

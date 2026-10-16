@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -22,25 +22,26 @@ function resolveRemoteEntry(
   return envVar.endsWith('.js') ? envVar : `${envVar.replace(/\/+$/, '')}/remoteEntry.js`;
 }
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
   const isDev = command === 'serve';
+  const env = loadEnv(mode, path.resolve(__dirname, '../..'), 'VITE_');
 
   const storefrontUrl = resolveRemoteEntry(
-    process.env['VITE_REMOTE_STOREFRONT_URL'],
+    env['VITE_REMOTE_STOREFRONT_URL'],
     'http://localhost:4201/remoteEntry.js',
     '/remotes/storefront/remoteEntry.js',
     isDev,
   );
 
   const checkoutUrl = resolveRemoteEntry(
-    process.env['VITE_REMOTE_CHECKOUT_URL'],
+    env['VITE_REMOTE_CHECKOUT_URL'],
     'http://localhost:4202/remoteEntry.js',
     '/remotes/checkout/remoteEntry.js',
     isDev,
   );
 
   const accountUrl = resolveRemoteEntry(
-    process.env['VITE_REMOTE_ACCOUNT_URL'],
+    env['VITE_REMOTE_ACCOUNT_URL'],
     'http://localhost:4203/remoteEntry.js',
     '/remotes/account/remoteEntry.js',
     isDev,
@@ -48,11 +49,23 @@ export default defineConfig(({ command }) => {
 
   return {
     root: __dirname,
+    cacheDir: path.resolve(__dirname, '../../node_modules/.vite/shell'),
+    envDir: path.resolve(__dirname, '../..'),
+    optimizeDeps: {
+      // Seed dynamic mock imports before Federation consumes shared modules.
+      include: [
+        'zod', 'decimal.js', 'axios', 'msw', 'msw/browser', '@mswjs/socket.io-binding',
+        '@radix-ui/react-slot', '@radix-ui/react-dropdown-menu', '@radix-ui/react-dialog',
+        'lucide-react', 'clsx', 'tailwind-merge', 'react-hook-form', '@hookform/resolvers/zod',
+      ],
+      exclude: ['@tailwindcss/oxide'],
+    },
 
     plugins: [
       tsconfigPaths({ projects: [path.resolve(__dirname, '../../tsconfig.base.json')] }),
       federation({
         name: 'shell',
+        shareStrategy: isDev ? 'loaded-first' : 'version-first',
         remotes: {
           storefront: {
             type: 'module',
@@ -77,6 +90,8 @@ export default defineConfig(({ command }) => {
           },
         },
         shared: {
+          'react/jsx-runtime': { singleton: true, requiredVersion: '^19.0.0', eager: true },
+          'react/jsx-dev-runtime': { singleton: true, requiredVersion: '^19.0.0', eager: true },
           react: { singleton: true, requiredVersion: '^19.0.0', eager: true },
           'react-dom': { singleton: true, requiredVersion: '^19.0.0', eager: true },
           '@tanstack/react-router': { singleton: true, eager: true },
@@ -90,6 +105,7 @@ export default defineConfig(({ command }) => {
     ],
     server: {
       port: 4200,
+      strictPort: true,
       host: 'localhost',
     },
     preview: {
