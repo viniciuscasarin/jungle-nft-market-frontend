@@ -16,7 +16,7 @@ Um único monorepo Nx com 4 apps React/Vite integrados por Module Federation:
 - `apps/web-e2e`: Playwright sobre o sistema integrado.
 
 ## Regras de topologia
-1. Remotes expõem apenas componentes de página. O host é dono das rotas, dos guards e dos schemas de search params (em `@nft/shared-contracts`).
+1. Remotes expõem apenas componentes de página. O host é dono das rotas de produto, dos guards e dos schemas de search params (em `@nft/shared-contracts`). O harness local standalone de cada remote (`bootstrapStandalone`) apenas adapta suas próprias páginas expostas para desenvolvimento isolado, sem importar outros apps ou reproduzir a tabela canônica de rotas; destinos externos ao remote resolvem para a origem configurável do Shell.
 2. Singletons compartilhados: react, react-dom, @tanstack/react-router, @tanstack/react-query, socket.io-client e as libs do workspace. Nunca existem duas instâncias de QueryClient, HttpClient, RealtimeClient ou service worker MSW.
 3. O host cria e injeta as instâncias via `ShellContext` (`libs/shell-kit`). Remotes só consomem.
 4. Nenhum app importa outro app. O compartilhamento ocorre apenas por libs.

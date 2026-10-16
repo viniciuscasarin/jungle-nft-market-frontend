@@ -2,6 +2,44 @@
 
 Marketplace de NFTs em React + TypeScript, com backend 100% simulado (MSW). Este documento registra as decisões de arquitetura, as políticas de estado e as limitações da entrega. Seções marcadas com `[PREENCHER]` dependem da implementação e devem ser completadas ao final de cada change.
 
+---
+
+## 🏛️ Motivações da Arquitetura em Monorepo
+
+A escolha por uma arquitetura em **Monorepo orquestrado com Nx e pnpm**, combinada com **Micro-frontends via Module Federation**, foi concebida para atender não apenas aos requisitos de escopo do desafio, mas aos padrões de engenharia de software de alta maturidade para sistemas modernos, escaláveis e prontos para produção (*production-ready*). As principais motivações técnicas que fundamentam esta arquitetura incluem:
+
+### 1. Desacoplamento Estrito e Domínios Independentes (DDD)
+- **Separação em Camadas Limpas**: Cada domínio de negócio (`auth`, `catalog`, `favorites`, `cart`, `checkout`, `orders`, `profile`, `wallets`) é estritamente particionado em 4 camadas com responsabilidades bem demarcadas:
+  - `domain`: Regras de negócio 100% puras, sem I/O, sem React e sem dependências externas (apenas `@nft/shared-contracts` e `@nft/shared-money`).
+  - `data-access`: Encapsulamento de chamadas de API, query options e mutations do TanStack Query.
+  - `ui`: Componentes apresentacionais puros e desacoplados de estado remoto.
+  - `feature`: Composição de páginas e componentes conectados aos hooks de dados.
+- **Fronteiras Arquiteturais Automatizadas**: Através de tags Nx (`scope:*`, `type:*`, `flow:*`) e do plugin `@nx/enforce-module-boundaries` no ESLint, o desacoplamento deixa de ser uma diretriz abstrata e passa a ser uma regra mecânica bloqueante em CI. O código de um fluxo (ex.: `checkout`) não pode vazar nem ser importado indevidamente por outro (ex.: `catalog`).
+
+### 2. Escalabilidade Organizacional e Desenvolvimento Paralelo
+- **Autonomia de Fluxos e Times**: A separação das aplicações em `apps/shell` (host orquestrador), `apps/storefront` (catálogo e PDP), `apps/checkout` (carrinho, pagamento e recibo) e `apps/account` (perfil e carteiras) espelha a divisão de squads de grandes plataformas digitais.
+- **Harness Standalone para Agilidade**: Cada remote possui um ponto de entrada autônomo com `bootstrapStandalone()` (`@nft/shell-kit`). Um engenheiro focado em pagamentos pode subir e iterar exclusivamente sobre `apps/checkout` na porta dedicada (4202) com mocks e roteamento local, sem a sobrecarga de rodar o ecossistema inteiro.
+- **Ambiente Isolado de Design e Testes**: O Storybook (`apps/storybook`) na porta 6006 e a suite E2E Playwright (`apps/web-e2e`) operam como aplicações dedicadas no grafo, garantindo que o desenvolvimento visual e os testes de regressão não interfiram no código produtivo.
+
+### 3. Pronto para Produção (Enterprise-Ready & Checkout Limpo)
+- **Zero Dependency Drift**: Um único lockfile estrito (`pnpm-lock.yaml`) assegura que todas as 51 bibliotecas e aplicações compartilhem exatamente as mesmas versões de dependências essenciais (React 19, Vite 6, TanStack Query 5, TanStack Router e Zod), eliminando inconsistências clássicas de múltiplos repositórios (*dependency hell*).
+- **Checkout Limpo e Autônomo**: Atende com rigor à exigência do enunciado de execução a partir de um checkout limpo. Todas as bibliotecas de domínio e contratos são consumidas via TypeScript path aliases (`@nft/*`), dispensando pipelines complexos de publicação, controle de versão semântica intermediário ou acesso a registries privados npm.
+- **Deploy Estático Unificado na Vercel**: A compilação integrada (`scripts/build-integrated.js`) reúne o host Shell na raiz e remotes sob `/remotes/<app>/` em um único artefato estático (`dist/integrated/`). Isso proporciona performance de CDN global, elimina latência de rede entre microsserviços e extingue problemas de CORS e orquestrações frágeis de múltiplos deploys.
+
+### 4. Bundle Otimizado e Performance Superior
+- **Compartilhamento de Singletons via Module Federation**: Dependências pesadas de runtime (`react`, `react-dom`, `@tanstack/react-router`, `@tanstack/react-query`, `socket.io-client`, Tailwind CSS) são declaradas como `singleton: true` e `eager: true` no host, sendo compartilhadas entre todos os remotes. Isso evita que cada micro-frontend carregue sua própria cópia de bibliotecas compartilhadas, reduzindo drasticamente o tamanho do bundle final.
+- **Code-Splitting Dinâmico e Prefetching**: Remotes e páginas são carregados sob demanda com `React.lazy` e `RemoteBoundary`. O layout do Shell injeta `preload="intent"` em links de navegação, iniciando o download do bundle no momento do hover ou foco do teclado, resultando em transições de tela instantâneas.
+- **Granularidade e Tree-Shaking Máximo**: Ícones do Figma e componentes Radix UI são exportados como módulos individuais em `@nft/shared-ui`. Apenas o código estritamente utilizado por cada tela é incluído no bundle, garantindo First Contentful Paint (FCP) e Largest Contentful Paint (LCP) otimizados para as metas do Lighthouse (≥ 90 em Performance).
+
+### 5. Governança e Encapsulamento de Terceiros
+- **Isolamento de Fornecedores Externos**: Bibliotecas de terceiros são estritamente encapsuladas em módulos de infraestrutura (`@nft/shared-http` para Axios, `@nft/shared-realtime` para Socket.IO, `@nft/shared-money` para Decimal.js, `@nft/shared-ui` para Radix UI).
+- **Blindagem e Evolutividade**: Caso a biblioteca de mensageria em tempo real ou o cliente HTTP precisem ser atualizados ou substituídos no futuro, nenhuma regra de negócio ou componente de UI precisará ser alterado; a manutenção é restrita à sua respectiva biblioteca compartilhada.
+
+### 6. Eficiência de Build e CI Inteligente (Nx Affected)
+- **Computação Afetada e Cache Distribuído**: O grafo de dependências do Nx calcula a árvore de impacto de cada alteração (`nx affected`). Se um commit modifica apenas a tela de perfil em `apps/account`, as suites de teste, tipagem e lint do catálogo e checkout utilizam o cache local/CI (`.nx/cache`), economizando tempo de execução e acelerando os loops de feedback.
+
+---
+
 ## 1. Objetivos e restrições
 
 - Fluxos de descoberta, compra e conta do colecionador, em desktop e mobile.
@@ -137,8 +175,11 @@ A infraestrutura e viabilidade técnica foram comprovadas e validadas empiricame
   - Integra `Suspense` com fallback visual `DefaultRemoteSkeleton` (shimmer com desativação automática sob `prefers-reduced-motion`).
   - Timeout de carregamento configurável via `withRemoteTimeout` (padrão de 10s).
   - ErrorBoundary com anúncio acessível (`role="alert"`, `aria-live="assertive"`) e botão de retry que reexecuta o carregamento dinâmico sem necessidade de recarregar a janela do Shell (`window.location.reload()`).
-- **Execução Standalone dos Remotes (`bootstrapStandalone`):** Cada remote possui ponto de entrada autônomo em `src/main.tsx` invocando `bootstrapStandalone(Page, options)` de `@nft/shell-kit`, provendo `ShellProvider` mockado, router mínimo em memória e suporte opcional a MSW para desenvolvimento isolado nas portas 4201, 4202 e 4203.
-  - A composição também fornece `QueryClientProvider` com o mesmo cliente do `ShellContext`, `ShellToastProvider`, `GlobalLiveRegions` e `ShellPageChromeProvider`. Consumidores conectados podem consultar dados, registrar chrome e anunciar feedback visual/acessível. A inicialização aguarda MSW e sessão opcional antes de montar a página, com loading acessível e ErrorState com retry no mesmo root e clientes. Uma falha de worker libera a Promise rejeitada para nova tentativa e reutiliza o worker existente.
+- **Execução Standalone dos Remotes (`bootstrapStandalone`):** Cada remote possui ponto de entrada autônomo em `src/main.tsx` invocando `bootstrapStandalone(entry, options)` de `@nft/shell-kit`. Remotes podem registrar uma página única ou descritores de páginas locais (`pages: StandalonePageDescriptor[]`) com validação de search params (`validateSearch`) e redirecionamentos locais para desenvolvimento isolado nas portas 4201, 4202 e 4203.
+  - **Limites do Harness e Dono das Rotas:** O host Shell permanece como proprietário exclusivo de todas as rotas e guards de produto (`requireAuth`, `requireGuest`). O harness standalone destina-se apenas ao desenvolvimento isolado daquele remote e não reproduz a tabela canônica de rotas nem importa features de outros apps.
+  - **Composição e Inicialização Ordenada:** Fornece `QueryClientProvider` com o mesmo cliente do `ShellContext`, `ShellToastProvider`, `GlobalLiveRegions` e `ShellPageChromeProvider`. Consumidores conectados podem consultar dados, registrar chrome e anunciar feedback visual/acessível. A inicialização aguarda MSW e sessão opcional antes de montar a página, com loading acessível e `ErrorState` com retry no mesmo root e clientes, sem duplicar worker ou instâncias de clientes.
+  - **Roteador e Histórico:** O router standalone utiliza `<Outlet />` na raiz e suporta `historyType: 'browser'` (padrão em dev para histórico nativo e refresh) e `historyType: 'memory'` (para testes determinísticos).
+  - **Resolução de Destinos e Segurança:** Destinos locais usam o router do remote. Destinos externos ao remote (ex: PDP `/nft/$nftId`, Login `/login`, Checkout `/carrinho`) são resolvidos para a URL canônica na origem configurável do Shell (`shellOrigin`, padrão `http://localhost:4200` ou alternativa em E2E) preservando path, search e hash. Tentativas de open redirect ou destinos inseguros (`//evil.com`, `/\evil.com`, `javascript:`, etc.) são rejeitados para o fallback seguro `/`. URLs locais desconhecidas renderizam o estado acessível `StandaloneNotFound` (`role="region"`, `role="alert"`) com links de recuperação para o remote e para o Shell.
 - **Distribuição Consolidada de Produção:**
   - Build consolidado via `scripts/build-integrated.js` (`pnpm build`) gerando `dist/integrated/` com Shell na raiz e remotes sob `/remotes/<app>/`.
   - Servidor de preview (`pnpm preview`) escutando na porta 4200 com SPA fallback total para qualquer subrota e headers de cache apropriados (`no-cache` em `remoteEntry.js` e imutável para assets com hash).
@@ -363,6 +404,10 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
   - **Upload de Avatar Simplificado**: O controle de avatar (`Alterar` e `Remover`) converte o `<input type="file">` para Data URL simples (leitura via `FileReader.readAsDataURL`) no `POST /api/profile/avatar` e limpa com `avatarUrl = null` no `DELETE /api/profile/avatar`, sem cropper de imagem interativo ou upload binário multipart. A implementação de recorte (crop) visual e otimização de tamanho é registrada como débito técnico.
   - **Stories CSF3 Mínimos**: Mantidos apenas os stories básicos para `ProfilePageContent` (`profile-page-content.stories.tsx`) e `WalletsPageContent` (`wallets-page-content.stories.tsx`) cobrindo os cenários principais (default, com avatar, sucesso, erros de campo, salvando). A expansão de stories granulares para todos os subcomponentes (`AccountLayout`, `AccountNavigation`, `AccountMobileHeader`) e pseudo-estados interativos adicionais é registrada como débito técnico.
   - **Adaptação Mobile por Empilhamento Responsivo**: A responsividade mobile (`390px`, `768px`) utiliza o empilhamento responsivo existente (`grid-cols-1 md:grid-cols-2`, `AccountMobileHeader` visível em `< 768px`) para evitar overflow horizontal, sem criar árvore de componentes mobile separada. A validação de zoom (`200%`) e a otimização de touch targets em dispositivos menores são registradas como débito técnico.
+- **Débitos Técnicos P1 de Recibo e Confirmação de Pedido (`checkout-confirmation-receipt`)**: Para atender ao prazo crítico da conclusão do pedido garantindo fidelidade de dados imutáveis:
+  - **Adaptação Mobile Simplificada**: O modal de confirmação utiliza adaptação fluida direta com Tailwind (`w-full max-w-[578px] px-4 overflow-y-auto max-h-[90vh]`) em vez de redesenho dedicado para mobile ou gaveta/drawer inferior. A ausência de overflow horizontal é assegurada em `390px`.
+  - **Stories CSF3 Mínimos**: Mantido 1 story representativo para o modal de confirmação em `libs/orders/ui/src/order-confirmation-modal.stories.tsx` (Default e ModalOverlay), adiando variações granulares de múltiplos itens ou textos longos de carteira.
+  - **Ação Externa Etherscan**: Botão "Ver no Etherscan" exibe aviso informativo explícito via feedback da shell (`indisponível nesta demonstração`) sem abrir URLs externas.
 - **Simulação de Blockchain e Gateways**: Todas as carteiras, assinaturas de transação, transferências de tokens e pagamentos são estritamente simulados, sem interação com redes reais de blockchain (Ethereum, Polygon, Solana).
 - **Sincronização de Sessão entre Abas**: A sincronização de logout entre abas apoia-se em eventos nativos `storage` do `localStorage` (`nft_auth_token`). A invalidação de cache privado no TanStack Query ocorre reativamente na aba que recebe o evento.
 

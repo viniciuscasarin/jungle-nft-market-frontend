@@ -164,16 +164,50 @@ export default defineConfig({
 ```
 
 ### Passo 3: Configurar Execução Standalone
-No arquivo `src/main.tsx` do remote, utilize `bootstrapStandalone`:
+No arquivo `src/main.tsx` do remote, utilize `bootstrapStandalone` de `@nft/shell-kit`. Remotes podem registrar uma única página ou múltiplos descritores locais (`StandalonePageDescriptor`):
+
 ```tsx
 import { bootstrapStandalone } from '@nft/shell-kit';
 import MinhaPagina from './pages/MinhaPagina';
+import OutraPagina from './pages/OutraPagina';
 
-bootstrapStandalone(MinhaPagina, {
+void bootstrapStandalone({
   mountPoint: '#root',
   initialRoute: '/',
+  pages: [
+    { path: '/', component: MinhaPagina },
+    { path: '/detalhes', component: OutraPagina },
+  ],
+  shellOrigin: 'http://localhost:4200',
 });
 ```
+
+#### Contrato do Bootstrap e Limites do Harness Standalone
+1. **Host como Dono Canônico**: O host shell (`apps/shell`) permanece como proprietário único de todas as rotas de produto, layouts estruturais (`_app`, `_modal`) e guards (`requireAuth`, `requireGuest`). O harness standalone destina-se estritamente ao desenvolvimento isolado daquele remote e não substitui o roteamento de produção.
+2. **Ciclo de Inicialização Ordenado**:
+   - `initMsw`: Inicializa a simulação de rede antes de qualquer requisição.
+   - `initSession`: Resolve a sessão de desenvolvimento após a prontidão da rede.
+   - Renderização da página no mesmo root React (`createRoot`), prevenindo layout shift e telas em branco.
+   - Em caso de falha em qualquer etapa assíncrona, renderiza `ErrorState` acessível com retry (`onRetry`), preservando os clientes e a instância do Service Worker.
+3. **Estrutura com `<Outlet />` e Histórico**:
+   - A raiz do router standalone utiliza `<Outlet />`, evitando montagem redundante de páginas.
+   - Suporte a `historyType: 'browser'` (padrão em desenvolvimento, viabilizando refresh e histórico de navegação back/forward) e `historyType: 'memory'` (utilizado em testes unitários para isolamento determinístico).
+4. **Resolução de Destinos Locais vs Externos ao Remote**:
+   - Rotas locais configuradas em `pages` navegam internamente pelo router do remote.
+   - Destinos fora do remote (ex: PDP `/nft/$nftId`, Login `/login`, Carrinho `/carrinho`) são resolvidos para a URL canônica na origem do Shell (`shellOrigin`, padrão `http://localhost:4200` ou origem alternativa em testes E2E), preservando search params e hash.
+   - Destinos inseguros (ataques de open redirect como `//evil.com`, `/\\evil.com`, `javascript:`, etc.) são sanitizados e rejeitados para o fallback seguro `/`.
+   - Links podem ser renderizados via `StandaloneLink` ou resolvidos via `resolveStandaloneDestination` / `resolveStandaloneHref`.
+5. **Tratamento de Rotas Desconhecidas**:
+   - URLs não mapeadas renderizam o componente acessível `StandaloneNotFound` (`role="region"`, `role="alert"`), oferecendo links claros para retornar ao início do remote (`Início do Remote`) ou acessar o ambiente integrado (`Abrir Shell Integrado`).
+6. **Fronteiras e Ausência de Imports Entre Apps**:
+   - O harness é fornecido exclusivamente por `@nft/shell-kit`. Nenhum remote importa outro remote ou arquivos de `apps/shell`.
+7. **Sessão Identificada e Ciclo de Vida em Modo Standalone**:
+   - **Autenticação Automática de Dev**: O adapter `authenticateStandaloneDevSession` (em `@nft/mocks-core`) realiza login determinístico utilizando credenciais de fixture (`Alice` por padrão ou personalizadas), injetando token Bearer no `HttpClient` e sincronizando o `RealtimeClient` (`setAuthToken`).
+   - **Blindagem de Produção e Mocks**: O adapter lança erro explícito caso `NODE_ENV === 'production'` ou `VITE_ENABLE_MOCKS === 'false'`, garantindo que credenciais simuladas nunca sejam utilizadas fora de desenvolvimento local com simulação de rede ativa.
+   - **Isolamento por Origem e Consumo Federado**: No consumo federado pelo Shell integrado, os remotes expõem unicamente componentes de página (`HomePage.tsx`, `ProfilePage.tsx`, `WalletsPage.tsx`). O Shell é o único responsável pelo ciclo real de autenticação e guards de rota; o adapter de dev session jamais executa no fluxo federado.
+   - **Expiração e Recuperação Explícita**: Ao receber HTTP 401 `SESSION_EXPIRED`, o harness dispara `clearPrivateCache(queryClient, userId)`, cancela queries ativas, zera o token de WebSocket (`setAuthToken(null, null)`) e exibe o componente acessível `StandaloneSessionExpired` (`role="alert"`, `aria-live="polite"`). O desenvolvedor pode reconectar explicitamente via "Reconectar Sessão Dev" sem entrar em loops infinitos de relogin silencioso.
+   - **Comportamento com Mocks Desabilitados**: Se `VITE_ENABLE_MOCKS=false`, a autenticação de dev é recusada com mensagem instrutiva orientando a utilizar o Shell integrado para efetuar login real.
+
 
 ### Passo 4: Registrar no Host Shell
 1. Adicione a rota em `apps/shell/src/routes.tsx`:
