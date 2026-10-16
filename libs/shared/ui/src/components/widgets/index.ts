@@ -9,3 +9,4 @@ export * from './wallet-card';
 export * from './social-button';
 export * from './account-sidebar';
 export * from './modal-layout';
+export * from './nft-carousel';

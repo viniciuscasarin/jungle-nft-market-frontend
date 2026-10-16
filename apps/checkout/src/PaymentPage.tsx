@@ -1,27 +1,25 @@
 import React from 'react';
 import { useShell, useSession } from '@nft/shell-kit';
+import { PaymentPageContent } from '@nft/checkout-ui';
 
 export function PaymentPage() {
   const { queryClient } = useShell();
   const session = useSession();
 
   return (
-    <div data-testid="checkout-payment-page" className="max-w-4xl mx-auto p-6 space-y-4">
-      <div className="border border-border-default rounded-lg p-6 bg-surface-card">
-        <span className="text-tiny-10 uppercase tracking-widest text-text-accent font-mono font-bold">
-          Checkout Remote
-        </span>
-        <h1 className="text-heading-24 font-bold text-text-primary mt-2">
-          Pagamento & Checkout
-        </h1>
-        <p className="text-body-14 text-text-secondary mt-2">
-          Página de pagamento protegida por autenticação.
-        </p>
-        <div className="mt-4 pt-4 border-t border-border-soft flex gap-4 text-caption-12 text-text-muted font-mono">
-          <span>QueryClient: {queryClient ? 'Conectado' : 'Ausente'}</span>
-          <span>Sessão: {session ? session.name : 'Não autenticado'}</span>
-        </div>
+    <div
+      data-testid="checkout-payment-page"
+      className="w-full min-h-screen bg-surface-default text-text-primary"
+    >
+      {/* Metadados acessíveis e de integração com host Shell */}
+      <h1 className="sr-only">Pagamento & Checkout</h1>
+      <div className="sr-only">
+        <span>Checkout Remote</span>
+        <span>QueryClient: {queryClient ? 'Conectado' : 'Ausente'}</span>
+        <span>Sessão: {session ? session.name : 'Não autenticado'}</span>
       </div>
+
+      <PaymentPageContent />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   IconMinus,
   IconPlus,
   IconCart,
+  Breadcrumb,
 } from '@nft/shared-ui';
 import { PdpGallery, type PdpImageItem } from './pdp-gallery';
 import {
@@ -245,19 +246,14 @@ export const PdpPageContent: React.FC<PdpPageContentProps> = ({
       {/* =========================================================================
           BREADCRUMB OFICIAL DESKTOP: Início / Mercado (Figma #10:244)
           ========================================================================= */}
-      <nav
+      <Breadcrumb
         data-testid="pdp-breadcrumb"
-        aria-label="Navegação estrutural"
-        className="hidden lg:flex mb-6 items-center gap-2 font-mono text-[13px] text-text-primary select-none"
-      >
-        <span className="text-text-primary hover:text-accent cursor-pointer transition-colors">
-          Início
-        </span>
-        <span className="text-text-muted">/</span>
-        <span className="text-text-primary font-bold">
-          Mercado
-        </span>
-      </nav>
+        className="hidden lg:flex mb-6"
+        items={[
+          { label: 'Início', href: '/' },
+          { label: 'Mercado', href: '/#catalogo' },
+        ]}
+      />
 
       {/* =========================================================================
           PRIMEIRA LINHA COM DUAS COLUNAS:

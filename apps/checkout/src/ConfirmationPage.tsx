@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from '@nft/shared-router';
 import { useShell, useSession } from '@nft/shell-kit';
+import { OrderConfirmationModal, DEFAULT_ORDER_CONFIRMATION } from '@nft/checkout-ui';
 
 export function ConfirmationPage() {
   let orderId: string | undefined;
@@ -14,25 +15,36 @@ export function ConfirmationPage() {
   const { queryClient } = useShell();
   const session = useSession();
 
+  const confirmationData = {
+    ...DEFAULT_ORDER_CONFIRMATION,
+    transactionId: orderId ? `0x${orderId.slice(0, 4)}…${orderId.slice(-4)}` : DEFAULT_ORDER_CONFIRMATION.transactionId,
+  };
+
   return (
-    <div data-testid="checkout-confirmation-page" className="max-w-4xl mx-auto p-6 space-y-4">
-      <div className="border border-border-default rounded-lg p-6 bg-surface-card">
-        <span className="text-tiny-10 uppercase tracking-widest text-text-accent font-mono font-bold">
-          Checkout Remote
-        </span>
-        <h1 className="text-heading-24 font-bold text-text-primary mt-2">
-          Confirmação de Pedido {orderId ? `#${orderId}` : ''}
-        </h1>
-        <p className="text-body-14 text-text-secondary mt-2">
-          Pedido confirmado com sucesso pela simulação de checkout.
-        </p>
-        <div className="mt-4 pt-4 border-t border-border-soft flex gap-4 text-caption-12 text-text-muted font-mono">
-          <span>QueryClient: {queryClient ? 'Conectado' : 'Ausente'}</span>
-          <span>Sessão: {session ? session.name : 'Não autenticado'}</span>
-        </div>
+    <div
+      data-testid="checkout-confirmation-page"
+      className="min-h-screen w-full bg-surface-default flex items-center justify-center p-4 sm:p-6"
+    >
+      {/* Informações semânticas e telemetria para o Shell em background */}
+      <h1 className="sr-only">Confirmação de Pedido {orderId ? `#${orderId}` : ''}</h1>
+      <div className="sr-only" aria-live="polite">
+        <span>QueryClient: {queryClient ? 'Conectado' : 'Ausente'}</span>
+        <span>Sessão: {session ? session.name : 'Não autenticado'}</span>
       </div>
+
+      <OrderConfirmationModal
+        isInline
+        isOpen
+        data={confirmationData}
+        onClose={() => {
+          if (typeof window !== 'undefined' && window.history) {
+            window.history.back();
+          }
+        }}
+      />
     </div>
   );
 }
 
 export default ConfirmationPage;
+
