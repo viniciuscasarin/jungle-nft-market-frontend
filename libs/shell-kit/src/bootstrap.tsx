@@ -37,8 +37,8 @@ export interface StandalonePageDescriptor<TSearch = Record<string, unknown>> {
 export type StandaloneHistoryType = 'browser' | 'memory';
 
 export interface ResolveDestinationOptions {
-  localPaths?: string[];
-  shellOrigin?: string;
+  localPaths?: string[] | undefined;
+  shellOrigin?: string | undefined;
 }
 
 export type ResolvedStandaloneDestination =

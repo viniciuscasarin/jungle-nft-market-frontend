@@ -450,9 +450,13 @@ describe('bootstrapStandalone (@nft/shell-kit)', () => {
     it('resolves local destinations to local router paths', () => {
       const res1 = resolveStandaloneDestination('/perfil', { localPaths });
       expect(res1).toEqual({ type: 'local', path: '/perfil' });
+      expect(resolveStandaloneHref('/perfil', { localPaths })).toBe('/perfil');
 
       const res2 = resolveStandaloneDestination('/carteiras?filter=active#details', { localPaths });
       expect(res2).toEqual({ type: 'local', path: '/carteiras?filter=active#details' });
+      expect(resolveStandaloneHref('/carteiras?filter=active#details', { localPaths })).toBe(
+        '/carteiras?filter=active#details',
+      );
     });
 
     it('resolves external product destinations (PDP, login, checkout) to configured shellOrigin preserving search and hash', () => {
