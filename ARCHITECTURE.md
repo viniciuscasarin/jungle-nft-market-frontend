@@ -182,10 +182,12 @@ Todo recurso carrega `version` inteira e monotônica.
 ## 8. Sessão
 
 - Cadastro, login, logout e consulta de sessão via API simulada. Senhas nunca em claro: o mock guarda hash e o cliente não persiste senha.
-- Token opaco de sessão guardado no cliente e enviado no `Authorization`. A sessão é recuperada no boot por `GET /session`.
-- Rotas privadas (checkout, perfil, carteiras, favoritos, pedidos) usam `requireAuth`, que redireciona para `/login` com `redirect` (path + search) para retorno ao fluxo anterior.
-- Expiração: `SESSION_EXPIRED` dispara `onSessionExpired` uma única vez, mesmo com requisições concorrentes. O contexto (rota, search params e rascunho do checkout) é preservado para retomada após novo login.
-- Logout e troca de usuário: limpam o cache privado, cancelam queries, encerram o socket e liberam subscriptions.
+- Token opaco de sessão guardado no cliente via `tokenStore` (`localStorage['nft_auth_token']`) e enviado no cabeçalho `Authorization: Bearer <token>`. A sessão é inicializada no boot por `GET /api/auth/session` (ou `/api/auth/me`).
+- Rotas privadas (checkout, perfil, carteiras, favoritos, pedidos) usam `requireAuth`, que redireciona para `/login` com parâmetro `redirect` (path + search) para retorno transparente ao fluxo anterior.
+- Expiração: Resposta 401 `UNAUTHENTICATED` / `SESSION_EXPIRED` interceptada pelo `SessionController`, disparando expiração uma única vez mesmo sob requisições concorrentes. O contexto de navegação é salvo no `ResumeStore` (`sessionStorage['nft_auth_resume']`) e o usuário é redirecionado para `/login?reason=expired`, exibindo alerta acessível.
+- Retomada de Contexto: Ao autenticar com sucesso, o `ResumeStore` restaura a rota e search params prévios caso correspondam ao usuário autenticado, devolvendo o usuário ao ponto onde estava.
+- Sincronização entre Abas: O `tokenStore` escuta eventos nativos de `window.addEventListener('storage', ...)` para `nft_auth_token`. Um logout realizado em uma aba é propagado instantaneamente para todas as outras abas abertas da aplicação.
+- Logout e troca de usuário: O `SessionController` limpa o `tokenStore`, cancela queries pendentes, limpa o cache privado via `queryClient.removeQueries()`, desconecta o socket e encerra subscriptions ativas.
 
 ## 9. Carrinho
 
@@ -211,10 +213,11 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 
 | Recurso | staleTime | Observação |
 |---|---|---|
-| Catálogo e detalhe | `[PREENCHER]` | Atualizado também por `nft.updated` |
-| Carrinho e cotação | `[PREENCHER]` | Invalidado por mutation e por evento |
-| Pedido | `[PREENCHER]` | Estados terminais não refazem polling |
-| Perfil e carteiras | `[PREENCHER]` | Invalidação após mutation |
+| Sessão (`auth.session`) | 0 (imediato) | Revalidado no boot e limpo no logout |
+| Catálogo e detalhe | 60s (list) / 30s (detail) | Atualizado também por `nft.updated` |
+| Carrinho e cotação | 0 (imediato) | Invalidado por mutation, login (merge) e evento |
+| Pedido | Infinito | Estados terminais (`confirmed`/`rejected`) não refazem polling |
+| Perfil e carteiras | 5 min | Invalidação após mutation e isolamento estrito por `userId` |
 
 ## 11. Tempo real e reconciliação com REST
 
@@ -309,6 +312,7 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 - **Escopo do Service Worker**: O Service Worker é registrado com escopo raiz `/` pelo Shell ou na porta de dev do remote em modo standalone. Remotes servidos em `/remotes/<remoteName>/` no build integrado não registram workers próprios para evitar colisões de escopo.
 - **Limitações do transporte Socket.IO no ambiente de mocks**: O transporte no ambiente de mocks utiliza `@mswjs/socket.io-binding` sobre interceptação de WebSocket; recursos avançados do Socket.IO não cobertos pela biblioteca binding dependem de fallback.
 - **Simulação de Blockchain e Gateways**: Todas as carteiras, assinaturas de transação, transferências de tokens e pagamentos são estritamente simulados, sem interação com redes reais de blockchain (Ethereum, Polygon, Solana).
+- **Sincronização de Sessão entre Abas**: A sincronização de logout entre abas apoia-se em eventos nativos `storage` do `localStorage` (`nft_auth_token`). A invalidação de cache privado no TanStack Query ocorre reativamente na aba que recebe o evento.
 
 
 ## 18. Decisões de UX

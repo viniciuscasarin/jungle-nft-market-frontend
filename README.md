@@ -166,10 +166,25 @@ São 16 cenários prontos para testes e validação da UI:
 
 ### Credenciais Fictícias de Demonstração
 As senhas são exclusivamente armazenadas na forma de `passwordHash` e `passwordSalt` via PBKDF2/SHA-256 (nunca em texto claro).
-- **Alice**: `alice@example.com` | Senha: `Password123!`
-- **Bob**: `bob@example.com` | Senha: `Password123!`
+- **Alice**: `alice@example.com` ou username `alice` | Senha: `Password123!`
+- **Bob**: `bob@example.com` ou username `bob` | Senha: `Password123!`
 
-Para gerar novos hashes: `pnpm mocks:hash <senha>`
+Para gerar novos hashes de senha: `pnpm mocks:hash <senha>`
+
+#### Como Testar Expiração de Sessão e Retomada de Contexto
+1. Faça login com Alice (`alice@example.com` / `Password123!`).
+2. Acesse uma rota protegida (ex: `/checkout`, `/perfil` ou `/carteiras`).
+3. No console do desenvolvedor, execute `window.__mocks.expireSession()` ou navegue para `/?scenario=session-expired`.
+4. Ao disparar uma requisição ou recarregar a tela, a API retornará 401 `UNAUTHENTICATED`. O `SessionController` captura o erro, armazena a rota e os parâmetros atuais no `ResumeStore` (`sessionStorage`) e redireciona para `/login?redirect=...&reason=expired`.
+5. Uma mensagem acessível em alerta com `role="alert"` informa: *"Sua sessão expirou. Faça login novamente para continuar."*
+6. Ao submeter o formulário de login novamente, a aplicação redireciona automaticamente para a rota onde o usuário estava, retomando o fluxo anterior de onde parou.
+
+#### Como Testar Troca de Conta (Isolamento de Cache A -> B)
+1. Faça login como Alice (`alice@example.com`).
+2. No menu do usuário no Header, clique em "Desconectar" (ou "Sair").
+3. O `SessionController` limpa o `tokenStore`, cancela queries pendentes e executa `queryClient.removeQueries()` para todas as chaves privadas vinculadas a `user_alice`.
+4. Faça login com Bob (`bob@example.com`).
+5. O Header e as rotas privadas exibem exclusivamente os dados de Bob Santos, garantindo isolamento total sem resquícios ou vazamento de dados do usuário anterior.
 
 
 ---

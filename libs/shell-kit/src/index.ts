@@ -3,6 +3,7 @@ export {
   ShellProvider,
   useShell,
   useSession,
+  toShellUserSession,
   type ShellUserSession,
   type ShellContextValue,
   type ShellProviderProps,

@@ -13,6 +13,7 @@ import {
   delay,
 } from './network-profile';
 import { getMockDatabase } from './database';
+import { getClock } from './clock';
 
 export function apiPath(path: string): string {
   const normalized = path.startsWith('/') ? path : `/${path}`;
@@ -140,7 +141,7 @@ export function requireSession(request: Request): {
   }
 
   const expiresTime = new Date(session.expiresAt).getTime();
-  if (expiresTime <= Date.now()) {
+  if (expiresTime <= getClock().nowMs()) {
     return {
       session: null,
       response: apiError(ApiErrorCode.SESSION_EXPIRED, {

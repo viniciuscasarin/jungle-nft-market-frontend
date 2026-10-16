@@ -28,9 +28,29 @@ describe('Auth, Session, Profile and Wallets Contracts (@nft/shared-contracts)',
         displayName: 'Alice',
         username: 'alice',
         email: 'alice@example.com',
-        password: 'short',
+        password: 'sh1',
       };
-      expect(() => SignUpInputSchema.parse(invalid)).toThrow();
+      expect(() => SignUpInputSchema.parse(invalid)).toThrow(/no mínimo 8 caracteres/);
+    });
+
+    it('rejects passwords without any letters', () => {
+      const invalid = {
+        displayName: 'Alice',
+        username: 'alice',
+        email: 'alice@example.com',
+        password: '1234567890',
+      };
+      expect(() => SignUpInputSchema.parse(invalid)).toThrow(/pelo menos uma letra/);
+    });
+
+    it('rejects passwords without any numbers', () => {
+      const invalid = {
+        displayName: 'Alice',
+        username: 'alice',
+        email: 'alice@example.com',
+        password: 'passwordWithoutNumber',
+      };
+      expect(() => SignUpInputSchema.parse(invalid)).toThrow(/pelo menos um número/);
     });
 
     it('rejects invalid email formats', () => {

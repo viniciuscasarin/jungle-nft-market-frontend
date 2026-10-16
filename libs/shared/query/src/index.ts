@@ -21,10 +21,35 @@ export function createQueryClient(config?: QueryClientConfig): QueryClient {
   });
 }
 
+export const queryKeys = {
+  session: () => ['session'] as const,
+  user: (userId: string, domain: string, ...extra: readonly unknown[]) =>
+    ['user', userId, domain, ...extra] as const,
+};
+
+export function clearPrivateCache(queryClient: QueryClient, userId?: string): void {
+  queryClient.removeQueries({
+    predicate: query => {
+      if (userId) {
+        return query.queryKey.includes(userId);
+      }
+      return (
+        query.queryKey[0] === 'user' ||
+        query.queryKey.some(
+          k => typeof k === 'string' && (k.startsWith('usr_') || k.startsWith('user_')),
+        )
+      );
+    },
+  });
+}
+
 export {
   QueryClient,
+  queryOptions,
   useQuery,
   useMutation,
   useQueryClient,
   QueryClientProvider,
+  type UseMutationResult,
+  type UseQueryResult,
 } from '@tanstack/react-query';

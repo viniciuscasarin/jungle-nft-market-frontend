@@ -4,12 +4,12 @@ import { Label } from './label';
 import { IconAlertCircle } from '../../icons/IconAlertCircle';
 
 export interface FormFieldProps {
-  id?: string;
-  label?: string;
-  required?: boolean;
-  description?: React.ReactNode;
-  error?: string;
-  className?: string;
+  id?: string | undefined;
+  label?: string | undefined;
+  required?: boolean | undefined;
+  description?: React.ReactNode | undefined;
+  error?: string | undefined;
+  className?: string | undefined;
   children: React.ReactNode;
 }
 

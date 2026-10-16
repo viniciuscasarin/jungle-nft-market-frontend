@@ -14,7 +14,6 @@ import {
   NotFoundComponent,
   HomeComponent,
   RemoteErrorComponent,
-  LoginComponent,
   router,
   type RouterContext,
 } from './routes';
@@ -329,10 +328,39 @@ describe('Shell routes and components', () => {
     ).toBeDefined();
   });
 
-  it('renders isolated LoginComponent directly', () => {
-    render(<LoginComponent />);
+  it('renders isolated LoginComponent directly on /login', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/login'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      render(<RouterProvider router={testRouter} />);
+    });
+
     expect(
       screen.getByRole('heading', { level: 1, name: 'Entrar na Conta' }),
+    ).toBeDefined();
+  });
+
+  it('renders SignUpPage on /cadastro route', async () => {
+    const testRouter = createRouter({
+      routeTree,
+      history: createMemoryHistory({ initialEntries: ['/cadastro'] }),
+      defaultNotFoundComponent: NotFoundComponent,
+      context: { session: null },
+    });
+    await testRouter.load();
+
+    await act(async () => {
+      render(<RouterProvider router={testRouter} />);
+    });
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Criar Conta' }),
     ).toBeDefined();
   });
 });
