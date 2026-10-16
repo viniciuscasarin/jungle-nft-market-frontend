@@ -55,3 +55,4 @@ export * from './realtime-triggers';
 export * from './scenarios';
 export * from './mock-controls';
 export * from './server';
+export * from './standalone-session';

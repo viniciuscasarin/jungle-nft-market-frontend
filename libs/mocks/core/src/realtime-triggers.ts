@@ -9,40 +9,40 @@ import { bumpVersion, getMockDatabase, transaction } from './database';
 import { getMockEventBus } from './event-bus';
 
 export interface EmitNftUpdatedInput {
-  id?: string;
-  nftId?: string;
-  editionId?: string;
-  price?: string;
-  availableSupply?: number;
-  maxSupply?: number;
-  version?: number;
-  timestamp?: string;
+  id?: string | undefined;
+  nftId?: string | undefined;
+  editionId?: string | undefined;
+  price?: string | undefined;
+  availableSupply?: number | undefined;
+  maxSupply?: number | undefined;
+  version?: number | undefined;
+  timestamp?: string | undefined;
 }
 
 export interface EmitOrderUpdatedInput {
-  id?: string;
-  orderId?: string;
-  userId?: string;
-  status?: OrderStatus;
-  transactionHash?: string;
-  rejectionReason?: string;
-  confirmedAt?: string;
-  version?: number;
-  timestamp?: string;
+  id?: string | undefined;
+  orderId?: string | undefined;
+  userId?: string | undefined;
+  status?: OrderStatus | undefined;
+  transactionHash?: string | undefined;
+  rejectionReason?: string | undefined;
+  confirmedAt?: string | undefined;
+  version?: number | undefined;
+  timestamp?: string | undefined;
 }
 
 export interface EmitStaleEventInput {
-  id?: string;
-  resource?: 'nft' | 'order';
-  nftId?: string;
-  editionId?: string;
-  price?: string;
-  availableSupply?: number;
-  orderId?: string;
-  userId?: string;
-  status?: OrderStatus;
-  version?: number;
-  timestamp?: string;
+  id?: string | undefined;
+  resource?: 'nft' | 'order' | undefined;
+  nftId?: string | undefined;
+  editionId?: string | undefined;
+  price?: string | undefined;
+  availableSupply?: number | undefined;
+  orderId?: string | undefined;
+  userId?: string | undefined;
+  status?: OrderStatus | undefined;
+  version?: number | undefined;
+  timestamp?: string | undefined;
 }
 
 let eventSequence = 0;

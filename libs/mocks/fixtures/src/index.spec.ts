@@ -1,11 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import {
-  NftItemSchema,
-  ReviewSchema,
-  UserSchema,
-  WalletSchema,
-  CartSchema,
-} from '@nft/shared-contracts';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { ZodSchema } from 'zod';
 import {
   mockCollections,
   mockCatalogNfts,
@@ -17,7 +11,21 @@ import {
   mockFavorites,
 } from './index';
 
+let NftItemSchema: ZodSchema;
+let ReviewSchema: ZodSchema;
+let UserSchema: ZodSchema;
+let WalletSchema: ZodSchema;
+let CartSchema: ZodSchema;
+
 describe('Domain Fixtures Compliance and Minimums', () => {
+  beforeAll(async () => {
+    const contracts = await import('@nft/shared-contracts');
+    NftItemSchema = contracts.NftItemSchema;
+    ReviewSchema = contracts.ReviewSchema;
+    UserSchema = contracts.UserSchema;
+    WalletSchema = contracts.WalletSchema;
+    CartSchema = contracts.CartSchema;
+  });
   describe('Catalog & Collections', () => {
     it('contains at least 5 collections spanning 3 networks', () => {
       expect(mockCollections.length).toBeGreaterThanOrEqual(5);
@@ -140,6 +148,32 @@ describe('Domain Fixtures Compliance and Minimums', () => {
       const bobFavs = mockFavorites.filter((f) => f.userId === 'user_bob');
       expect(aliceFavs.length).toBeGreaterThan(0);
       expect(bobFavs.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Orders Fixtures', () => {
+    it('validates all mockOrders strictly against OrderSchema and OrderReceiptSnapshotSchema', async () => {
+      const { OrderSchema, OrderReceiptSnapshotSchema } = await import('@nft/shared-contracts');
+      const { mockOrders, mockConfirmedReceipt } = await import('./orders');
+
+      expect(mockOrders.length).toBeGreaterThanOrEqual(3);
+      for (const order of mockOrders) {
+        expect(() => OrderSchema.parse(order)).not.toThrow();
+      }
+
+      expect(() => OrderReceiptSnapshotSchema.parse(mockConfirmedReceipt)).not.toThrow();
+
+      const confirmed = mockOrders.find((o) => o.status === 'confirmed');
+      const rejected = mockOrders.find((o) => o.status === 'rejected');
+      const pending = mockOrders.find((o) => o.status === 'pending');
+
+      expect(confirmed).toBeDefined();
+      expect(confirmed?.receipt).not.toBeNull();
+      expect(rejected).toBeDefined();
+      expect(rejected?.receipt).toBeNull();
+      expect(rejected?.rejectionReason).toBeTruthy();
+      expect(pending).toBeDefined();
+      expect(pending?.receipt).toBeNull();
     });
   });
 });

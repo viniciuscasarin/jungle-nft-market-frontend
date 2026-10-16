@@ -6,6 +6,7 @@ export * from './wallets';
 export * from './coupons';
 export * from './carts';
 export * from './favorites';
+export * from './orders';
 
 export { mockCatalogNfts as mockNfts } from './nfts';
 

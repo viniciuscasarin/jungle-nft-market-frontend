@@ -195,7 +195,7 @@ describe('In-Memory Database & Persistence', () => {
 
       expect(resetDb.nfts.length).toBe(pristine.nfts.length);
       expect(resetDb.users.length).toBe(pristine.users.length);
-      expect(resetDb.orders.length).toBe(0);
+      expect(resetDb.orders.length).toBe(pristine.orders.length);
       expect(resetDb.scenarioId).toBe(pristine.scenarioId);
     });
   });

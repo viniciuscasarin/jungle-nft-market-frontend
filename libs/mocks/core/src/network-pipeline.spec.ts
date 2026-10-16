@@ -174,6 +174,7 @@ describe('Network Pipeline & Handlers MSW Integration', () => {
       ],
     });
 
+    const initialOrdersCount = getMockDatabase().orders.length;
     const response = await fetch('http://localhost/api/test/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -185,10 +186,11 @@ describe('Network Pipeline & Handlers MSW Integration', () => {
     expect(data.code).toBe(ApiErrorCode.FORBIDDEN);
     // Domain code was NOT executed
     expect(testOrders.length).toBe(0);
-    expect(getMockDatabase().orders.length).toBe(0);
+    expect(getMockDatabase().orders.length).toBe(initialOrdersCount);
   });
 
   it('executes phase: "after" with timeout, persisting to DB before connection failure', async () => {
+    const initialOrdersCount = getMockDatabase().orders.length;
     setNetworkProfile({
       id: 'timeout-after-create',
       name: 'Timeout After Create',
@@ -216,7 +218,7 @@ describe('Network Pipeline & Handlers MSW Integration', () => {
     // Verify critical guarantee: database persisted the mutation before the timeout failure!
     expect(testOrders.length).toBe(1);
     expect(testOrders[0]?.title).toBe('Exclusive Ape');
-    expect(getMockDatabase().orders.length).toBe(1);
+    expect(getMockDatabase().orders.length).toBe(initialOrdersCount + 1);
   });
 
   it('recovers on 3rd attempt when configured with failTimes(2, 503)', async () => {
