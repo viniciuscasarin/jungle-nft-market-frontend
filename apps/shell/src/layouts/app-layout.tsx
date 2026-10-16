@@ -116,7 +116,19 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
   };
 
   const handleSearchClick = () => {
-    void navigate({ to: ANCHORS.SEARCH } as never);
+    if (pathname === ROUTES.HOME || pathname === '') {
+      void navigate({ to: '/', hash: 'catalogo', replace: true } as never);
+      const el = document.getElementById('catalogo') || document.getElementById('busca');
+      if (el) {
+        const prefersReducedMotion =
+          typeof window !== 'undefined' &&
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      }
+    } else {
+      void navigate({ to: '/', hash: 'catalogo' } as never);
+    }
   };
 
   const handleProfileClick = () => {
@@ -145,7 +157,7 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
         cartCount={cartCount}
         activePath={pathname}
         navLinks={navLinks}
-        searchHref={ANCHORS.SEARCH}
+        searchHref={ANCHORS.CATALOG}
         cartHref={ROUTES.CART}
         profileHref={ROUTES.PROFILE}
         walletsHref={ROUTES.WALLETS}
@@ -184,6 +196,17 @@ export function AppLayout({ cartCount }: AppLayoutProps) {
       <MobileTabBar
         activePath={pathname}
         cartCount={cartCount}
+        onTabSelect={(tabId) => {
+          if (tabId === 'search') {
+            handleSearchClick();
+          } else if (tabId === 'catalog') {
+            void navigate({ to: ROUTES.HOME } as never);
+          } else if (tabId === 'cart') {
+            void navigate({ to: ROUTES.CART } as never);
+          } else if (tabId === 'account') {
+            void navigate({ to: ROUTES.PROFILE } as never);
+          }
+        }}
         className="lg:hidden"
       />
     </div>

@@ -40,7 +40,7 @@ describe('Global Layout Components', () => {
 
       const searchLink = screen.getByRole('link', { name: 'Ir para busca de NFTs' });
       expect(searchLink).toBeInTheDocument();
-      expect(searchLink).toHaveAttribute('href', '/#busca');
+      expect(searchLink).toHaveAttribute('href', '/#catalogo');
       fireEvent.click(searchLink);
       expect(handleSearch).toHaveBeenCalledTimes(1);
 

@@ -38,15 +38,43 @@ export function CatalogHomePage() {
     searchParams,
   );
 
+  const scrollToCatalog = React.useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const el = document.getElementById('catalogo') || document.getElementById('busca');
+    if (el) {
+      const prefersReducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      }
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.hash === '#catalogo' || window.location.hash === '#busca')
+    ) {
+      const timer = setTimeout(() => {
+        scrollToCatalog();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [scrollToCatalog]);
+
   const updateFilters = React.useCallback(
     (changes: Partial<CatalogSearchParams>) => {
       const next = applyCatalogFilterChange(searchParams, changes);
       void navigate({
         search: next,
+        hash: 'catalogo',
         replace: true,
       } as never);
+      scrollToCatalog();
     },
-    [navigate, searchParams],
+    [navigate, searchParams, scrollToCatalog],
   );
 
   const handleClearFilters = React.useCallback(() => {
@@ -57,9 +85,11 @@ export function CatalogHomePage() {
         tab: 'all',
         sort: 'popular-desc',
       },
+      hash: 'catalogo',
       replace: true,
     } as never);
-  }, [navigate]);
+    scrollToCatalog();
+  }, [navigate, scrollToCatalog]);
 
   const handleToggleCollection = React.useCallback(
     (colId: string) => {
@@ -127,8 +157,6 @@ export function CatalogHomePage() {
   const handlePageChange = React.useCallback(
     (page: number) => {
       updateFilters({ page });
-      const el = document.getElementById('catalogo');
-      el?.scrollIntoView?.({ behavior: 'smooth' });
     },
     [updateFilters],
   );

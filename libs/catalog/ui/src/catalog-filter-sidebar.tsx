@@ -117,6 +117,7 @@ export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
           <span className="text-tiny-10 text-text-muted">Filtros ativos</span>
           <button
             type="button"
+            data-testid="clear-all-filters-sidebar"
             onClick={onClearFilters}
             className="text-tiny-10 text-text-accent hover:underline font-bold cursor-pointer"
           >

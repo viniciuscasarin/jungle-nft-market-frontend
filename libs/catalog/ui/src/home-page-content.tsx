@@ -160,9 +160,10 @@ export const HomePageContent: React.FC<HomePageContentProps> = ({
       <section
         id="catalogo"
         data-testid="home-catalog-section"
-        className="mt-6 sm:mt-16 scroll-mt-6"
+        className="mt-6 sm:mt-16 scroll-mt-20 sm:scroll-mt-24"
         aria-label="Catálogo de Colecionáveis"
       >
+        <div id="busca" className="sr-only" aria-hidden="true" />
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* COLUNA ESQUERDA: Sidebar de Filtros Desktop */}
           <div className="hidden lg:block w-[310px] shrink-0 sticky top-6">

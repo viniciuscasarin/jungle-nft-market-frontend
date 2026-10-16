@@ -109,6 +109,7 @@ describe('CatalogHomePage (@nft/catalog-feature)', () => {
         tab: 'trending',
         page: 1,
       }),
+      hash: 'catalogo',
       replace: true,
     });
   });
@@ -131,5 +132,59 @@ describe('CatalogHomePage (@nft/catalog-feature)', () => {
     fireEvent.click(button!);
 
     expect(mockNotify).toHaveBeenCalledWith('Lançamentos promocionais');
+  });
+
+  it('scrolls to catalog section and preserves anchor when filter changes', () => {
+    const scrollIntoViewMock = vi.fn();
+    const fakeCatalogElement = document.createElement('div');
+    fakeCatalogElement.id = 'catalogo';
+    fakeCatalogElement.scrollIntoView = scrollIntoViewMock;
+    document.body.appendChild(fakeCatalogElement);
+
+    render(<CatalogHomePage />);
+
+    const tabNew = screen.getByTestId('catalog-tab-new');
+    fireEvent.click(tabNew);
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      search: expect.objectContaining({
+        tab: 'new',
+        page: 1,
+      }),
+      hash: 'catalogo',
+      replace: true,
+    });
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+    document.body.removeChild(fakeCatalogElement);
+  });
+
+  it('scrolls to catalog section when clearing filters', () => {
+    mockSearchState = { collections: ['col_cyber_jungle'] };
+
+    const scrollIntoViewMock = vi.fn();
+    const fakeCatalogElement = document.createElement('div');
+    fakeCatalogElement.id = 'catalogo';
+    fakeCatalogElement.scrollIntoView = scrollIntoViewMock;
+    document.body.appendChild(fakeCatalogElement);
+
+    render(<CatalogHomePage />);
+
+    const clearButton = screen.getByTestId('clear-all-filters-sidebar');
+    fireEvent.click(clearButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      search: expect.objectContaining({
+        page: 1,
+        pageSize: 9,
+        tab: 'all',
+        sort: 'popular-desc',
+      }),
+      hash: 'catalogo',
+      replace: true,
+    });
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+    document.body.removeChild(fakeCatalogElement);
   });
 });

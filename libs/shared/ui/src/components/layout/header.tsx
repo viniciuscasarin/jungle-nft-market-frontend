@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
   cartCount,
   activePath = '/',
   navLinks,
-  searchHref = '/#busca',
+  searchHref = '/#catalogo',
   cartHref = '/carrinho',
   profileHref = '/perfil',
   walletsHref = '/carteiras',

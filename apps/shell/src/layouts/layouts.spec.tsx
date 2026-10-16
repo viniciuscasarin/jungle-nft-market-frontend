@@ -162,6 +162,54 @@ describe('AppLayout and ModalLayout', () => {
       const mobileNav = screen.getByRole('navigation', { name: /Navegação móvel/i });
       expect(mobileNav).toBeDefined();
     });
+
+    it('navigates and scrolls to catalog anchor when clicking search icon on Header', async () => {
+      const router = createTestRouter('/', AppLayout);
+      await router.load();
+
+      const scrollIntoViewMock = vi.fn();
+      const fakeCatalog = document.createElement('div');
+      fakeCatalog.id = 'catalogo';
+      fakeCatalog.scrollIntoView = scrollIntoViewMock;
+      document.body.appendChild(fakeCatalog);
+
+      await act(async () => {
+        renderRouterWithProviders(router);
+      });
+
+      const searchLink = screen.getByRole('link', { name: /Ir para busca de NFTs/i });
+      await act(async () => {
+        searchLink.click();
+      });
+
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+      document.body.removeChild(fakeCatalog);
+    });
+
+    it('navigates and scrolls to catalog anchor when clicking search tab on MobileTabBar', async () => {
+      const router = createTestRouter('/', AppLayout);
+      await router.load();
+
+      const scrollIntoViewMock = vi.fn();
+      const fakeCatalog = document.createElement('div');
+      fakeCatalog.id = 'catalogo';
+      fakeCatalog.scrollIntoView = scrollIntoViewMock;
+      document.body.appendChild(fakeCatalog);
+
+      await act(async () => {
+        renderRouterWithProviders(router);
+      });
+
+      const searchTabLink = screen.getByRole('link', { name: /Buscar/i });
+      await act(async () => {
+        searchTabLink.click();
+      });
+
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+      document.body.removeChild(fakeCatalog);
+    });
   });
 
   describe('ModalLayout', () => {

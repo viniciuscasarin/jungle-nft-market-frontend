@@ -34,7 +34,7 @@ export const DEFAULT_MOBILE_TAB_BAR_ITEMS: TabBarItem[] = [
     id: 'search',
     label: 'Buscar',
     icon: <IconSearch className="h-5 w-5" aria-hidden="true" />,
-    href: '/#busca',
+    href: '/#catalogo',
   },
   {
     id: 'cart',
@@ -66,7 +66,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
     if (!activePath) return 'catalog';
 
     if (activePath === '/') return 'catalog';
-    if (activePath === '/#busca') return 'search';
+    if (activePath === '/#busca' || activePath === '/#catalogo') return 'search';
     if (activePath === '/carrinho') return 'cart';
     if (activePath.startsWith('/perfil') || activePath.startsWith('/carteiras')) return 'account';
 
