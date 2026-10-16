@@ -221,6 +221,7 @@ As decisões técnicas, contratos e políticas detalhadas estão documentadas em
 
 - **Motivações do Monorepo**: Justificativas de desacoplamento DDD, escalabilidade, bundle otimizado e prontidão para produção ([`ARCHITECTURE.md` Motivações](./ARCHITECTURE.md#🏛️-motivações-da-arquitetura-em-monorepo)).
 - **Metodologia OpenSpec**: Rastreabilidade do fluxo Spec-Driven Development, especificações e artefatos de tarefas ([`ARCHITECTURE.md` Metodologia](./ARCHITECTURE.md#📋-metodologia-de-desenvolvimento-openspec) e [`openspec/`](./openspec/)).
+- **Trade-offs e Priorizações**: Escolha consciente por fundação sólida e arquitetura de produção vs. pixel-perfect no frontend dentro do prazo ([`ARCHITECTURE.md` Trade-offs](./ARCHITECTURE.md#⚖️-trade-offs-priorizações-e-pontos-não-concluídos-a-100%)).
 - **Contratos REST e Eventos**: Endpoints, schemas Zod, envelopes Socket.IO e códigos de erro normalizados ([`ARCHITECTURE.md` §6](./ARCHITECTURE.md#6-contratos-rest-e-eventos) e [`docs/contracts.md`](docs/contracts.md)).
 - **Política de Sessão**: Recuperação após refresh, expiração com retomada de contexto e isolamento por usuário ([`ARCHITECTURE.md` §8](./ARCHITECTURE.md#8-sessão)).
 - **Estado do Carrinho**: Fonte de verdade no servidor, fusão ao autenticar e integridade monetária ([`ARCHITECTURE.md` §9](./ARCHITECTURE.md#9-carrinho)).
