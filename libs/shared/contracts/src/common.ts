@@ -7,6 +7,14 @@ export const EthAmountSchema = z
   })
   .regex(/^(?:0|[1-9]\d*)(?:\.\d+)?$/, 'Valor em ETH deve ser uma string decimal válida');
 
+export const ImageUrlOrPathSchema = z
+  .string()
+  .min(1, 'Imagem deve ser uma URL válida')
+  .refine(
+    (value) => value.startsWith('/') || /^https?:\/\//i.test(value),
+    'Imagem deve ser uma URL válida',
+  );
+
 export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
   z.object({
     items: z.array(itemSchema),
@@ -15,3 +23,4 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =
     pageSize: z.number().int().positive(),
     totalPages: z.number().int().nonnegative(),
   });
+

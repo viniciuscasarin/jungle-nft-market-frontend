@@ -32,20 +32,28 @@ describe('validateEnv module', () => {
     expect(configZero.VITE_ENABLE_MOCKS).toBe(false);
   });
 
-  it('throws an explicit EnvValidationError when mandatory variables are missing', () => {
-    expect(() => validateEnv({})).toThrow(EnvValidationError);
+  it('provides safe demonstration defaults when initialized with empty object', () => {
+    const config = validateEnv({});
 
-    try {
-      validateEnv({});
-    } catch (err) {
-      expect(err).toBeInstanceOf(EnvValidationError);
-      const validationError = err as EnvValidationError;
-      expect(validationError.missingOrInvalidKeys).toContain('VITE_API_BASE_URL');
-      expect(validationError.missingOrInvalidKeys).toContain('VITE_SOCKET_URL');
-      expect(validationError.missingOrInvalidKeys).toContain('VITE_REMOTE_STOREFRONT_URL');
-      expect(validationError.message).toContain('VITE_API_BASE_URL é obrigatória');
-      expect(validationError.message).toContain('.env.example');
-    }
+    expect(config.VITE_ENABLE_MOCKS).toBe(true);
+    expect(config.VITE_DEFAULT_SCENARIO).toBe('default');
+    expect(config.VITE_API_BASE_URL).toBe('/api');
+    expect(config.VITE_SOCKET_URL).toBe('');
+    expect(config.VITE_REMOTE_STOREFRONT_URL).toBe('/remotes/storefront/remoteEntry.js');
+    expect(config.VITE_REMOTE_CHECKOUT_URL).toBe('/remotes/checkout/remoteEntry.js');
+    expect(config.VITE_REMOTE_ACCOUNT_URL).toBe('/remotes/account/remoteEntry.js');
+  });
+
+  it('accepts valid relative paths for remote endpoints', () => {
+    const config = validateEnv({
+      VITE_REMOTE_STOREFRONT_URL: '/custom/storefront/remoteEntry.js',
+      VITE_REMOTE_CHECKOUT_URL: './checkout/remoteEntry.js',
+      VITE_REMOTE_ACCOUNT_URL: '/remotes/account/remoteEntry.js',
+    });
+
+    expect(config.VITE_REMOTE_STOREFRONT_URL).toBe('/custom/storefront/remoteEntry.js');
+    expect(config.VITE_REMOTE_CHECKOUT_URL).toBe('./checkout/remoteEntry.js');
+    expect(config.VITE_REMOTE_ACCOUNT_URL).toBe('/remotes/account/remoteEntry.js');
   });
 
   it('throws an explicit EnvValidationError when URL format is invalid', () => {
@@ -55,5 +63,17 @@ describe('validateEnv module', () => {
         VITE_REMOTE_STOREFRONT_URL: 'not-a-valid-url',
       }),
     ).toThrow(EnvValidationError);
+
+    try {
+      validateEnv({
+        ...validMockEnv,
+        VITE_REMOTE_STOREFRONT_URL: 'not-a-valid-url',
+      });
+    } catch (err) {
+      expect(err).toBeInstanceOf(EnvValidationError);
+      const validationError = err as EnvValidationError;
+      expect(validationError.missingOrInvalidKeys).toContain('VITE_REMOTE_STOREFRONT_URL');
+      expect(validationError.message).toContain('VITE_REMOTE_STOREFRONT_URL');
+    }
   });
 });

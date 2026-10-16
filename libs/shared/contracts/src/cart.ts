@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EthAmountSchema } from './common';
+import { EthAmountSchema, ImageUrlOrPathSchema } from './common';
 
 export const CartItemSchema = z.object({
   id: z.string().min(1, 'ID do item é obrigatório'),
@@ -7,7 +7,7 @@ export const CartItemSchema = z.object({
   editionId: z.string().min(1, 'ID da edição é obrigatório'),
   title: z.string().min(1, 'Título é obrigatório'),
   editionNumber: z.number().int().positive().optional(),
-  imageUrl: z.string().url('Imagem deve ser uma URL válida'),
+  imageUrl: ImageUrlOrPathSchema,
   unitPrice: EthAmountSchema,
   quantity: z
     .number({

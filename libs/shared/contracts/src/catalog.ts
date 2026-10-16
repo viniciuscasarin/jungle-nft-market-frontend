@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { EthAmountSchema, PaginatedResponseSchema } from './common';
+import { EthAmountSchema, ImageUrlOrPathSchema, PaginatedResponseSchema } from './common';
+
+export const NftNetworkSchema = z.enum(['ethereum', 'polygon', 'solana']);
+export type NftNetwork = z.infer<typeof NftNetworkSchema>;
+
+export const NftTabSchema = z.enum(['all', 'new', 'trending']);
+export type NftTab = z.infer<typeof NftTabSchema>;
 
 export const NftRatingSchema = z.object({
   average: z.number().min(0, 'Nota média não pode ser negativa').max(5, 'Nota média não pode ser maior que 5'),
@@ -23,7 +29,7 @@ export type NftEdition = z.infer<typeof NftEditionSchema>;
 export const NftCreatorSchema = z.object({
   id: z.string().min(1, 'ID do criador é obrigatório'),
   name: z.string().min(1, 'Nome do criador é obrigatório'),
-  avatarUrl: z.string().url().optional().nullable(),
+  avatarUrl: ImageUrlOrPathSchema.optional().nullable(),
   verified: z.boolean().default(false),
 });
 
@@ -33,9 +39,13 @@ export const NftItemSchema = z.object({
   id: z.string().min(1, 'ID do NFT é obrigatório'),
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().optional(),
-  imageUrl: z.string().url('Imagem deve ser uma URL válida'),
+  imageUrl: ImageUrlOrPathSchema,
   creator: NftCreatorSchema,
   category: z.string().optional(),
+  collectionName: z.string().optional(),
+  network: NftNetworkSchema.optional(),
+  rarity: z.string().optional(),
+  previousPriceEth: EthAmountSchema.optional(),
   tags: z.array(z.string()).default([]),
   price: EthAmountSchema,
   rating: NftRatingSchema,
@@ -58,17 +68,81 @@ export const NftSortOptionSchema = z.enum([
 
 export type NftSortOption = z.infer<typeof NftSortOptionSchema>;
 
+export const CatalogStringArrayParamSchema = z.preprocess((val) => {
+  if (val === undefined || val === null || val === '') return undefined;
+  if (Array.isArray(val)) {
+    const cleaned = val
+      .filter((v): v is string => typeof v === 'string')
+      .flatMap((v) => v.split(','))
+      .map((v) => v.trim())
+      .filter(Boolean);
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+  if (typeof val === 'string') {
+    const cleaned = val
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean);
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+  return undefined;
+}, z.array(z.string().min(1)).optional());
+
+export const CatalogNetworkArrayParamSchema = z.preprocess((val) => {
+  if (val === undefined || val === null || val === '') return undefined;
+  const rawList = Array.isArray(val)
+    ? val.filter((v): v is string => typeof v === 'string').flatMap((v) => v.split(','))
+    : typeof val === 'string'
+      ? val.split(',')
+      : null;
+  if (!rawList) return undefined;
+  const cleaned = rawList
+    .map((v) => v.trim())
+    .filter((v): v is NftNetwork => NftNetworkSchema.safeParse(v).success);
+  return cleaned.length > 0 ? cleaned : undefined;
+}, z.array(NftNetworkSchema).optional());
+
 export const NftListQuerySchema = z.object({
+  q: z.string().optional(),
   search: z.string().optional(),
   category: z.string().optional(),
+  collections: CatalogStringArrayParamSchema,
+  networks: CatalogNetworkArrayParamSchema,
   minPrice: EthAmountSchema.optional(),
   maxPrice: EthAmountSchema.optional(),
+  tab: NftTabSchema.default('all'),
   sort: NftSortOptionSchema.default('popular-desc'),
   page: z.coerce.number().int().positive().default(1),
-  pageSize: z.coerce.number().int().positive().default(12),
+  pageSize: z.coerce.number().int().positive().default(9),
 });
 
 export type NftListQuery = z.infer<typeof NftListQuerySchema>;
 
-export const NftListResponseSchema = PaginatedResponseSchema(NftItemSchema);
+export const CatalogFacetItemSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  count: z.number().int().nonnegative(),
+});
+
+export type CatalogFacetItem = z.infer<typeof CatalogFacetItemSchema>;
+
+export const CatalogNetworkFacetItemSchema = z.object({
+  id: NftNetworkSchema,
+  label: z.string().min(1),
+  count: z.number().int().nonnegative(),
+});
+
+export type CatalogNetworkFacetItem = z.infer<typeof CatalogNetworkFacetItemSchema>;
+
+export const CatalogFacetsSchema = z.object({
+  collections: z.array(CatalogFacetItemSchema),
+  networks: z.array(CatalogNetworkFacetItemSchema),
+});
+
+export type CatalogFacets = z.infer<typeof CatalogFacetsSchema>;
+
+export const NftListResponseSchema = PaginatedResponseSchema(NftItemSchema).extend({
+  facets: CatalogFacetsSchema.optional(),
+});
 export type NftListResponse = z.infer<typeof NftListResponseSchema>;
+

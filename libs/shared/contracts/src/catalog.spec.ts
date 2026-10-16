@@ -5,6 +5,7 @@ import {
   NftEditionSchema,
   NftRatingSchema,
   NftListQuerySchema,
+  NftListResponseSchema,
 } from './index';
 
 describe('Catalog, NFTs and Reviews Contracts (@nft/shared-contracts)', () => {
@@ -101,18 +102,22 @@ describe('Catalog, NFTs and Reviews Contracts (@nft/shared-contracts)', () => {
       );
     });
 
-    it('validates legitimate NFT item with editions and monotonic integer version', () => {
+    it('validates legitimate NFT item with editions, visual metadata, self-hosted image path and monotonic integer version', () => {
       const validNft = {
         id: 'nft-100',
         title: 'Jungle Apex #1',
         description: 'Rare cyber predator',
-        imageUrl: 'https://example.com/nft.png',
+        imageUrl: '/assets/images/nft-03-emerald-ape.png',
         creator: {
           id: 'creator-1',
           name: 'Jane Doe',
           verified: true,
         },
-        category: 'Art',
+        category: 'col_cyber_jungle',
+        collectionName: 'Cyber Jungle',
+        network: 'ethereum',
+        rarity: 'RARO',
+        previousPriceEth: '3.0000',
         tags: ['cyber', 'jungle', 'rare'],
         price: '2.5000',
         rating: { average: 4.8, count: 120 },
@@ -142,6 +147,10 @@ describe('Catalog, NFTs and Reviews Contracts (@nft/shared-contracts)', () => {
 
       const parsed = NftItemSchema.parse(validNft);
       expect(parsed.price).toBe('2.5000');
+      expect(parsed.collectionName).toBe('Cyber Jungle');
+      expect(parsed.network).toBe('ethereum');
+      expect(parsed.rarity).toBe('RARO');
+      expect(parsed.previousPriceEth).toBe('3.0000');
       expect(parsed.editions).toHaveLength(2);
       expect(Number.isInteger(parsed.version)).toBe(true);
       expect(Number.isInteger(parsed.editions[0]?.version)).toBe(true);
@@ -165,28 +174,54 @@ describe('Catalog, NFTs and Reviews Contracts (@nft/shared-contracts)', () => {
     });
   });
 
-  describe('NftListQuerySchema', () => {
-    it('applies defaults for sort, page and pageSize', () => {
+  describe('NftListQuerySchema & NftListResponseSchema', () => {
+    it('applies defaults for tab, sort, page and pageSize (9)', () => {
       const parsed = NftListQuerySchema.parse({});
+      expect(parsed.tab).toBe('all');
       expect(parsed.sort).toBe('popular-desc');
       expect(parsed.page).toBe(1);
-      expect(parsed.pageSize).toBe(12);
+      expect(parsed.pageSize).toBe(9);
     });
 
-    it('accepts valid search filters', () => {
+    it('accepts valid search and combinable filters', () => {
       const parsed = NftListQuerySchema.parse({
+        q: 'ape',
         search: 'jungle',
         category: 'Collectibles',
+        collections: 'col_cyber_jungle,col_neon_predators',
+        networks: ['ethereum', 'solana'],
         minPrice: '0.5',
         maxPrice: '10.0',
+        tab: 'trending',
         sort: 'price-asc',
         page: '2',
         pageSize: '24',
       });
+      expect(parsed.q).toBe('ape');
       expect(parsed.search).toBe('jungle');
+      expect(parsed.collections).toEqual(['col_cyber_jungle', 'col_neon_predators']);
+      expect(parsed.networks).toEqual(['ethereum', 'solana']);
       expect(parsed.minPrice).toBe('0.5');
+      expect(parsed.tab).toBe('trending');
       expect(parsed.page).toBe(2);
       expect(parsed.pageSize).toBe(24);
     });
+
+    it('validates catalog response with facet counts', () => {
+      const parsed = NftListResponseSchema.parse({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 9,
+        totalPages: 0,
+        facets: {
+          collections: [{ id: 'col_cyber_jungle', label: 'Cyber Jungle', count: 12 }],
+          networks: [{ id: 'ethereum', label: 'Ethereum', count: 20 }],
+        },
+      });
+      expect(parsed.facets?.collections).toHaveLength(1);
+      expect(parsed.facets?.networks).toHaveLength(1);
+    });
   });
 });
+

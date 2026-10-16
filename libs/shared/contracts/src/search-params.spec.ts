@@ -11,53 +11,66 @@ describe('Tolerant Search Params Schemas (@nft/shared-contracts)', () => {
       const invalidInput = {
         page: 'invalid',
         pageSize: '-10',
+        tab: 'invalid',
         sort: 'unknown',
         minPrice: 'not-a-number',
       };
 
       const result = parseCatalogSearchParams(invalidInput);
       expect(result.page).toBe(1);
-      expect(result.pageSize).toBe(12);
+      expect(result.pageSize).toBe(9);
+      expect(result.tab).toBe('all');
       expect(result.sort).toBe('popular-desc');
       expect(result.minPrice).toBeUndefined();
     });
 
     it('returns defaults when input is null, undefined, or empty object', () => {
       expect(parseCatalogSearchParams(null)).toEqual({
+        tab: 'all',
         sort: 'popular-desc',
         page: 1,
-        pageSize: 12,
+        pageSize: 9,
       });
 
       expect(parseCatalogSearchParams(undefined)).toEqual({
+        tab: 'all',
         sort: 'popular-desc',
         page: 1,
-        pageSize: 12,
+        pageSize: 9,
       });
 
       expect(parseCatalogSearchParams({})).toEqual({
+        tab: 'all',
         sort: 'popular-desc',
         page: 1,
-        pageSize: 12,
+        pageSize: 9,
       });
     });
 
-    it('accepts and coerces valid parameters correctly', () => {
+    it('accepts and coerces valid parameters including combinable filter arrays', () => {
       const valid = {
+        q: 'ape',
         search: 'panther',
         category: 'Art',
+        collections: ['col_cyber_jungle', 'col_neon_predators'],
+        networks: 'ethereum,polygon',
         minPrice: '0.5000',
         maxPrice: '10.0000',
+        tab: 'new',
         sort: 'price-asc',
         page: '3',
         pageSize: '24',
       };
 
       const result = parseCatalogSearchParams(valid);
+      expect(result.q).toBe('ape');
       expect(result.search).toBe('panther');
       expect(result.category).toBe('Art');
+      expect(result.collections).toEqual(['col_cyber_jungle', 'col_neon_predators']);
+      expect(result.networks).toEqual(['ethereum', 'polygon']);
       expect(result.minPrice).toBe('0.5000');
       expect(result.maxPrice).toBe('10.0000');
+      expect(result.tab).toBe('new');
       expect(result.sort).toBe('price-asc');
       expect(result.page).toBe(3);
       expect(result.pageSize).toBe(24);

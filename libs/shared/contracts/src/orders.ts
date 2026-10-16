@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { EthAmountSchema } from './common';
-import { WalletNetworkSchema } from './wallets';
+import { EthAmountSchema, ImageUrlOrPathSchema } from './common';
+import { WalletNetworkSchema, WalletTypeSchema } from './wallets';
 
 export const OrderStatusSchema = z.enum(['pending', 'confirmed', 'rejected']);
 export type OrderStatus = z.infer<typeof OrderStatusSchema>;
@@ -21,10 +21,12 @@ export const CollectorBaseSchema = z.object({
   fullName: z.string().min(1, 'Nome completo é obrigatório'),
   email: z.string().email('Email inválido'),
   walletAddress: z.string().min(1, 'Endereço da carteira é obrigatório'),
+  walletType: WalletTypeSchema,
   network: WalletNetworkSchema.default('ethereum-mainnet'),
   ensName: z.string().optional().nullable(),
   useSecondaryWallet: z.boolean().default(false),
   secondaryWallet: SecondaryWalletDataSchema.optional().nullable(),
+  note: z.string().max(500).optional().nullable(),
 });
 
 export const CollectorSchema = CollectorBaseSchema.superRefine((data, ctx) => {
@@ -73,7 +75,7 @@ export const OrderItemSchema = z.object({
   editionId: z.string().min(1),
   editionNumber: z.number().int().positive().optional(),
   title: z.string().min(1),
-  imageUrl: z.string().url(),
+  imageUrl: ImageUrlOrPathSchema,
   unitPrice: EthAmountSchema,
   quantity: z.number().int().positive(),
   subtotal: EthAmountSchema,
@@ -84,7 +86,7 @@ export type OrderItem = z.infer<typeof OrderItemSchema>;
 export const OrderReceiptSnapshotSchema = z.object({
   orderId: z.string().min(1),
   transactionHash: z.string().min(1),
-  collector: CollectorBaseSchema,
+  collector: CollectorSchema,
   items: z.array(OrderItemSchema).min(1),
   quoteId: z.string().min(1),
   subtotal: EthAmountSchema,
@@ -103,7 +105,7 @@ export const OrderSchema = z.object({
   quoteId: z.string().min(1, 'ID da cotação é obrigatório'),
   idempotencyKey: z.string().min(1, 'Idempotency-Key é obrigatória'),
   status: OrderStatusSchema,
-  collector: CollectorBaseSchema,
+  collector: CollectorSchema,
   items: z.array(OrderItemSchema).min(1),
   subtotal: EthAmountSchema,
   discount: EthAmountSchema,

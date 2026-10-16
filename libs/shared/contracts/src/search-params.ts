@@ -1,15 +1,24 @@
 import { z } from 'zod';
-import { NftSortOptionSchema } from './catalog';
+import {
+  CatalogNetworkArrayParamSchema,
+  CatalogStringArrayParamSchema,
+  NftSortOptionSchema,
+  NftTabSchema,
+} from './catalog';
 import { EthAmountSchema } from './common';
 
 export const CatalogSearchParamsSchema = z.object({
+  q: z.string().optional().catch(undefined),
   search: z.string().optional().catch(undefined),
   category: z.string().optional().catch(undefined),
+  collections: CatalogStringArrayParamSchema.catch(undefined),
+  networks: CatalogNetworkArrayParamSchema.catch(undefined),
   minPrice: EthAmountSchema.optional().catch(undefined),
   maxPrice: EthAmountSchema.optional().catch(undefined),
+  tab: NftTabSchema.catch('all'),
   sort: NftSortOptionSchema.catch('popular-desc'),
   page: z.coerce.number().int().positive().catch(1),
-  pageSize: z.coerce.number().int().positive().catch(12),
+  pageSize: z.coerce.number().int().positive().catch(9),
 });
 
 export type CatalogSearchParams = z.infer<typeof CatalogSearchParamsSchema>;
@@ -20,9 +29,10 @@ export function parseCatalogSearchParams(raw: unknown): CatalogSearchParams {
     return result.data;
   }
   return {
+    tab: 'all',
     sort: 'popular-desc',
     page: 1,
-    pageSize: 12,
+    pageSize: 9,
   };
 }
 

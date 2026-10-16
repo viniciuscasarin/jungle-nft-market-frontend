@@ -114,55 +114,72 @@ Encerra a sessão ativa e invalida o token.
 ## 3. Catálogo e NFTs
 
 ### `GET /api/nfts`
-Listagem paginada do catálogo com filtros combináveis e ordenação.
+Listagem paginada do catálogo com filtros combináveis, ordenação e contagens de facetas.
 
-- **Query Parameters (`NftListQuerySchema`):**
-  - `search` (opcional): Termo de busca textual no título e descrição.
-  - `category` (opcional): Categoria do NFT (ex: `"Cyberpunk"`, `"Art"`).
+- **Query Parameters (`NftListQuerySchema` / `CatalogSearchParamsSchema`):**
+  - `q` / `search` (opcional): Termo de busca textual no título, descrição e coleção.
+  - `category` (opcional): Categoria/coleção única do NFT.
+  - `collections` (opcional): Lista de IDs de coleções selecionadas (`string[]` ou string separada por vírgulas).
+  - `networks` (opcional): Lista de redes selecionadas (`('ethereum' | 'polygon' | 'solana')[]` ou string separada por vírgulas).
   - `minPrice` (opcional): Preço mínimo em ETH (`EthAmount`).
   - `maxPrice` (opcional): Preço máximo em ETH (`EthAmount`).
+  - `tab`: `'all' | 'new' | 'trending'` (default: `'all'`).
   - `sort`: `'popular-desc' | 'price-asc' | 'price-desc' | 'rating-desc' | 'created-desc'` (default: `'popular-desc'`).
   - `page`: Número da página (inteiro >= 1, default: `1`).
-  - `pageSize`: Itens por página (inteiro >= 1, default: `12`).
+  - `pageSize`: Itens por página (inteiro >= 1, default: `9`).
 - **Response 200 (`NftListResponseSchema`):**
   ```json
   {
     "items": [
       {
-        "id": "nft-101",
-        "title": "Apex Predator #01",
-        "description": "Cybernetic feline prowling the digital canopy.",
-        "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe",
+        "id": "nft-01",
+        "title": "Alpha Primate",
+        "description": "Cybernetic primate prowling the digital canopy.",
+        "imageUrl": "/assets/images/nft-03-emerald-ape.png",
         "creator": {
-          "id": "cr-1",
-          "name": "NeoTokyo Studios",
+          "id": "creator_jungle_lab",
+          "name": "Jungle Labs",
           "avatarUrl": "https://example.com/avatar.jpg",
           "verified": true
         },
-        "category": "Cyberpunk",
-        "tags": ["3D", "Cyber", "Predator"],
-        "price": "1.7500",
-        "rating": { "average": 4.9, "count": 88 },
+        "category": "col_cyber_jungle",
+        "collectionName": "Cyber Jungle",
+        "network": "ethereum",
+        "rarity": "RARO",
+        "previousPriceEth": "2.10",
+        "tags": ["ethereum", "cyber-jungle", "jungle", "collectible"],
+        "price": "1.75",
+        "rating": { "average": 4.9, "count": 28 },
         "editions": [
           {
-            "id": "ed-1",
+            "id": "edition_nft-01_1",
             "editionNumber": 1,
             "name": "First Edition",
-            "maxSupply": 50,
-            "availableSupply": 12,
-            "price": "1.7500",
+            "maxSupply": 10,
+            "availableSupply": 9,
+            "price": "1.75",
             "version": 1
           }
         ],
         "featured": true,
         "version": 1,
-        "createdAt": "2026-02-01T08:00:00.000Z"
+        "createdAt": "2026-01-02T00:00:00.000Z"
       }
     ],
-    "total": 45,
+    "total": 48,
     "page": 1,
-    "pageSize": 12,
-    "totalPages": 4
+    "pageSize": 9,
+    "totalPages": 6,
+    "facets": {
+      "collections": [
+        { "id": "col_cyber_jungle", "label": "Cyber Jungle", "count": 12 }
+      ],
+      "networks": [
+        { "id": "ethereum", "label": "Ethereum", "count": 20 },
+        { "id": "polygon", "label": "Polygon", "count": 18 },
+        { "id": "solana", "label": "Solana", "count": 10 }
+      ]
+    }
   }
   ```
 
@@ -414,33 +431,55 @@ Consulta o estado de um pedido e seu recibo imutável.
 Consulta os dados do perfil do usuário autenticado.
 
 - **Headers:** `Authorization: Bearer <token>`
-- **Response 200 (`ProfileSchema`):** Objeto `User` sem dados confidenciais de credenciais.
+- **Response 200 (`ProfileSchema`):** Objeto `User` estendido com `ensName` e `walletNickname` opcionais, sem dados confidenciais de credenciais.
 
-### `PATCH /api/profile`
-Atualiza dados cadastrais e avatar.
+### `PUT /api/profile` / `PATCH /api/profile`
+Atualiza dados cadastrais (`displayName`, `username`, `email`, `ensName`, `walletNickname`, `bio`, `avatarUrl`).
 
 - **Request Body (`UpdateProfileInputSchema`):**
   ```json
   {
     "displayName": "Alex Cyber Updated",
+    "username": "alex_cyber_new",
+    "email": "alex.new@jungle.market",
+    "ensName": "alexcyber",
+    "walletNickname": "Carteira Principal",
     "bio": "New bio description",
     "avatarUrl": "https://example.com/new-avatar.jpg"
   }
   ```
 - **Response 200 (`ProfileSchema`):** Perfil atualizado.
+- **Erros:** `VALIDATION_ERROR` (400), `CONFLICT` (409 com `fieldErrors` para `email` ou `username` já em uso).
 
-### `POST /api/profile/change-password`
-Altera a senha do usuário autenticado.
+### `POST /api/profile/avatar`
+Atualiza a foto de perfil (avatar) do usuário autenticado (suporta URL ou Data URL simples).
+
+- **Request Body (`UploadAvatarInputSchema`):**
+  ```json
+  {
+    "avatarUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+  }
+  ```
+- **Response 200 (`ProfileSchema`):** Perfil atualizado com o novo `avatarUrl`.
+
+### `DELETE /api/profile/avatar`
+Remove o avatar do usuário autenticado (`avatarUrl = null`).
+
+- **Response 200 (`ProfileSchema`):** Perfil atualizado com `avatarUrl: null`.
+
+### `POST /api/profile/password` / `POST /api/profile/change-password`
+Altera a senha do usuário autenticado validando o hash PBKDF2/SHA-256 da senha atual.
 
 - **Request Body (`ChangePasswordInputSchema`):**
   ```json
   {
     "currentPassword": "OldPassword123!",
-    "newPassword": "NewStrongPassword123!"
+    "newPassword": "NewStrongPassword123!",
+    "confirmPassword": "NewStrongPassword123!"
   }
   ```
 - **Response 200:** `{ "success": true }`
-- **Erros:** `VALIDATION_ERROR` (400) se a nova senha for igual à atual.
+- **Erros:** `VALIDATION_ERROR` (400) se a senha atual estiver incorreta (`fieldErrors.currentPassword`), se a nova senha for igual à atual ou se a confirmação divergir.
 
 ### `GET /api/wallets`
 Consulta a carteira principal e a carteira secundária do usuário.
@@ -453,14 +492,20 @@ Consulta a carteira principal e a carteira secundária do usuário.
       "id": "wal-1",
       "address": "0x1111111111111111111111111111111111111111",
       "network": "ethereum-mainnet",
+      "walletType": "metamask",
       "ensName": "alexcyber",
       "label": "Cold Storage",
+      "displayName": "Minha MetaMask",
+      "email": "alex@jungle.market",
+      "referralCode": "JUNGLE10",
+      "notes": null,
       "isPrimary": true
     },
     "secondary": {
       "id": "wal-2",
       "address": "0x2222222222222222222222222222222222222222",
       "network": "polygon",
+      "walletType": "walletconnect",
       "ensName": null,
       "label": "Daily Wallet",
       "isPrimary": false
@@ -468,23 +513,28 @@ Consulta a carteira principal e a carteira secundária do usuário.
   }
   ```
 
-### `POST /api/wallets`
-Cadastra ou atualiza uma carteira.
+### `POST /api/wallets` / `PUT /api/wallets`
+Cadastra ou atualiza a carteira principal (`isPrimary: true`) ou secundária (`isPrimary: false`) do usuário autenticado.
 
-- **Request Body (`CreateWalletInputSchema`):**
+- **Request Body (`CreateWalletInputSchema` / `UpdateWalletInputSchema`):**
   ```json
   {
     "address": "0x1111111111111111111111111111111111111111",
     "network": "ethereum-mainnet",
+    "walletType": "metamask",
     "ensName": "alexcyber",
     "label": "Primary Vault",
+    "displayName": "Minha MetaMask",
+    "email": "alex@jungle.market",
+    "referralCode": "JUNGLE10",
+    "notes": "Backup",
     "isPrimary": true
   }
   ```
 - **Validações Estritas:**
   - `address`: Deve ter exatamente 42 caracteres hexadecimais começando com `0x`.
   - `ensName`: Não deve conter o sufixo `.eth`.
-- **Response 201 (`WalletSchema`):** Carteira cadastrada.
+- **Response 200 / 201 (`WalletSchema`):** Carteira cadastrada ou atualizada.
 
 ---
 

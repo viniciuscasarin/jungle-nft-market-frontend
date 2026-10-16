@@ -1,26 +1,46 @@
 import { z } from 'zod';
 
+const relativeOrAbsoluteUrl = (fieldName: string, defaultValue: string) =>
+  z
+    .string({ required_error: `${fieldName} é obrigatória` })
+    .default(defaultValue)
+    .refine(
+      val => {
+        if (val.startsWith('/') || val.startsWith('./')) {
+          return true;
+        }
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      {
+        message: `${fieldName} deve ser uma URL válida ou um caminho relativo válido`,
+      },
+    );
+
 export const EnvSchema = z.object({
   VITE_ENABLE_MOCKS: z
     .union([z.boolean(), z.enum(['true', 'false', '1', '0'])])
     .default('true')
     .transform(val => (typeof val === 'boolean' ? val : val === 'true' || val === '1')),
   VITE_DEFAULT_SCENARIO: z.string().default('default'),
-  VITE_API_BASE_URL: z
-    .string({ required_error: 'VITE_API_BASE_URL é obrigatória' })
-    .min(1, 'VITE_API_BASE_URL é obrigatória'),
-  VITE_SOCKET_URL: z
-    .string({ required_error: 'VITE_SOCKET_URL é obrigatória' })
-    .min(1, 'VITE_SOCKET_URL é obrigatória'),
-  VITE_REMOTE_STOREFRONT_URL: z
-    .string({ required_error: 'VITE_REMOTE_STOREFRONT_URL é obrigatória' })
-    .url('VITE_REMOTE_STOREFRONT_URL deve ser uma URL válida'),
-  VITE_REMOTE_CHECKOUT_URL: z
-    .string({ required_error: 'VITE_REMOTE_CHECKOUT_URL é obrigatória' })
-    .url('VITE_REMOTE_CHECKOUT_URL deve ser uma URL válida'),
-  VITE_REMOTE_ACCOUNT_URL: z
-    .string({ required_error: 'VITE_REMOTE_ACCOUNT_URL é obrigatória' })
-    .url('VITE_REMOTE_ACCOUNT_URL deve ser uma URL válida'),
+  VITE_API_BASE_URL: z.string().min(1, 'VITE_API_BASE_URL é obrigatória').default('/api'),
+  VITE_SOCKET_URL: z.string().default(''),
+  VITE_REMOTE_STOREFRONT_URL: relativeOrAbsoluteUrl(
+    'VITE_REMOTE_STOREFRONT_URL',
+    '/remotes/storefront/remoteEntry.js',
+  ),
+  VITE_REMOTE_CHECKOUT_URL: relativeOrAbsoluteUrl(
+    'VITE_REMOTE_CHECKOUT_URL',
+    '/remotes/checkout/remoteEntry.js',
+  ),
+  VITE_REMOTE_ACCOUNT_URL: relativeOrAbsoluteUrl(
+    'VITE_REMOTE_ACCOUNT_URL',
+    '/remotes/account/remoteEntry.js',
+  ),
 });
 
 export type EnvConfig = z.infer<typeof EnvSchema>;

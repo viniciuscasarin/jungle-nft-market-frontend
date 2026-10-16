@@ -4,7 +4,12 @@ import {
   SignInInputSchema,
   SessionSchema,
   UserSchema,
+  ProfileSchema,
+  UpdateProfileInputSchema,
+  UploadAvatarInputSchema,
   WalletSchema,
+  CreateWalletInputSchema,
+  WalletTypeSchema,
   WalletAddressSchema,
   EnsNameSchema,
   ChangePasswordInputSchema,
@@ -124,18 +129,84 @@ describe('Auth, Session, Profile and Wallets Contracts (@nft/shared-contracts)',
     });
   });
 
+  describe('ProfileSchema, UpdateProfileInputSchema & UploadAvatarInputSchema', () => {
+    it('accepts profile with ensName and walletNickname', () => {
+      const parsed = ProfileSchema.parse({
+        id: 'usr-1',
+        displayName: 'Alice Silva',
+        username: 'alice',
+        email: 'alice@example.com',
+        ensName: 'alice',
+        walletNickname: 'Carteira Principal',
+        avatarUrl: null,
+        bio: null,
+        createdAt: '2026-01-01T00:00:00Z',
+      });
+      expect(parsed.ensName).toBe('alice');
+      expect(parsed.walletNickname).toBe('Carteira Principal');
+    });
+
+    it('validates UpdateProfileInputSchema with username, email, ensName and walletNickname', () => {
+      const parsed = UpdateProfileInputSchema.parse({
+        displayName: 'Alice Updated',
+        username: 'alice_new',
+        email: 'alice.new@example.com',
+        ensName: 'alicenew',
+        walletNickname: 'Hot Wallet',
+      });
+      expect(parsed.username).toBe('alice_new');
+      expect(parsed.email).toBe('alice.new@example.com');
+    });
+
+    it('validates UploadAvatarInputSchema with URL and Data URL', () => {
+      expect(
+        UploadAvatarInputSchema.parse({ avatarUrl: 'https://example.com/avatar.png' })
+      ).toEqual({ avatarUrl: 'https://example.com/avatar.png' });
+      expect(
+        UploadAvatarInputSchema.parse({
+          avatarUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        }).avatarUrl
+      ).toContain('data:image/png;base64');
+    });
+  });
+
   describe('Wallets & ENS Validation', () => {
-    it('validates legitimate wallet object', () => {
+    it('validates legitimate wallet object and extended wallet fields', () => {
       const wallet = {
         id: 'wal-1',
         address: '0x1234567890123456789012345678901234567890',
         network: 'ethereum-mainnet',
+        walletType: 'metamask',
         ensName: 'vitalik',
+        label: 'MetaMask Hot Wallet',
+        displayName: 'Minha MetaMask',
+        email: 'vitalik@example.com',
+        referralCode: 'JUNGLE2026',
+        notes: 'Backup vault',
         isPrimary: true,
       };
       const parsed = WalletSchema.parse(wallet);
       expect(parsed.address).toBe('0x1234567890123456789012345678901234567890');
       expect(parsed.ensName).toBe('vitalik');
+      expect(parsed.walletType).toBe('metamask');
+      expect(parsed.displayName).toBe('Minha MetaMask');
+    });
+
+    it('validates CreateWalletInputSchema and WalletTypeSchema', () => {
+      expect(WalletTypeSchema.parse('coinbase')).toBe('coinbase');
+      const created = CreateWalletInputSchema.parse({
+        address: '0x1234567890123456789012345678901234567890',
+        network: 'polygon',
+        walletType: 'walletconnect',
+        label: 'Polygon Vault',
+        displayName: 'Polygon Principal',
+        email: 'collector@example.com',
+        referralCode: 'REF01',
+        notes: 'Secondary',
+        isPrimary: false,
+      });
+      expect(created.walletType).toBe('walletconnect');
+      expect(created.label).toBe('Polygon Vault');
     });
 
     it('rejects wallet address that does not match 42 hex characters (0x...)', () => {
@@ -182,5 +253,16 @@ describe('Auth, Session, Profile and Wallets Contracts (@nft/shared-contracts)',
         /A nova senha deve ser diferente da senha atual/
       );
     });
+
+    it('rejects when confirmPassword is provided and does not match newPassword', () => {
+      expect(() =>
+        ChangePasswordInputSchema.parse({
+          currentPassword: 'oldPassword123',
+          newPassword: 'newSuperPassword123',
+          confirmPassword: 'differentPassword123',
+        })
+      ).toThrow(/A confirmação de senha não confere/);
+    });
   });
 });
+
