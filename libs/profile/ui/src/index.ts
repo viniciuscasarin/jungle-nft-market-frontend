@@ -1,2 +1,4 @@
-// Public API for @nft/profile-ui
-export const PROFILE_UI_MODULE = '@nft/profile-ui';
+export * from './account-layout';
+export * from './account-navigation';
+export * from './account-mobile-header';
+export * from './profile-page-content';
