@@ -260,7 +260,7 @@ export function PaymentFeaturePage({
     quoteChangedNotice ??
     (errorEntries.length > 0 ? (errorEntries[0]?.[1]?.message as string) : null);
 
-  const onSubmitValid = async (data: Collector) => {
+  const onSubmitValid = async () => {
     // If quote changed notice is active, user must acknowledge/clear
     if (quoteChangedNotice) {
       setQuoteChangedNotice(null);

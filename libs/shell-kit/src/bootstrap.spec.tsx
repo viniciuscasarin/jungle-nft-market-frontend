@@ -12,7 +12,13 @@ import {
   createMemoryHistory,
 } from '@nft/shared-router';
 import { parseCatalogSearchParams } from '@nft/shared-contracts';
-import { bootstrapStandalone } from './bootstrap';
+import {
+  bootstrapStandalone,
+  resolveStandaloneDestination,
+  resolveStandaloneHref,
+  isSafeInternalPath,
+  StandaloneLink,
+} from './bootstrap';
 import { useShell, useSession, type ShellContextValue } from './context';
 import { usePageChrome } from './page-chrome';
 import { singletonRegistry } from './singleton-registry';
@@ -423,6 +429,174 @@ describe('bootstrapStandalone (@nft/shell-kit)', () => {
 
     const shellLink = screen.getByRole('link', { name: 'Abrir Shell Integrado' });
     expect(shellLink).toHaveAttribute('href', 'http://localhost:4200');
+  });
+
+  describe('external destination resolution and security', () => {
+    const localPaths = ['/', '/perfil', '/carteiras'];
+
+    it('identifies safe internal paths and rejects open redirect attempts', () => {
+      expect(isSafeInternalPath('/perfil')).toBe(true);
+      expect(isSafeInternalPath('/nft/cyber-panther-1?tab=bids#price')).toBe(true);
+      expect(isSafeInternalPath('/login')).toBe(true);
+
+      expect(isSafeInternalPath('')).toBe(false);
+      expect(isSafeInternalPath('//evil.com')).toBe(false);
+      expect(isSafeInternalPath('/\\evil.com')).toBe(false);
+      expect(isSafeInternalPath('https://external.com')).toBe(false);
+      expect(isSafeInternalPath('javascript:alert(1)')).toBe(false);
+      expect(isSafeInternalPath('data:text/html,hack')).toBe(false);
+    });
+
+    it('resolves local destinations to local router paths', () => {
+      const res1 = resolveStandaloneDestination('/perfil', { localPaths });
+      expect(res1).toEqual({ type: 'local', path: '/perfil' });
+
+      const res2 = resolveStandaloneDestination('/carteiras?filter=active#details', { localPaths });
+      expect(res2).toEqual({ type: 'local', path: '/carteiras?filter=active#details' });
+    });
+
+    it('resolves external product destinations (PDP, login, checkout) to configured shellOrigin preserving search and hash', () => {
+      const pdp = resolveStandaloneDestination('/nft/cyber-ape-42?ref=trending#history', {
+        localPaths,
+        shellOrigin: 'http://localhost:4200',
+      });
+      expect(pdp).toEqual({
+        type: 'external',
+        url: 'http://localhost:4200/nft/cyber-ape-42?ref=trending#history',
+      });
+
+      const login = resolveStandaloneDestination('/login?redirect=%2Fcarteiras', {
+        localPaths,
+        shellOrigin: 'http://localhost:4200',
+      });
+      expect(login).toEqual({
+        type: 'external',
+        url: 'http://localhost:4200/login?redirect=%2Fcarteiras',
+      });
+
+      // Alternative E2E test origin
+      const e2e = resolveStandaloneDestination('/carrinho', {
+        localPaths,
+        shellOrigin: 'http://localhost:9999/',
+      });
+      expect(e2e).toEqual({
+        type: 'external',
+        url: 'http://localhost:9999/carrinho',
+      });
+    });
+
+    it('rejects insecure external destinations to safe fallback', () => {
+      expect(resolveStandaloneDestination('//evil.com/phish', { localPaths })).toEqual({
+        type: 'invalid',
+        path: '/',
+      });
+      expect(resolveStandaloneDestination('/\\evil.com', { localPaths })).toEqual({
+        type: 'invalid',
+        path: '/',
+      });
+      expect(resolveStandaloneDestination('javascript:alert(1)', { localPaths })).toEqual({
+        type: 'invalid',
+        path: '/',
+      });
+    });
+
+    it('navigates to external product URLs or safe fallback via useShell().navigate', async () => {
+      const onNavigate = vi.fn();
+      const assignSpy = vi.fn();
+      Object.defineProperty(window, 'location', {
+        writable: true,
+        value: { ...window.location, assign: assignSpy, href: '' },
+      });
+
+      function PageWithNavigation() {
+        const shell = useShell();
+        return (
+          <div>
+            <h1>Navigation Test</h1>
+            <button onClick={() => shell.navigate('/nft/nft-123?tab=price')}>Open PDP</button>
+            <button onClick={() => shell.navigate('/login?redirect=%2Fperfil')}>Go Login</button>
+            <button onClick={() => shell.navigate('//insecure-domain.com')}>Trigger Insecure</button>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        mountedRoot = await bootstrapStandalone({
+          mountPoint: container,
+          shellOrigin: 'http://localhost:4200',
+          onNavigate,
+          pages: [
+            { path: '/', component: PageWithNavigation },
+          ],
+        });
+      });
+
+      // 1. External PDP
+      fireEvent.click(screen.getByRole('button', { name: 'Open PDP' }));
+      expect(onNavigate).toHaveBeenCalledWith('http://localhost:4200/nft/nft-123?tab=price');
+      expect(assignSpy).toHaveBeenCalledWith('http://localhost:4200/nft/nft-123?tab=price');
+
+      // 2. External Login
+      fireEvent.click(screen.getByRole('button', { name: 'Go Login' }));
+      expect(onNavigate).toHaveBeenCalledWith('http://localhost:4200/login?redirect=%2Fperfil');
+      expect(assignSpy).toHaveBeenCalledWith('http://localhost:4200/login?redirect=%2Fperfil');
+
+      // 3. Insecure Destination
+      fireEvent.click(screen.getByRole('button', { name: 'Trigger Insecure' }));
+      expect(onNavigate).toHaveBeenCalledWith('/');
+    });
+
+    it('renders StandaloneLink with local Link or external anchor based on destination and shell origin', async () => {
+      function LinksPage() {
+        return (
+          <div>
+            <h1>Links Page</h1>
+            <StandaloneLink to="/carteiras" localPaths={localPaths}>
+              Link Local Carteiras
+            </StandaloneLink>
+            <StandaloneLink
+              to="/nft/cyber-panther-99?ref=banner"
+              localPaths={localPaths}
+              shellOrigin="http://localhost:4200"
+            >
+              Link Externo PDP
+            </StandaloneLink>
+            <StandaloneLink
+              to="/login"
+              localPaths={localPaths}
+              shellOrigin="http://e2e.test:4300"
+            >
+              Link Externo E2E Login
+            </StandaloneLink>
+            <StandaloneLink to="//evil.com" localPaths={localPaths}>
+              Link Inseguro
+            </StandaloneLink>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        mountedRoot = await bootstrapStandalone({
+          mountPoint: container,
+          pages: [
+            { path: '/', component: LinksPage },
+            { path: '/carteiras', component: () => <h1>Carteiras</h1> },
+          ],
+        });
+      });
+
+      const localLink = screen.getByRole('link', { name: 'Link Local Carteiras' });
+      expect(localLink).toHaveAttribute('href', '/carteiras');
+
+      const pdpLink = screen.getByRole('link', { name: 'Link Externo PDP' });
+      expect(pdpLink).toHaveAttribute('href', 'http://localhost:4200/nft/cyber-panther-99?ref=banner');
+
+      const e2eLink = screen.getByRole('link', { name: 'Link Externo E2E Login' });
+      expect(e2eLink).toHaveAttribute('href', 'http://e2e.test:4300/login');
+
+      const insecureLink = screen.getByRole('link', { name: 'Link Inseguro' });
+      expect(insecureLink).toHaveAttribute('href', '/');
+    });
   });
 });
 
