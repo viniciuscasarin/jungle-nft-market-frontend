@@ -1,0 +1,13 @@
+# OpenSpec Propose Command
+# Usage: /opsx-propose
+# Description: Create a new OpenSpec change proposal
+
+name = "opsx-propose"
+description = "Create a new OpenSpec change proposal"
+
+[invoke]
+agentName = "openspec-propose"
+prompt = """
+Execute the openspec-propose skill to create a new OpenSpec change.
+Guide the user through the process of proposing a new change.
+"""

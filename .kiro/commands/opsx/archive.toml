@@ -1,0 +1,14 @@
+# OpenSpec Archive Command
+# Usage: /opsx-archive [change-name]
+# Description: Archive a completed OpenSpec change
+
+name = "opsx-archive"
+description = "Archive a completed OpenSpec change"
+
+[invoke]
+agentName = "openspec-archive-change"
+prompt = """
+Execute the openspec-archive-change skill to archive a completed OpenSpec change.
+Follow the workspace agent rules defined in .agents/AGENTS.md for Git commit confirmation.
+If a change name is provided by the user, use it. Otherwise, list available changes and ask which one to archive.
+"""

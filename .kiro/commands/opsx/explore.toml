@@ -1,0 +1,13 @@
+# OpenSpec Explore Command
+# Usage: /opsx-explore
+# Description: Explore and analyze OpenSpec changes
+
+name = "opsx-explore"
+description = "Explore and analyze OpenSpec changes in the repository"
+
+[invoke]
+agentName = "openspec-explore"
+prompt = """
+Execute the openspec-explore skill to analyze the current OpenSpec changes.
+List all changes and provide an overview of their status.
+"""

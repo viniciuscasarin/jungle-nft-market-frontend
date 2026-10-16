@@ -1,0 +1,13 @@
+# OpenSpec Sync Command
+# Usage: /opsx-sync
+# Description: Synchronize OpenSpec changes with external specifications
+
+name = "opsx-sync"
+description = "Synchronize OpenSpec changes with external specifications (API specs, etc.)"
+
+[invoke]
+agentName = "openspec-sync-specs"
+prompt = """
+Execute the openspec-sync-specs skill to synchronize OpenSpec changes with external specifications.
+Check for updates in API specs, GraphQL schemas, or other external documentation.
+"""

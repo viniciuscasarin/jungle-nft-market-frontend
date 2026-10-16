@@ -1,0 +1,14 @@
+# OpenSpec Apply Command
+# Usage: /opsx-apply [change-name]
+# Description: Apply an OpenSpec change by implementing its tasks
+
+name = "opsx-apply"
+description = "Apply an OpenSpec change by implementing its tasks"
+
+[invoke]
+agentName = "openspec-apply-change"
+prompt = """
+Execute the openspec-apply-change skill to implement the specified OpenSpec change.
+Follow the workspace agent rules defined in .agents/AGENTS.md for incremental execution.
+If a change name is provided by the user, use it. Otherwise, list available changes and ask which one to apply.
+"""

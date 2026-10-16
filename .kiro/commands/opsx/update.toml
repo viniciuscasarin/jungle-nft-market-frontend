@@ -1,0 +1,13 @@
+# OpenSpec Update Command
+# Usage: /opsx-update [change-name]
+# Description: Update an existing OpenSpec change
+
+name = "opsx-update"
+description = "Update an existing OpenSpec change (requirements, design, or tasks)"
+
+[invoke]
+agentName = "openspec-update-change"
+prompt = """
+Execute the openspec-update-change skill to update an existing OpenSpec change.
+If a change name is provided by the user, use it. Otherwise, list available changes and ask which one to update.
+"""
