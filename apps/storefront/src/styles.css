@@ -2,3 +2,19 @@
 @import "../../../libs/shared/ui/src/styles/theme.css";
 @source "../../../libs";
 @source "./**/*.{ts,tsx}";
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

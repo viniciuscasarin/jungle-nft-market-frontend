@@ -1,0 +1,326 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "metadata": {
+    "source": "Figma - Frontend Challenge (cópia)",
+    "fileKey": "dKMJKBVdX6q0Ym4OX5vd3V",
+    "extractedAt": "2026-10-15T22:00:00Z",
+    "totalAssets": 35
+  },
+  "assets": [
+    {
+      "id": "icon-arrow-down-2",
+      "nodeId": "4:152",
+      "path": "icons/arrow-down-2.svg",
+      "format": "svg",
+      "dimensions": { "width": 16, "height": 16 },
+      "usage": "Seletor de ordenação e dropdowns",
+      "alt": "Seta para baixo"
+    },
+    {
+      "id": "icon-arrow-right-2",
+      "nodeId": "4:392",
+      "path": "icons/arrow-right-2.svg",
+      "format": "svg",
+      "dimensions": { "width": 18, "height": 18 },
+      "usage": "Navegação da paginação para a direita",
+      "alt": "Próxima página"
+    },
+    {
+      "id": "icon-arrow-right",
+      "nodeId": "5:99",
+      "path": "icons/arrow-right.svg",
+      "format": "svg",
+      "dimensions": { "width": 18, "height": 18 },
+      "usage": "Seta de CTA de links e botões",
+      "alt": "Seta para direita"
+    },
+    {
+      "id": "icon-cart",
+      "nodeId": "I70522:3240;70504:3015;70486:521",
+      "path": "icons/cart.svg",
+      "format": "svg",
+      "dimensions": { "width": 25, "height": 24 },
+      "usage": "Ícone do carrinho no cabeçalho",
+      "alt": "Carrinho de compras"
+    },
+    {
+      "id": "icon-close",
+      "nodeId": "9:947",
+      "path": "icons/close.svg",
+      "format": "svg",
+      "dimensions": { "width": 18, "height": 18 },
+      "usage": "Botão fechar de modais e diálogos",
+      "alt": "Fechar modal"
+    },
+    {
+      "id": "icon-coinbase",
+      "nodeId": "I70492:696;70491:1284",
+      "path": "icons/coinbase.svg",
+      "format": "svg",
+      "dimensions": { "width": 32, "height": 32 },
+      "usage": "Opção de conexão da carteira Coinbase",
+      "alt": "Logotipo Coinbase Wallet"
+    },
+    {
+      "id": "icon-discord",
+      "nodeId": "I70492:696;70491:1278",
+      "path": "icons/discord.svg",
+      "format": "svg",
+      "dimensions": { "width": 19, "height": 14 },
+      "usage": "Link para comunidade no Discord no rodapé",
+      "alt": "Logotipo do Discord"
+    },
+    {
+      "id": "icon-ethereum",
+      "nodeId": "4:166",
+      "path": "icons/ethereum.svg",
+      "format": "svg",
+      "dimensions": { "width": 32, "height": 32 },
+      "usage": "Símbolo de moeda Ethereum / ETH nos preços",
+      "alt": "Símbolo Ethereum"
+    },
+    {
+      "id": "icon-facebook",
+      "nodeId": "I70492:696;70491:1270",
+      "path": "icons/facebook.svg",
+      "format": "svg",
+      "dimensions": { "width": 8, "height": 16 },
+      "usage": "Link social para Facebook no rodapé",
+      "alt": "Logotipo do Facebook"
+    },
+    {
+      "id": "icon-instagram",
+      "nodeId": "I70492:696;70491:1272",
+      "path": "icons/instagram.svg",
+      "format": "svg",
+      "dimensions": { "width": 16, "height": 16 },
+      "usage": "Link social para Instagram no rodapé",
+      "alt": "Logotipo do Instagram"
+    },
+    {
+      "id": "icon-kurio-logo",
+      "nodeId": "I70522:3240;70504:3015;70486:509",
+      "path": "icons/kurio-logo.svg",
+      "format": "svg",
+      "dimensions": { "width": 120, "height": 32 },
+      "usage": "Logotipo / Wordmark da marca KURIO no cabeçalho e rodapé",
+      "alt": "Logotipo KURIO"
+    },
+    {
+      "id": "icon-linkedin",
+      "nodeId": "I70492:696;70491:1276",
+      "path": "icons/linkedin.svg",
+      "format": "svg",
+      "dimensions": { "width": 16, "height": 16 },
+      "usage": "Link social para LinkedIn no rodapé",
+      "alt": "Logotipo do LinkedIn"
+    },
+    {
+      "id": "icon-logout",
+      "nodeId": "I70522:3240;70504:3015;70486:527",
+      "path": "icons/logout.svg",
+      "format": "svg",
+      "dimensions": { "width": 20, "height": 20 },
+      "usage": "Ícone do botão de entrar/sair no cabeçalho",
+      "alt": "Ícone de autenticação"
+    },
+    {
+      "id": "icon-metamask",
+      "nodeId": "I70492:696;70491:1284",
+      "path": "icons/metamask.svg",
+      "format": "svg",
+      "dimensions": { "width": 32, "height": 32 },
+      "usage": "Opção de conexão da carteira MetaMask",
+      "alt": "Logotipo MetaMask"
+    },
+    {
+      "id": "icon-search",
+      "nodeId": "I70522:3240;70504:3015;70486:519",
+      "path": "icons/search.svg",
+      "format": "svg",
+      "dimensions": { "width": 20, "height": 20 },
+      "usage": "Campo de busca e atalho no cabeçalho",
+      "alt": "Ícone de pesquisa"
+    },
+    {
+      "id": "icon-slider-dots",
+      "nodeId": "3:131",
+      "path": "icons/slider-dots.svg",
+      "format": "svg",
+      "dimensions": { "width": 40, "height": 8 },
+      "usage": "Indicadores de navegação / paginação do carrossel Hero",
+      "alt": "Indicador de slide"
+    },
+    {
+      "id": "icon-twitter",
+      "nodeId": "I70492:696;70491:1274",
+      "path": "icons/twitter.svg",
+      "format": "svg",
+      "dimensions": { "width": 16, "height": 14 },
+      "usage": "Link social para Twitter / X no rodapé",
+      "alt": "Logotipo do Twitter"
+    },
+    {
+      "id": "icon-walletconnect",
+      "nodeId": "I70492:696;70491:1284",
+      "path": "icons/walletconnect.svg",
+      "format": "svg",
+      "dimensions": { "width": 32, "height": 32 },
+      "usage": "Opção de conexão via protocolo WalletConnect",
+      "alt": "Logotipo WalletConnect"
+    },
+    {
+      "id": "image-hero-nft",
+      "nodeId": "70342:2673",
+      "path": "images/hero-nft.png",
+      "format": "png",
+      "dimensions": { "width": 450, "height": 450 },
+      "usage": "Arte principal em destaque no banner Hero da página inicial",
+      "alt": "Arte NFT em destaque no banner principal"
+    },
+    {
+      "id": "image-featured-nft",
+      "nodeId": "70410:3798",
+      "path": "images/featured-nft.png",
+      "format": "png",
+      "dimensions": { "width": 310, "height": 368 },
+      "usage": "Arte do card de oferta limitada na barra lateral de filtros",
+      "alt": "Arte NFT de oferta limitada na barra lateral"
+    },
+    {
+      "id": "image-nft-03-emerald-ape",
+      "nodeId": "4:137",
+      "path": "images/nft-03-emerald-ape.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Emerald Ape #042' no catálogo",
+      "alt": "Emerald Ape #042"
+    },
+    {
+      "id": "image-nft-04-sage-nomad",
+      "nodeId": "4:162",
+      "path": "images/nft-04-sage-nomad.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Sage Nomad #009' no catálogo",
+      "alt": "Sage Nomad #009"
+    },
+    {
+      "id": "image-nft-05-neon-vessel",
+      "nodeId": "4:164",
+      "path": "images/nft-05-neon-vessel.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Neon Vessel #552' no catálogo",
+      "alt": "Neon Vessel #552"
+    },
+    {
+      "id": "image-nft-06-cosmic-bloom",
+      "nodeId": "4:280",
+      "path": "images/nft-06-cosmic-bloom.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Cosmic Bloom #118' no catálogo",
+      "alt": "Cosmic Bloom #118"
+    },
+    {
+      "id": "image-nft-07-violet-nomad",
+      "nodeId": "4:282",
+      "path": "images/nft-07-violet-nomad.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Violet Nomad #314' no catálogo",
+      "alt": "Violet Nomad #314"
+    },
+    {
+      "id": "image-nft-08-ivory-baron",
+      "nodeId": "4:284",
+      "path": "images/nft-08-ivory-baron.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Ivory Baron #088' no catálogo",
+      "alt": "Ivory Baron #088"
+    },
+    {
+      "id": "image-nft-09-golden-beat",
+      "nodeId": "4:286",
+      "path": "images/nft-09-golden-beat.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Golden Beat #207' no catálogo",
+      "alt": "Golden Beat #207"
+    },
+    {
+      "id": "image-nft-10-artwork",
+      "nodeId": "4:289",
+      "path": "images/nft-10-artwork.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do catálogo de artes digitais",
+      "alt": "Arte digital colecionável"
+    },
+    {
+      "id": "image-nft-11-golden-signal",
+      "nodeId": "4:291",
+      "path": "images/nft-11-golden-signal.png",
+      "format": "png",
+      "dimensions": { "width": 250, "height": 250 },
+      "usage": "Arte NFT do item 'Golden Signal #160' no catálogo",
+      "alt": "Golden Signal #160"
+    },
+    {
+      "id": "image-promo-genesis-drops",
+      "nodeId": "4:428",
+      "path": "images/promo-genesis-drops.png",
+      "format": "png",
+      "dimensions": { "width": 292, "height": 250 },
+      "usage": "Arte promocional do card 'Lançamentos gênesis'",
+      "alt": "Card promocional de lançamentos gênesis"
+    },
+    {
+      "id": "image-promo-curated-art",
+      "nodeId": "4:423",
+      "path": "images/promo-curated-art.png",
+      "format": "png",
+      "dimensions": { "width": 287, "height": 250 },
+      "usage": "Arte promocional do card 'Arte digital selecionada'",
+      "alt": "Card promocional de arte digital selecionada"
+    },
+    {
+      "id": "image-blog-01",
+      "nodeId": "70343:259",
+      "path": "images/blog-01.png",
+      "format": "png",
+      "dimensions": { "width": 268, "height": 195 },
+      "usage": "Imagem ilustrativa do artigo 'Como funciona a propriedade de NFTs'",
+      "alt": "Ilustração do artigo sobre propriedade de NFTs"
+    },
+    {
+      "id": "image-blog-02",
+      "nodeId": "70343:268",
+      "path": "images/blog-02.png",
+      "format": "png",
+      "dimensions": { "width": 268, "height": 195 },
+      "usage": "Imagem ilustrativa do artigo '10 artistas digitais para acompanhar'",
+      "alt": "Ilustração do artigo sobre artistas digitais"
+    },
+    {
+      "id": "image-blog-03",
+      "nodeId": "70343:277",
+      "path": "images/blog-03.png",
+      "format": "png",
+      "dimensions": { "width": 268, "height": 195 },
+      "usage": "Imagem ilustrativa do artigo 'Raridade, atributos e procedência'",
+      "alt": "Ilustração do artigo sobre raridade e procedência"
+    },
+    {
+      "id": "image-blog-04",
+      "nodeId": "70343:286",
+      "path": "images/blog-04.png",
+      "format": "png",
+      "dimensions": { "width": 268, "height": 195 },
+      "usage": "Imagem ilustrativa do artigo 'Como proteger sua carteira'",
+      "alt": "Ilustração do artigo sobre segurança da carteira"
+    }
+  ]
+}

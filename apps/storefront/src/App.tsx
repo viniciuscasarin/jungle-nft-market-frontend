@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Header, Footer } from '@nft/shared-ui';
-import { PdpPageContent } from '@nft/catalog-ui';
+import { HomePageContent, PdpPageContent } from '@nft/catalog-ui';
 import { singletonProbe } from '@nft/shell-kit';
 
 export function App() {
   const [probeCount, setProbeCount] = React.useState<number>(() => singletonProbe.getCount());
-  const [activeView, setActiveView] = React.useState<'pdp' | 'catalog'>('pdp');
+  const [activeView, setActiveView] = React.useState<'home' | 'pdp'>('home');
 
   React.useEffect(() => {
     const nextCount = singletonProbe.increment('apps/storefront');
@@ -24,27 +24,34 @@ export function App() {
             <div className="hidden sm:flex items-center gap-1 bg-surface-dark px-2 py-0.5 rounded border border-border-soft text-tiny-10">
               <button
                 type="button"
-                onClick={() => setActiveView('pdp')}
+                onClick={() => setActiveView('home')}
                 className={`px-2 py-0.5 rounded font-mono transition-colors ${
-                  activeView === 'pdp' ? 'bg-primary text-text-primary font-bold' : 'text-text-muted hover:text-text-primary'
+                  activeView === 'home'
+                    ? 'bg-primary text-text-primary font-bold'
+                    : 'text-text-muted hover:text-text-primary'
                 }`}
               >
-                Layout Detalhes (PDP)
+                Layout Início (Home)
               </button>
               <button
                 type="button"
-                onClick={() => setActiveView('catalog')}
+                onClick={() => setActiveView('pdp')}
                 className={`px-2 py-0.5 rounded font-mono transition-colors ${
-                  activeView === 'catalog' ? 'bg-primary text-text-primary font-bold' : 'text-text-muted hover:text-text-primary'
+                  activeView === 'pdp'
+                    ? 'bg-primary text-text-primary font-bold'
+                    : 'text-text-muted hover:text-text-primary'
                 }`}
               >
-                Info do Remote
+                Layout Detalhes (PDP)
               </button>
             </div>
           </div>
           <div className="flex items-center gap-3 font-mono text-[11px]">
             <span className="text-text-muted hidden md:inline">
-              Sonda Singleton: <strong className="text-emerald-400" data-testid="singleton-probe-count">{probeCount}</strong>
+              Sonda Singleton:{' '}
+              <strong className="text-emerald-400" data-testid="singleton-probe-count">
+                {probeCount}
+              </strong>
             </span>
             <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-emerald-400 font-bold">
               Porta 4201
@@ -60,38 +67,27 @@ export function App() {
             name: 'Vinicius Casarin',
             walletAddress: '0x71C...3948',
           }}
-          cartCount={1}
-          activePath="/item/4092"
+          cartCount={6}
+          activePath={activeView === 'home' ? '/' : '/item/4092'}
         />
       </div>
 
       {/* Conteúdo principal */}
       <main className="flex-1" role="region" aria-label="Catálogo Storefront">
-        {activeView === 'pdp' ? (
-          <PdpPageContent />
+        {activeView === 'home' ? (
+          <HomePageContent
+            onSelectNft={() => {
+              setActiveView('pdp');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
         ) : (
-          <div className="container mx-auto px-4 py-12 max-w-4xl">
-            <div className="rounded-2xl border border-border-default bg-surface-card p-8">
-              <span className="text-tiny-10 uppercase tracking-widest text-text-accent font-mono font-bold">
-                Storefront Remote
-              </span>
-              <h2 className="mt-2 text-heading-28 font-bold text-text-primary">
-                Vitrine & Catálogo de Colecionáveis
-              </h2>
-              <p className="mt-3 text-body-14 text-text-secondary leading-relaxed">
-                Este remote é responsável pela vitrine de produtos, filtros por categoria, ordenação por preço e página de detalhes do NFT (PDP).
-              </p>
-              <div className="mt-6 pt-4 border-t border-border-soft flex gap-4 text-caption-12 text-text-muted">
-                <button
-                  type="button"
-                  onClick={() => setActiveView('pdp')}
-                  className="text-text-accent hover:underline font-bold"
-                >
-                  → Ver página de Detalhes do Produto (PDP)
-                </button>
-              </div>
-            </div>
-          </div>
+          <PdpPageContent
+            onBack={() => {
+              setActiveView('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
         )}
       </main>
 
