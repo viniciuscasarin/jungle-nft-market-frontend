@@ -1,0 +1,59 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Foundations/Cores" />
+
+# Cores do Sistema (Design Tokens)
+
+Paleta oficial extraída do Figma (`fileKey: dKMJKBVdX6q0Ym4OX5vd3V`). O marketplace utiliza modo escuro com fundo em tom de tinta (`ink`).
+
+---
+
+## Superfícies (`color.surface`)
+
+| Amostra | Token | Valor Hex | Classe Tailwind | NodeId Figma | Descrição |
+|:---:|:---|:---|:---|:---|:---|
+| <div style={{width: 48, height: 48, background: '#140d0a', borderRadius: 6, border: '1px solid #3f2319'}}></div> | `color.surface.default` | `#140d0a` | `bg-surface-default` / `bg-ink` | `2:2` | Fundo principal da página (ink) |
+| <div style={{width: 48, height: 48, background: '#241612', borderRadius: 6, border: '1px solid #3f2319'}}></div> | `color.surface.card` | `#241612` | `bg-surface-card` / `bg-card` | `70493:2519` | Fundo de cards, painéis e rodapé |
+| <div style={{width: 48, height: 48, background: '#2f1d15', borderRadius: 6, border: '1px solid #3f2319'}}></div> | `color.surface.raised` | `#2f1d15` | `bg-surface-raised` / `bg-raised` | `70381:239` | Superfícies elevadas e modais |
+| <div style={{width: 48, height: 48, background: '#38220f', borderRadius: 6, border: '1px solid #3f2319'}}></div> | `color.surface.dark` | `#38220f` | `bg-surface-dark` | `70491:1243` | Faixa de contato do rodapé e inputs escuros |
+
+---
+
+## Bordas (`color.border`)
+
+| Amostra | Token | Valor Hex | Classe Tailwind | NodeId Figma | Descrição |
+|:---:|:---|:---|:---|:---|:---|
+| <div style={{width: 48, height: 48, background: 'transparent', borderRadius: 6, border: '3px solid #3f2319'}}></div> | `color.border.default` | `#3f2319` | `border-border-default` / `border-border` | `4:388` | Bordas padrão e divisores |
+| <div style={{width: 48, height: 48, background: 'transparent', borderRadius: 6, border: '3px solid #55321f'}}></div> | `color.border.soft` | `#55321f` | `border-border-soft` | `I70492:696;70491:1283` | Bordas suaves de campos e divisores secundários |
+| <div style={{width: 48, height: 48, background: 'transparent', borderRadius: 6, border: '3px solid #8a583e'}}></div> | `color.border.accessible` | `#8a583e` | `border-border-accessible` | `mitigation:wcag-1.4.11` | Borda acessível com contraste 3.40:1 sobre ink para campos interativos |
+
+---
+
+## Tipografia & Texto (`color.text`)
+
+| Amostra | Token | Valor Hex | Classe Tailwind | NodeId Figma | Descrição |
+|:---:|:---|:---|:---|:---|:---|
+| <div style={{width: 48, height: 48, background: '#f7f3ec', borderRadius: 6}}></div> | `color.text.primary` | `#f7f3ec` | `text-text-primary` | `3:107` | Texto principal de alta ênfase |
+| <div style={{width: 48, height: 48, background: '#cfb28c', borderRadius: 6}}></div> | `color.text.secondary` | `#cfb28c` | `text-text-secondary` / `text-secondary` | `3:114` | Texto de apoio e labels secundárias |
+| <div style={{width: 48, height: 48, background: '#b39463', borderRadius: 6}}></div> | `color.text.muted` | `#b39463` | `text-text-muted` / `text-muted` | `4:171` | Texto atenuado, preços antigos e legendas secundárias |
+| <div style={{width: 48, height: 48, background: '#e89b55', borderRadius: 6}}></div> | `color.text.accent` | `#e89b55` | `text-text-accent` / `text-accent` | `4:166` | Preços em destaque e links ativos |
+| <div style={{width: 48, height: 48, background: '#f0805f', borderRadius: 6}}></div> | `color.text.coral` | `#f0805f` | `text-text-coral` / `text-coral` | `2:2` | Texto de destaque coral e avisos |
+
+---
+
+## Ação & Botões (`color.action`)
+
+| Amostra | Token | Valor Hex | Classe Tailwind | NodeId Figma | Descrição |
+|:---:|:---|:---|:---|:---|:---|
+| <div style={{width: 48, height: 48, background: '#d28a4c', borderRadius: 6}}></div> | `color.action.primary` | `#d28a4c` | `bg-action-primary` / `bg-primary` | `3:127` | Fundo de botões primários e destaques de ação |
+| <div style={{width: 48, height: 48, background: '#b87437', borderRadius: 6}}></div> | `color.action.primaryHover` | `#b87437` | `bg-action-primary-hover` / `bg-primary-hover` | `3:127` | Estado hover para botões primários |
+| <div style={{width: 48, height: 48, background: '#55321f', borderRadius: 6}}></div> | `color.action.disabled` | `#55321f` | `bg-action-disabled` | `70381:245` | Estado desabilitado de botões e ações |
+
+---
+
+## Feedback (`color.feedback`)
+
+| Amostra | Token | Valor Hex | Classe Tailwind | NodeId Figma | Descrição |
+|:---:|:---|:---|:---|:---|:---|
+| <div style={{width: 48, height: 48, background: '#00a66c', borderRadius: 6}}></div> | `color.feedback.success` | `#00a66c` | `text-feedback-success` / `text-success` | `2:2` | Cor indicativa de sucesso e confirmação |
+| <div style={{width: 48, height: 48, background: '#f0805f', borderRadius: 6}}></div> | `color.feedback.error` | `#f0805f` | `text-feedback-error` / `text-error` | `2:2` | Cor indicativa de erro e validação |

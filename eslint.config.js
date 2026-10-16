@@ -110,6 +110,19 @@ export default [
               sourceTag: 'flow:shared',
               onlyDependOnLibsWithTags: ['flow:shared'],
             },
+            {
+              sourceTag: 'flow:tooling',
+              onlyDependOnLibsWithTags: ['type:ui', 'flow:shared'],
+            },
+            {
+              sourceTag: 'flow:tooling',
+              notDependOnLibsWithTags: [
+                'type:app',
+                'type:feature',
+                'type:data-access',
+                'scope:mocks',
+              ],
+            },
 
             // 3. Layer hierarchy enforcement (app -> feature -> ui / data-access -> domain -> shared)
             {
@@ -155,6 +168,15 @@ export default [
             {
               sourceTag: 'scope:shared',
               notDependOnLibsWithTags: ['scope:mocks', 'type:app', 'type:feature'],
+            },
+            {
+              sourceTag: 'scope:tooling',
+              notDependOnLibsWithTags: [
+                'scope:mocks',
+                'type:app',
+                'type:feature',
+                'type:data-access',
+              ],
             },
           ],
         },

@@ -40,14 +40,15 @@ libs/
   {auth,catalog,favorites,cart,checkout,orders,profile,wallets}/{domain,data-access,feature,ui} (32 libs)
 ```
 
-### Inventário de Projetos Nx (50 projetos)
+### Inventário de Projetos Nx (51 projetos)
 
-- **Aplicações (5)**:
+- **Aplicações (6)**:
   - `shell`: Host na porta `4200`, gerenciador de rotas, providers e sessão.
   - `storefront`: Remote na porta `4201`, catálogo e PDP.
   - `checkout`: Remote na porta `4202`, carrinho e checkout.
   - `account`: Remote na porta `4203`, perfil e carteiras.
-  - `web-e2e`: Testes de integração Playwright.
+  - `storybook`: Catálogo de componentes isolados na porta `6006` com tag `flow:tooling`.
+  - `web-e2e`: Testes de integração e regressão visual com Playwright.
 - **Bibliotecas Compartilhadas (8)**:
   - `@nft/shared-contracts`: Schemas zod, DTOs e validação de runtime de env vars.
   - `@nft/shared-money`: Operações e formatação de ETH em strings decimais via decimal.js.
@@ -243,13 +244,15 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 
 ## 14. Interface, acessibilidade e performance
 
-- Tokens do Figma como CSS variables e preset Tailwind exportado por `shared/ui`. O CSS de tokens é carregado uma vez pelo host; remotes standalone o importam só no bootstrap standalone.
-- shadcn/ui adaptado em `shared/ui`, com API própria tipada, sem vazar tipos Radix.
-- Fontes e assets self-hosted, com `font-display: swap` e preload da fonte crítica.
-- Skeleton com shimmer em catálogo, detalhe e resumo do carrinho, com dimensões preservadas (sem layout shift) e animação desativada sob `prefers-reduced-motion`.
-- Acessibilidade: teclado e foco visível, trap e retorno de foco em Dialog e Drawer, labels e erros associados por `aria-describedby`, `aria-invalid`, live regions para mutations e eventos em tempo real, estados que não dependem só de cor, contraste AA, sem overflow horizontal. Verificação com axe.
-- Viewports de referência: 390, 768 e 1440.
-- Lighthouse em Início e Detalhe, perfis mobile e desktop, três medições e mediana. Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Registro de LCP, CLS e TBT em `docs/lighthouse/`. Resultados abaixo da meta são justificados aqui. `[PREENCHER]`
+- **Tokens e Tailwind v4 CSS-First**: Tokens do Figma extraídos em `design/tokens/tokens.json` são compilados via `pnpm design:tokens` (`scripts/generate-tokens.js`) para a sintaxe `@theme` do Tailwind v4 em `libs/shared/ui/src/styles/theme.css`. O host (`apps/shell`) importa esse CSS uma única vez; remotes standalone o importam apenas no bootstrap standalone via `@nft/shell-kit`.
+- **Biblioteca `@nft/shared-ui`**: Estruturada modularmente em primitivos Radix UI encapsulados (`components/primitives`), estruturas globais de layout (`components/layout`), componentes ricos de catálogo e conta (`components/widgets`) e 35 componentes de ícones SVG nomeados individuais com suporte completo a tree-shaking (`icons/`). Nenhuma classe de cor hexadecimal literal é permitida fora dos tokens, com teste automatizado bloqueante.
+- **Storybook (`apps/storybook`)**: Aplicação isolada na porta 6006 com builder `@storybook/react-vite`, tag `flow:tooling`, suporte a dark mode `ink`, viewports de referência (390, 768 e 1440), toggle de acessibilidade para `prefers-reduced-motion`, addon `@storybook/addon-a11y` (violações tratadas como erro bloqueante), `@storybook/addon-designs` e 5 páginas Foundations em MDX geradas dos tokens (`Cores`, `Tipografia`, `Espaçamento`, `Raios`, `Sombras`).
+- **Notas de Fidelidade e Tolerâncias**: Catálogo minucioso de alinhamento visual, tolerâncias de subpixel/1px, regras de arredondamento de bordas e especificação de estados não desenhados documentados em `docs/design/fidelity-notes.md`.
+- **Fontes e Assets Self-Hosted**: Família Roboto Mono baixada e servida localmente (`design/fonts/`) nos pesos 400, 500 e 700 em `.woff2` com `font-display: swap` e preload crítico no `index.html` do host.
+- **Skeleton Shimmer**: Gradiente animado em catálogo, detalhe e carrinho preservando dimensões fixas contra CLS (Cumulative Layout Shift) e desativado sob `@media (prefers-reduced-motion: reduce)`.
+- **Acessibilidade (WCAG 2.1 AA)**: Teclado e foco visível com anel unificado `ring-2 ring-primary ring-offset-2 ring-offset-ink` (6.85:1 sobre `ink`), token de demarcação `color.border.accessible` (`#8a583e`, 3.4:1), focus trap e retorno de foco em Dialog e Drawer, labels e erros associados por `aria-describedby` e `aria-invalid`, live regions para feedback de ações assíncronas, e avisos explícitos para ações fora de escopo ("Funcionalidade indisponível nesta demonstração").
+- **Viewports de referência**: 390, 768 e 1440.
+- **Lighthouse**: Em Início e Detalhe, perfis mobile e desktop, três medições e mediana. Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Registro de LCP, CLS e TBT em `docs/lighthouse/`. Resultados abaixo da meta são justificados aqui. `[PREENCHER]`
 
 ## 15. Testes
 
@@ -257,22 +260,26 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 - Playwright em `apps/web-e2e`, em Chromium, desktop e mobile, contra o sistema integrado com mocks. Cobre os 12 fluxos do desafio (busca e filtros, detalhe, conta e sessão, favoritos, carrinho, compra, falhas de pagamento e timeout, perfil e carteiras, tempo real, duplicatas e reconexão, teclado e foco, skeletons e recuperação).
 - Cada teste parte de estado isolado (reset do cenário). Relógio, latência e disparo de eventos são controlados.
 - Testes de tempo real passam pelo `socket.io-client`; os de REST passam pelos handlers MSW.
-- Regressão visual de início, detalhe, carrinho e pagamento, com baselines versionadas.
+- Regressão visual de início, detalhe, carrinho, pagamento e componentes isolados do Storybook (`iframe.html?id=...`), com baselines versionadas em viewports 1440px e 390px.
 - Relatório HTML e traces de falha como artefatos do CI.
 
 ## 16. Build, deploy e execução
 
-- Build consolida os apps em uma única pasta (`dist/integrated/`): shell na raiz `/`, remotes sob `/remotes/<nome>/` (`remotes/storefront`, `remotes/checkout`, `remotes/account`).
-- `vercel.json` com SPA fallback para `/index.html`, sem cache longo em `remoteEntry.js` (`Cache-Control: public, max-age=0, must-revalidate`) e cache imutável em chunks com hash (`Cache-Control: public, max-age=31536000, immutable`). Acesso direto e refresh funcionam em qualquer rota.
+- Build consolida os apps em uma única pasta (`dist/integrated/`): shell na raiz `/`, remotes sob `/remotes/<nome>/` (`remotes/storefront`, `remotes/checkout`, `remotes/account`) e Storybook estático sob `/storybook/`.
+- `vercel.json` com SPA fallback para `/index.html`, rewrite dedicado `{ "source": "/storybook/:path*", "destination": "/storybook/:path*" }`, sem cache longo em `remoteEntry.js` (`Cache-Control: public, max-age=0, must-revalidate`) e cache imutável em chunks com hash (`Cache-Control: public, max-age=31536000, immutable`). Acesso direto e refresh funcionam em qualquer rota.
 - Scripts raiz no `package.json`:
   - `pnpm dev:mocks`: Inicializa simultaneamente os 4 apps Vite via Nx.
   - `pnpm dev:shell`: Host na porta `4200`.
   - `pnpm dev:storefront`: Remote catálogo na porta `4201`.
   - `pnpm dev:checkout`: Remote carrinho/pagamento na porta `4202`.
   - `pnpm dev:account`: Remote perfil/carteiras na porta `4203`.
-  - `pnpm build`: Executa `scripts/build-integrated.js` compilando todos os apps e montando `dist/integrated/`.
+  - `pnpm storybook`: Servidor interativo do Storybook na porta `6006`.
+  - `pnpm build:storybook`: Compilação estática do Storybook para `dist/apps/storybook`.
+  - `pnpm design:tokens`: Compilação de `tokens.json` em `@theme` Tailwind v4 em `theme.css`.
+  - `pnpm design:icons`: Geração dos 35 ícones vetoriais React nomeados individuais.
+  - `pnpm build`: Executa `scripts/build-integrated.js` compilando todos os apps e Storybook, montando `dist/integrated/`.
   - `pnpm preview`: Servidor estático Node.js servindo `dist/integrated/` com headers de cache simulados.
-  - `pnpm typecheck`: Checagem de tipos estrita em todos os 50 projetos (`nx run-many -t typecheck`).
+  - `pnpm typecheck`: Checagem de tipos estrita em todos os 51 projetos (`nx run-many -t typecheck`).
   - `pnpm lint`: ESLint com regras de fronteiras e restrição de imports de terceiros.
   - `pnpm test`: Vitest rodando em paralelo em todas as bibliotecas.
   - `pnpm e2e`: Execução dos testes integrados com Playwright em `apps/web-e2e`.
@@ -300,6 +307,8 @@ Detalhe em [`docs/cache-policy.md`](docs/cache-policy.md). Resumo da política:
 - **Mudança de Preço ou Disponibilidade**: Caso haja alteração de preço, taxa ou esgotamento de item durante o fluxo de checkout, a confirmação do pedido é bloqueada e o usuário é notificado para revisar os novos valores antes de confirmar.
 
 ## 19. Desvios do Figma e ajustes de acessibilidade
+
+> Consulte [docs/design/fidelity-notes.md](docs/design/fidelity-notes.md) para o catálogo completo de tolerâncias visuais, fidelidade de 1px e notas de alinhamento por componente.
 
 | Item | Figma | Entrega | Motivo |
 |---|---|---|---|

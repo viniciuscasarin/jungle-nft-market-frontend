@@ -1,0 +1,2 @@
+// Storybook application shell
+export {};

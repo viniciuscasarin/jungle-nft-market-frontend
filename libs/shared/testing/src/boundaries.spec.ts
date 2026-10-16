@@ -76,4 +76,49 @@ describe('Architectural Boundaries & Encapsulation Enforcement', () => {
     const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
     expect(rules).toContain('no-restricted-imports');
   });
+
+  it('deve autorizar apps/storybook a importar type:ui e flow:shared (@nft/shared-ui)', async () => {
+    const results = await eslint.lintText(
+      "import { Button } from '@nft/shared-ui';\nconsole.log(Button);\n",
+      {
+        filePath: 'apps/storybook/src/test-ui.ts',
+      }
+    );
+    const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
+    expect(rules).not.toContain('@nx/enforce-module-boundaries');
+  });
+
+  it('deve proibir apps/storybook de importar type:feature (@nft/catalog-feature)', async () => {
+    const results = await eslint.lintText(
+      "import { CatalogFeature } from '@nft/catalog-feature';\nconsole.log(CatalogFeature);\n",
+      {
+        filePath: 'apps/storybook/src/test-feature.ts',
+      }
+    );
+    const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
+    expect(rules).toContain('@nx/enforce-module-boundaries');
+  });
+
+  it('deve proibir apps/storybook de importar type:data-access (@nft/catalog-data-access)', async () => {
+    const results = await eslint.lintText(
+      "import { CatalogDataAccess } from '@nft/catalog-data-access';\nconsole.log(CatalogDataAccess);\n",
+      {
+        filePath: 'apps/storybook/src/test-data-access.ts',
+      }
+    );
+    const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
+    expect(rules).toContain('@nx/enforce-module-boundaries');
+  });
+
+  it('deve proibir apps/storybook de importar scope:mocks (@nft/mocks-core)', async () => {
+    const results = await eslint.lintText(
+      "import { mockState } from '@nft/mocks-core';\nconsole.log(mockState);\n",
+      {
+        filePath: 'apps/storybook/src/test-mocks.ts',
+      }
+    );
+    const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
+    expect(rules).toContain('@nx/enforce-module-boundaries');
+  });
 });
+

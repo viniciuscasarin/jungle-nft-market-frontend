@@ -16,12 +16,17 @@
     "build": "node scripts/build-integrated.js",
     "build:apps": "nx run-many -t build",
     "preview": "node scripts/preview.js",
+    "storybook": "storybook dev -p 6006 -c apps/storybook/.storybook",
+    "build:storybook": "storybook build -c apps/storybook/.storybook -o dist/apps/storybook --quiet --disable-telemetry",
     "e2e": "nx e2e web-e2e",
     "lighthouse": "node scripts/lighthouse.js",
-    "design:check": "node scripts/design-check.js"
+    "design:check": "node scripts/design-check.js",
+    "design:tokens": "node scripts/generate-tokens.js",
+    "design:icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
+    "@nft/shell-kit": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-slot": "^1.1.2",
     "@tanstack/react-query": "^5.67.0",
@@ -35,7 +40,6 @@
     "react-hook-form": "^7.54.2",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.0.2",
-    "@nft/shell-kit": "workspace:*",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -49,6 +53,13 @@
     "@nx/vite": "23.3.0",
     "@nx/vitest": "23.3.0",
     "@playwright/test": "^1.50.1",
+    "@storybook/addon-a11y": "^8.6.14",
+    "@storybook/addon-designs": "^8.0.4",
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/addon-interactions": "^8.6.14",
+    "@storybook/react": "^8.6.14",
+    "@storybook/react-vite": "^8.6.14",
+    "@storybook/test": "^8.6.14",
     "@tailwindcss/vite": "^4.0.9",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
@@ -58,6 +69,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^3.0.7",
+    "axe-core": "^4.14.0",
     "eslint": "^9.21.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.4",
@@ -66,11 +78,14 @@
     "msw": "^2.7.3",
     "nx": "23.3.0",
     "prettier": "^3.5.2",
+    "storybook": "^8.6.14",
+    "storybook-addon-pseudo-states": "^4.0.4",
     "tailwindcss": "^4.0.9",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.25.0",
     "vite": "^6.2.0",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^3.0.7"
+    "vitest": "^3.0.7",
+    "vitest-axe": "^0.1.0"
   }
 }

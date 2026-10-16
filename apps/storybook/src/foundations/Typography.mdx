@@ -1,0 +1,50 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Foundations/Tipografia" />
+
+# Tipografia do Sistema (Roboto Mono)
+
+Toda a tipografia do marketplace utiliza a família `Roboto Mono` servida de modo estritamente self-hosted a partir de `design/fonts/`.
+
+---
+
+## Família Tipográfica
+
+- **Font Family**: `'Roboto Mono', monospace` (`--font-mono`)
+- **Pesos suportados**:
+  - `400` (Regular) — `font-normal` (NodeId `3:114`)
+  - `500` (Medium) — `font-medium` (NodeId `3:113`)
+  - `700` (Bold) — `font-bold` (NodeId `3:107`)
+
+---
+
+## Escala de Tamanhos de Fonte (`typography.fontSize`)
+
+| Exemplo Visual | Token | Tamanho | Classe Tailwind | NodeId Figma | Uso Típico |
+|:---|:---|:---|:---|:---|:---|
+| <span style={{fontSize: 43, fontWeight: 700, fontFamily: 'Roboto Mono'}}>Hero 43px</span> | `typography.fontSize.display43` | `43px` | `text-display-43` | `3:107` | Título principal da Hero |
+| <span style={{fontSize: 28, fontWeight: 700, fontFamily: 'Roboto Mono'}}>Heading 28px</span> | `typography.fontSize.heading28` | `28px` | `text-heading-28` | `70343:255` | Títulos de seções de conteúdo |
+| <span style={{fontSize: 24, fontWeight: 700, fontFamily: 'Roboto Mono'}}>Heading 24px</span> | `typography.fontSize.heading24` | `24px` | `text-heading-24` | `70410:3795` | Títulos de modais e diálogos |
+| <span style={{fontSize: 20, fontWeight: 500, fontFamily: 'Roboto Mono'}}>Title 20px</span> | `typography.fontSize.title20` | `20px` | `text-title-20` | `2:2` | Títulos de cards e seções |
+| <span style={{fontSize: 18, fontWeight: 500, fontFamily: 'Roboto Mono'}}>Body Large 18px</span> | `typography.fontSize.bodyLarge18` | `18px` | `text-body-large-18` | `4:406` | Preços de NFTs em destaque |
+| <span style={{fontSize: 17, fontWeight: 500, fontFamily: 'Roboto Mono'}}>Body Large 17px</span> | `typography.fontSize.bodyLarge17` | `17px` | `text-body-large-17` | `I70492:696;70491:797` | Subtítulos de colunas do rodapé |
+| <span style={{fontSize: 16, fontWeight: 500, fontFamily: 'Roboto Mono'}}>Body Large 16px</span> | `typography.fontSize.bodyLarge16` | `16px` | `text-body-large-16` | `I70522:3240;70504:3015;70486:515` | Botões primários e links de menu |
+| <span style={{fontSize: 15, fontWeight: 400, fontFamily: 'Roboto Mono'}}>Body 15px</span> | `typography.fontSize.body15` | `15px` | `text-body-15` | `I70485:382;70485:323` | Abas e opções de filtros |
+| <span style={{fontSize: 14, fontWeight: 400, fontFamily: 'Roboto Mono'}}>Body 14px</span> | `typography.fontSize.body14` | `14px` | `text-body-14` | `3:114` | Texto corrido padrão e descrições |
+| <span style={{fontSize: 13, fontWeight: 400, fontFamily: 'Roboto Mono'}}>Caption 13px</span> | `typography.fontSize.caption13` | `13px` | `text-caption-13` | `I70492:696;70491:1241` | Linhas de apoio e copyright |
+| <span style={{fontSize: 12, fontWeight: 400, fontFamily: 'Roboto Mono'}}>Caption 12px</span> | `typography.fontSize.caption12` | `12px` | `text-caption-12` | `70343:265` | Legendas, autor e tags |
+| <span style={{fontSize: 10, fontWeight: 500, fontFamily: 'Roboto Mono'}}>Tiny 10px</span> | `typography.fontSize.tiny10` | `10px` | `text-tiny-10` | `I70522:3240;70504:3015;70486:523` | Contador numérico do carrinho |
+| <span style={{fontSize: 9, fontWeight: 400, fontFamily: 'Roboto Mono'}}>Tiny 9px</span> | `typography.fontSize.tiny9` | `9px` | `text-tiny-9` | `I70492:696;70491:1284` | Rótulos de edição e metadados |
+
+---
+
+## Altura de Linha (`typography.lineHeight`)
+
+| Token | Valor | Classe Tailwind | NodeId Figma |
+|:---|:---|:---|:---|
+| `typography.lineHeight.tight` | `16px` | `leading-tight` | `3:113` |
+| `typography.lineHeight.snug` | `20px` | `leading-snug` | `3:127` |
+| `typography.lineHeight.normal` | `24px` | `leading-normal` | `3:114` |
+| `typography.lineHeight.relaxed` | `30px` | `leading-relaxed` | `I70492:696;70491:1258` |
+| `typography.lineHeight.loose` | `40px` | `leading-loose` | `I70485:382;70485:324` |
+| `typography.lineHeight.hero` | `70px` | `leading-hero` | `3:107` |

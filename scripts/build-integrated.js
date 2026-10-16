@@ -49,5 +49,23 @@ for (const remote of remotes) {
   fs.cpSync(remoteDist, targetDir, { recursive: true });
 }
 
+// 5. Copia o Storybook para dist/integrated/storybook
+const storybookDist = path.join(rootDir, 'dist', 'apps', 'storybook');
+const storybookTargetDir = path.join(integratedDir, 'storybook');
+
+if (!fs.existsSync(storybookDist)) {
+  console.log('📚 Compilando Storybook...');
+  execSync('pnpm build:storybook', { stdio: 'inherit' });
+}
+
+if (fs.existsSync(storybookDist)) {
+  console.log('📚 Copiando apps/storybook para dist/integrated/storybook...');
+  fs.mkdirSync(storybookTargetDir, { recursive: true });
+  fs.cpSync(storybookDist, storybookTargetDir, { recursive: true });
+} else {
+  console.error(`❌ Diretório de build do Storybook não encontrado: ${storybookDist}`);
+  process.exit(1);
+}
+
 console.log('✅ Build consolidado concluído com sucesso!');
 console.log(`📁 Estrutura gerada em: ${integratedDir}`);

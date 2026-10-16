@@ -1,0 +1,54 @@
+{
+  "name": "storybook",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/storybook/src",
+  "projectType": "application",
+  "tags": [
+    "scope:tooling",
+    "type:app",
+    "flow:tooling"
+  ],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "storybook dev -p 6006 -c apps/storybook/.storybook --ci --disable-telemetry"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "storybook dev -p 6006 -c apps/storybook/.storybook --ci --disable-telemetry"
+      }
+    },
+    "storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "storybook dev -p 6006 -c apps/storybook/.storybook --ci --disable-telemetry"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/storybook"
+      ],
+      "options": {
+        "command": "storybook build -c apps/storybook/.storybook -o dist/apps/storybook --quiet --disable-telemetry"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/storybook/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p apps/storybook/tsconfig.json --noEmit"
+      }
+    }
+  }
+}
