@@ -1,22 +1,12 @@
 import { http, HttpResponse } from 'msw';
-import { mockNfts } from '@nft/mocks-fixtures';
+import { getMockDatabase } from '@nft/mocks-core';
 
 import { authHandlers } from './auth';
+import { profileHandlers } from './profile';
+import { walletsHandlers } from './wallets';
+import { catalogHandlers } from './catalog';
 
-export { authHandlers };
-
-export const catalogHandlers = [
-  http.get('/api/nfts', () => {
-    return HttpResponse.json({ items: mockNfts, total: mockNfts.length });
-  }),
-  http.get('/api/nfts/:id', ({ params }: { params: Record<string, string | readonly string[] | undefined> }) => {
-    const nft = mockNfts.find((item: { id: string }) => item.id === params['id']);
-    if (!nft) {
-      return new HttpResponse(null, { status: 404 });
-    }
-    return HttpResponse.json(nft);
-  }),
-];
+export { authHandlers, profileHandlers, walletsHandlers, catalogHandlers };
 
 export const cartHandlers = [
   http.get('/api/cart', () => {
@@ -39,11 +29,22 @@ export const checkoutHandlers = [
       status: 'confirmed',
     });
   }),
+  http.get('/api/orders/:id', ({ params }: { params: Record<string, string | readonly string[] | undefined> }) => {
+    const { orders } = getMockDatabase();
+    const order = orders.find((o) => o.id === params['id']);
+    if (!order) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(order);
+  }),
 ];
 
 export const handlers = [
   ...authHandlers,
+  ...profileHandlers,
+  ...walletsHandlers,
   ...catalogHandlers,
   ...cartHandlers,
   ...checkoutHandlers,
 ];
+

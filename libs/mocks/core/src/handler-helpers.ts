@@ -1,5 +1,5 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw';
-import { type ZodSchema } from 'zod';
+import { type ZodType, type ZodTypeDef } from 'zod';
 import {
   ApiErrorCode,
   type ApiErrorPayload,
@@ -75,9 +75,9 @@ export function apiError(code: ApiErrorCode | string, options: ApiErrorOptions =
   return HttpResponse.json(payload, { status });
 }
 
-export async function parseBody<T>(
+export async function parseBody<T, Input>(
   request: Request,
-  schema: ZodSchema<T>
+  schema: ZodType<T, ZodTypeDef, Input>
 ): Promise<{ success: true; data: T } | { success: false; response: Response }> {
   try {
     const raw = await request.json();

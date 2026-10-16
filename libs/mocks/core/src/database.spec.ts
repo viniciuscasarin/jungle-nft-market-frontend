@@ -174,6 +174,7 @@ describe('In-Memory Database & Persistence', () => {
             fullName: 'Alice',
             email: 'alice@example.com',
             walletAddress: '0x1111111111111111111111111111111111111111',
+            walletType: 'coinbase',
             network: 'ethereum-mainnet',
             useSecondaryWallet: false,
           },

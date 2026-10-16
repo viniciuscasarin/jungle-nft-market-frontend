@@ -16,6 +16,8 @@ import {
   hashPassword,
   verifyPassword,
   mergeGuestCart,
+  bumpVersion,
+  persistState,
 } from '@nft/mocks-core';
 import type { MockStoredUser } from '@nft/mocks-fixtures';
 
@@ -112,6 +114,8 @@ export const authHandlers = [
       expiresAt,
     };
     db.sessions.push(session);
+    bumpVersion();
+    persistState();
 
     // Merge guest cart if guest session header present
     const guestId = request.headers.get('x-session-id') ?? request.headers.get('X-Session-Id');
@@ -166,6 +170,8 @@ export const authHandlers = [
       expiresAt,
     };
     db.sessions.push(session);
+    bumpVersion();
+    persistState();
 
     // Merge guest cart if guest session header present
     const guestId = request.headers.get('x-session-id') ?? request.headers.get('X-Session-Id');
@@ -200,6 +206,8 @@ export const authHandlers = [
       const sessionIndex = db.sessions.findIndex((s) => s.token === token);
       if (sessionIndex !== -1) {
         db.sessions.splice(sessionIndex, 1);
+        bumpVersion();
+        persistState();
       }
     }
 

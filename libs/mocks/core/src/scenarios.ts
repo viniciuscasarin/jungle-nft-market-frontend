@@ -4,6 +4,8 @@ import {
   createPristineDatabaseState,
   resetMockDatabase,
   setPristineSnapshot,
+  restorePersistedState,
+  getMockDatabase,
 } from './database';
 import {
   type NetworkProfile,
@@ -390,11 +392,16 @@ export const scenarioRegistry: Record<ScenarioId, ScenarioDefinition> = {
   },
 };
 
-export function applyScenario(scenarioId: ScenarioId): MockDatabaseState {
+export function applyScenario(scenarioId: ScenarioId, forceReset = false): MockDatabaseState {
   const definition = scenarioRegistry[scenarioId] ?? scenarioRegistry.default;
+  setNetworkProfile(definition.networkProfile);
+
+  if (!forceReset && restorePersistedState() && getMockDatabase().scenarioId === scenarioId) {
+    return getMockDatabase();
+  }
+
   const initialState = definition.createState();
   setPristineSnapshot(initialState);
   const db = resetMockDatabase(initialState);
-  setNetworkProfile(definition.networkProfile);
   return db;
 }

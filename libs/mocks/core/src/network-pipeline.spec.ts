@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, expectTypeOf, beforeAll, afterAll, beforeEach } from 'vitest';
 import { setupServer } from 'msw/node';
 import { HttpResponse } from 'msw';
 import { z } from 'zod';
@@ -50,6 +50,7 @@ const testHandlers = [
           fullName: 'Alice',
           email: 'alice@example.com',
           walletAddress: '0x1111111111111111111111111111111111111111',
+          walletType: 'coinbase',
           network: 'ethereum-mainnet',
           useSecondaryWallet: false,
         },
@@ -99,6 +100,23 @@ describe('Network Pipeline & Handlers MSW Integration', () => {
     const data = await response.json();
     expect(data.status).toBe('ok');
     expect(data.scenarioId).toBe('default');
+  });
+
+  it('preserves schema output types and applies defaults and transforms', async () => {
+    const schema = z.object({
+      network: z.string().default('ethereum-mainnet'),
+      quantity: z.string().transform((value) => value.length),
+    });
+    const result = await parseBody(new Request('http://localhost/api/test/parse', {
+      method: 'POST',
+      body: JSON.stringify({ quantity: 'abc' }),
+    }), schema);
+
+    expect(result.success).toBe(true);
+    if (!result.success) throw new Error('Expected a validated body');
+    expectTypeOf(result.data.network).toEqualTypeOf<string>();
+    expectTypeOf(result.data.quantity).toEqualTypeOf<number>();
+    expect(result.data).toEqual({ network: 'ethereum-mainnet', quantity: 3 });
   });
 
   it('returns 422 with fieldErrors on malformed body via parseBody', async () => {

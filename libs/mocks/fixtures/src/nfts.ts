@@ -1,40 +1,43 @@
-import type { NftItem } from '@nft/shared-contracts';
+import type { NftItem, NftNetwork } from '@nft/shared-contracts';
 import { mockCollections } from './collections';
 
-const SAMPLE_IMAGES = [
-  'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1618172193763-c511deb635ca?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1633493106115-61849a04a601?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1549887534-1541e9326642?w=800&auto=format&fit=crop',
+export const LOCAL_NFT_IMAGES = [
+  '/assets/images/hero-nft.png',
+  '/assets/images/featured-nft.png',
+  '/assets/images/nft-03-emerald-ape.png',
+  '/assets/images/nft-04-sage-nomad.png',
+  '/assets/images/nft-05-neon-vessel.png',
+  '/assets/images/nft-06-cosmic-bloom.png',
+  '/assets/images/nft-07-violet-nomad.png',
+  '/assets/images/nft-08-ivory-baron.png',
+  '/assets/images/nft-09-golden-beat.png',
+  '/assets/images/nft-10-artwork.png',
+  '/assets/images/nft-11-golden-signal.png',
 ];
 
 const CREATORS = [
   {
     id: 'creator_jungle_lab',
     name: 'Jungle Labs',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop',
+    avatarUrl: '/assets/images/nft-03-emerald-ape.png',
     verified: true,
   },
   {
     id: 'creator_neon_art',
     name: 'Neon Master',
-    avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120&auto=format&fit=crop',
+    avatarUrl: '/assets/images/nft-04-sage-nomad.png',
     verified: true,
   },
   {
     id: 'creator_cyber_fox',
     name: 'Cyber Fox',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop',
+    avatarUrl: '/assets/images/nft-05-neon-vessel.png',
     verified: false,
   },
   {
     id: 'creator_pixel_sage',
     name: 'Pixel Sage',
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop',
+    avatarUrl: '/assets/images/nft-06-cosmic-bloom.png',
     verified: true,
   },
 ];
@@ -63,7 +66,7 @@ export function generateCatalogFixtures(): NftItem[] {
       const nftId = `nft-${idNum}`;
       const title = `${TITLES[itemIndex - 1] ?? `Jungle Beast #${idNum}`}`;
       const creator = CREATORS[(itemIndex - 1) % CREATORS.length]!;
-      const imageUrl = SAMPLE_IMAGES[(itemIndex - 1) % SAMPLE_IMAGES.length]!;
+      const imageUrl = LOCAL_NFT_IMAGES[(itemIndex - 1) % LOCAL_NFT_IMAGES.length]!;
 
       const priceEth = (0.25 + ((itemIndex * 7) % 35) * 0.1).toFixed(2);
       const isFirst = itemIndex === 1;
@@ -100,6 +103,20 @@ export function generateCatalogFixtures(): NftItem[] {
         });
       }
 
+      const rarity =
+        itemIndex % 5 === 0
+          ? 'ÉPICO'
+          : itemIndex % 3 === 0
+            ? 'RARO'
+            : itemIndex % 2 === 0
+              ? 'COMUM'
+              : undefined;
+
+      const previousPriceEth =
+        itemIndex % 4 === 0
+          ? (Number(priceEth) * 1.25).toFixed(2)
+          : undefined;
+
       nfts.push({
         id: nftId,
         title,
@@ -107,6 +124,10 @@ export function generateCatalogFixtures(): NftItem[] {
         imageUrl,
         creator,
         category: collection.id,
+        collectionName: collection.name,
+        network: collection.network as NftNetwork,
+        rarity,
+        previousPriceEth,
         tags: [collection.network, collection.slug, 'jungle', 'collectible'],
         price: priceEth,
         rating: {

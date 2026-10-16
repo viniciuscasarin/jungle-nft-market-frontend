@@ -154,3 +154,31 @@ A tabela a seguir comprova o atendimento integral a todos os requisitos do Desaf
 | Pagamento confirmado e recusado | Cenários `payment-confirmed` e `payment-rejected` | `libs/mocks/core/src/scenarios.ts` |
 | Credenciais fictícias sem senha em texto claro | Alice e Bob com `passwordHash` e `passwordSalt` PBKDF2/SHA-256 | `libs/mocks/core/src/auth-crypto.spec.ts`, `tools/mocks-hash.ts` |
 | Ativação condicional por flag de ambiente | Boot com `import.meta.env.VITE_ENABLE_MOCKS === 'true'` | `apps/shell/src/main.tsx` |
+
+---
+
+## 6. Tempo Real (Socket.IO MSW) e Gatilhos Determinísticos
+
+A comunicação em tempo real ponta a ponta conecta o cliente real `socket.io-client` ao interceptor WebSocket do MSW via `@mswjs/socket.io-binding`:
+
+- **Endpoint interceptado**: `ws.link(/\/socket\.io\//)` operando sobre o transporte `['websocket']`.
+- **Gatilhos determinísticos em `window.__mocks` e `window.__NFT_MOCK_CONTROL__`**:
+  ```js
+  // Emitir atualização de preço ou estoque de NFT (mutando o banco e emitindo nft.updated)
+  window.__mocks.emitNftUpdated({ nftId: 'nft-01', price: '4.50', availableSupply: 2 });
+
+  // Emitir confirmação ou rejeição de pedido (mutando o banco e emitindo order.updated)
+  window.__mocks.emitOrderUpdated({ orderId: 'ord_123', userId: 'usr_collector_01', status: 'confirmed' });
+
+  // Reenviar o último evento mantendo o mesmo id e version para testar deduplicação
+  window.__mocks.emitDuplicateEvent();
+
+  // Enviar versão antiga (version <= atual) para testar descarte monotônico
+  window.__mocks.emitStaleEvent({ nftId: 'nft-01', price: '0.01' });
+
+  // Simular queda de conexão e reconexão do socket
+  window.__mocks.simulateSocketDisconnect();
+  window.__mocks.simulateSocketReconnect();
+  ```
+- **Ações Rápidas no `MocksDevPanel` (`Ctrl+Alt+M`)**: O painel de desenvolvimento contém botões dedicados de um clique para disparar `nft.updated`, `order.updated` e reconexão imediata.
+- **Débito Técnico P1 Assumido**: A sincronização com o TanStack Query utiliza invalidação direcionada (`invalidateQueries`), mantendo o estado 100% fiel às respostas do servidor REST sem a complexidade de patches manuais in-place em múltiplas páginas de catálogo.

@@ -1,3 +1,8 @@
+import type {
+  NftUpdatedEvent,
+  OrderUpdatedEvent,
+  RealtimeEnvelope,
+} from '@nft/shared-contracts';
 import {
   type MockDatabaseState,
   getMockDatabase,
@@ -17,6 +22,18 @@ import {
 } from './network-profile';
 import { getClock } from './clock';
 import { getMockEventBus, type MockEventBus } from './event-bus';
+import {
+  type EmitNftUpdatedInput,
+  type EmitOrderUpdatedInput,
+  type EmitStaleEventInput,
+  emitNftUpdated,
+  emitOrderUpdated,
+  emitDuplicateEvent,
+  emitStaleEvent,
+  resetRealtimeTriggerState,
+  simulateSocketDisconnect,
+  simulateSocketReconnect,
+} from './realtime-triggers';
 
 export const SCENARIO_STORAGE_KEY = 'nft-mocks:v1:scenario';
 
@@ -31,6 +48,12 @@ export interface MockControls {
   advanceClock(ms: number): Date;
   setFlag(flag: string, value: boolean): void;
   getFlag(flag: string): boolean | undefined;
+  emitNftUpdated(input?: EmitNftUpdatedInput): NftUpdatedEvent;
+  emitOrderUpdated(input?: EmitOrderUpdatedInput): OrderUpdatedEvent;
+  emitDuplicateEvent(customEnvelope?: RealtimeEnvelope): RealtimeEnvelope;
+  emitStaleEvent(input?: EmitStaleEventInput): RealtimeEnvelope;
+  simulateSocketDisconnect(): void;
+  simulateSocketReconnect(): void;
   events: MockEventBus;
 }
 
@@ -107,6 +130,7 @@ export function createMockControls(): MockControls {
     getScenario: () => getMockDatabase().scenarioId as ScenarioId,
     setScenario: (scenarioId: ScenarioId) => {
       applyScenario(scenarioId);
+      resetRealtimeTriggerState();
       try {
         getStorageAdapter().setItem(SCENARIO_STORAGE_KEY, scenarioId);
       } catch {
@@ -115,6 +139,7 @@ export function createMockControls(): MockControls {
     },
     reset: () => {
       resetMockDatabase();
+      resetRealtimeTriggerState();
     },
     setNetworkProfile: (profile: NetworkProfile) => setNetworkProfile(profile),
     getNetworkProfile: () => getNetworkProfile(),
@@ -130,6 +155,12 @@ export function createMockControls(): MockControls {
       runtimeFlags.set(flag, value);
     },
     getFlag: (flag: string) => runtimeFlags.get(flag),
+    emitNftUpdated: (input?: EmitNftUpdatedInput) => emitNftUpdated(input),
+    emitOrderUpdated: (input?: EmitOrderUpdatedInput) => emitOrderUpdated(input),
+    emitDuplicateEvent: (customEnvelope?: RealtimeEnvelope) => emitDuplicateEvent(customEnvelope),
+    emitStaleEvent: (input?: EmitStaleEventInput) => emitStaleEvent(input),
+    simulateSocketDisconnect: () => simulateSocketDisconnect(),
+    simulateSocketReconnect: () => simulateSocketReconnect(),
     events: getMockEventBus(),
   };
 }
@@ -137,7 +168,13 @@ export function createMockControls(): MockControls {
 export function exposeMockControls(controls?: MockControls): MockControls {
   const activeControls = controls ?? createMockControls();
   if (typeof window !== 'undefined') {
-    (window as unknown as { __mocks?: MockControls }).__mocks = activeControls;
+    const win = window as unknown as {
+      __mocks?: MockControls;
+      __NFT_MOCK_CONTROL__?: MockControls;
+    };
+    win.__mocks = activeControls;
+    win.__NFT_MOCK_CONTROL__ = activeControls;
   }
   return activeControls;
 }
+

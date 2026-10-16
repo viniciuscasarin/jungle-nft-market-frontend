@@ -104,7 +104,7 @@ export function bumpVersion<T extends { version?: number }>(entity?: T): number 
   return activeDatabaseState.version;
 }
 
-function persistState(): void {
+export function persistState(): void {
   try {
     activeStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(activeDatabaseState));
     if (activeStorage.isDegraded) {

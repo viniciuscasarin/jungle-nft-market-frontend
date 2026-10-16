@@ -51,7 +51,7 @@ export * from './database';
 export * from './network-profile';
 export * from './handler-helpers';
 export * from './event-bus';
+export * from './realtime-triggers';
 export * from './scenarios';
 export * from './mock-controls';
 export * from './server';
-
