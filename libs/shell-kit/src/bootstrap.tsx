@@ -36,6 +36,87 @@ export interface StandalonePageDescriptor<TSearch = Record<string, unknown>> {
 
 export type StandaloneHistoryType = 'browser' | 'memory';
 
+export interface ResolveDestinationOptions {
+  localPaths?: string[];
+  shellOrigin?: string;
+}
+
+export type ResolvedStandaloneDestination =
+  | { type: 'local'; path: string }
+  | { type: 'external'; url: string }
+  | { type: 'invalid'; path: string };
+
+export function isSafeInternalPath(path: string): boolean {
+  if (!path || typeof path !== 'string') return false;
+  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) return false;
+  if (path.includes('://') || path.startsWith('javascript:') || path.startsWith('data:')) return false;
+  return true;
+}
+
+export function resolveStandaloneDestination(
+  to: string,
+  options: ResolveDestinationOptions = {},
+): ResolvedStandaloneDestination {
+  const { localPaths = ['/'], shellOrigin = 'http://localhost:4200' } = options;
+
+  if (!isSafeInternalPath(to)) {
+    return { type: 'invalid', path: '/' };
+  }
+
+  const pathname = to.split('?')[0]?.split('#')[0] ?? '/';
+
+  const isLocal = localPaths.some((p) => {
+    if (p === pathname) return true;
+    if (p !== '/' && pathname.startsWith(`${p}/`)) return true;
+    return false;
+  });
+
+  if (isLocal) {
+    return { type: 'local', path: to };
+  }
+
+  const cleanOrigin = shellOrigin.replace(/\/+$/, '');
+  return { type: 'external', url: `${cleanOrigin}${to}` };
+}
+
+export function resolveStandaloneHref(
+  to: string,
+  options: ResolveDestinationOptions = {},
+): string {
+  const resolved = resolveStandaloneDestination(to, options);
+  if (resolved.type === 'external') return resolved.url;
+  return resolved.path;
+}
+
+export interface StandaloneLinkProps
+  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+  to: string;
+  localPaths?: string[];
+  shellOrigin?: string;
+}
+
+export function StandaloneLink({
+  to,
+  localPaths,
+  shellOrigin,
+  children,
+  ...rest
+}: StandaloneLinkProps) {
+  const resolved = resolveStandaloneDestination(to, { localPaths, shellOrigin });
+  if (resolved.type === 'local') {
+    return (
+      <Link to={resolved.path} {...(rest as Record<string, unknown>)}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <a href={resolved.type === 'external' ? resolved.url : '/'} {...rest}>
+      {children}
+    </a>
+  );
+}
+
 export interface StandaloneBootstrapConfig {
   mountPoint?: HTMLElement | string | null;
   initialRoute?: string;
@@ -265,17 +346,44 @@ export async function bootstrapStandalone(
     ),
   });
 
+  const localPaths = pages.map((p) => p.path);
+
   const shellValue: ShellContextValue = {
     queryClient,
     httpClient,
     realtimeClient,
     session,
     navigate: (to: string) => {
-      onNavigate?.(to);
-      if (to.includes('?') || to.includes('#')) {
-        void router.navigate({ href: to } as never);
+      const resolved = resolveStandaloneDestination(to, {
+        localPaths,
+        shellOrigin,
+      });
+
+      if (resolved.type === 'invalid') {
+        onNavigate?.('/');
+        return;
+      }
+
+      if (resolved.type === 'local') {
+        onNavigate?.(resolved.path);
+        if (resolved.path.includes('?') || resolved.path.includes('#')) {
+          void router.navigate({ href: resolved.path } as never);
+        } else {
+          void router.navigate({ to: resolved.path } as never);
+        }
       } else {
-        void router.navigate({ to } as never);
+        onNavigate?.(resolved.url);
+        if (typeof window !== 'undefined' && window.location) {
+          try {
+            if (typeof window.location.assign === 'function') {
+              window.location.assign(resolved.url);
+            } else {
+              window.location.href = resolved.url;
+            }
+          } catch {
+            // Ignored in test environments where JSDOM does not implement external navigation
+          }
+        }
       }
     },
     feedback: globalFeedback,
