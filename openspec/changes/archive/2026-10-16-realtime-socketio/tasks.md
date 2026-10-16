@@ -13,12 +13,12 @@
 ## 3. [P0] Sincronização com TanStack Query, Feedback Acessível e Documentação (`libs/shared/query`, `libs/shell-kit`, `apps/shell`)
 
 - [x] 3.1 Expandir `queryKeys` em `libs/shared/query` (`catalog`, `cart`, `quote`, `orders`) e implementar o sincronizador global `RealtimeSync` / `useRealtimeSync` em `libs/shell-kit` montado em `apps/shell` para invalidar as queries afetadas em `nft.updated`, `order.updated` e `onReconnect` e anunciar mudanças de preço/disponibilidade/status via `feedback.notify` (Toast + Live Region `polite`), verificando com testes unitários em `libs/shell-kit` e `apps/shell` (`pnpm nx test shell-kit` e `pnpm nx test shell`)
-- [ ] 3.2 Adicionar ações rápidas de disparo de `nft.updated`, `order.updated` e reconexão no `MocksDevPanel` (`apps/shell/src/components/mocks-dev-panel.tsx`) e documentar o transporte `@mswjs/socket.io-binding`, suas limitações e os Débitos Técnicos P1 assumidos em `ARCHITECTURE.md` (§11, §13 e §17), `docs/mocks.md` e `README.md`, verificando com `pnpm nx test shell`
+- [x] 3.2 Adicionar ações rápidas de disparo de `nft.updated`, `order.updated` e reconexão no `MocksDevPanel` (`apps/shell/src/components/mocks-dev-panel.tsx`) e documentar o transporte `@mswjs/socket.io-binding`, suas limitações e os Débitos Técnicos P1 assumidos em `ARCHITECTURE.md` (§11, §13 e §17), `docs/mocks.md` e `README.md`, verificando com `pnpm nx test shell`
 
 ## 4. [P0] Teste E2E de Tempo Real e Validação Final (`apps/web-e2e`)
 
-- [ ] 4.1 Criar teste E2E enxuto em `apps/web-e2e/src/realtime-socketio.spec.ts` validando recepção real via `socket.io-client` de `nft.updated` (atualização de dados e anúncio em live region), descarte de evento duplicado (`id`) e de versão obsoleta (`version`), isolamento de `userId` diferente da sessão ativa e reconciliação via REST após reconexão (`pnpm nx e2e web-e2e --grep "realtime"`)
-- [ ] 4.2 Executar `typecheck`, `lint`, `test` e `build` nos projetos afetados (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`)
+- [x] 4.1 Criar teste E2E enxuto em `apps/web-e2e/src/realtime-socketio.spec.ts` validando recepção real via `socket.io-client` de `nft.updated` (atualização de dados e anúncio em live region), descarte de evento duplicado (`id`) e de versão obsoleta (`version`), isolamento de `userId` diferente da sessão ativa e reconciliação via REST após reconexão (`pnpm nx e2e web-e2e --grep "realtime"`)
+- [x] 4.2 Executar `typecheck`, `lint`, `test` e `build` nos projetos afetados (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`)
 
 ## P1 — Débito Técnico Mapeado (Referência documentada em `ARCHITECTURE.md` §13 e §17)
 
