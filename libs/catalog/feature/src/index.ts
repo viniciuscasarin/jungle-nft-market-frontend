@@ -2,3 +2,4 @@
 export const CATALOG_FEATURE_MODULE = '@nft/catalog-feature';
 
 export { CatalogHomePage } from './catalog-home-page';
+export { PdpFeaturePage } from './pdp-feature-page';

@@ -90,3 +90,13 @@ export function catalogDetailQueryOptions(client: HttpClient, nftId: string) {
     staleTime: 60_000,
   });
 }
+
+/**
+ * Hook para consulta reativa do detalhe de um NFT (PDP).
+ */
+export function useCatalogDetailQuery(
+  client: HttpClient,
+  nftId: string,
+): UseQueryResult<NftItem> {
+  return useQuery(catalogDetailQueryOptions(client, nftId));
+}

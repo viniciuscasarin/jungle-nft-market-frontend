@@ -9,9 +9,9 @@ test.describe('Module Federation Runtime & Resiliência', () => {
     await expect(page.getByTestId('home-page-content').or(page.getByRole('region', { name: 'Catálogo Storefront' }))).toBeVisible();
 
     // 2. Navega para storefront /nft/42 (PDP)
-    await page.goto('/nft/42');
-    await expect(page.getByTestId('storefront-pdp-page')).toBeVisible();
-    await expect(page.getByRole('heading', { level: 1, name: /Detalhes do NFT #42/i })).toBeVisible();
+    await page.goto('/nft/nft-01');
+    await expect(page.getByTestId('pdp-page-content')).toBeVisible();
+    await expect(page.getByTestId('pdp-product-title')).toBeVisible();
 
     // 3. Navega para checkout /carrinho
     const cartLink = page.getByRole('link', { name: /Carrinho/i }).first();

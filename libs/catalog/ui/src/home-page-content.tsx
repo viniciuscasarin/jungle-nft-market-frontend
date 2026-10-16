@@ -352,13 +352,13 @@ export const HomePageContent: React.FC<HomePageContentProps> = ({
                   }
 
                   return (
-                    <div
+                    <article
                       key={item.id}
                       data-testid={`catalog-item-${item.id}`}
                       data-item-index={index}
                       aria-label={`${item.title}, preço ${formattedPrice}`}
                       tabIndex={0}
-                      role="button"
+                      role="article"
                       onClick={() => onSelectNft?.(item.id)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -428,7 +428,7 @@ export const HomePageContent: React.FC<HomePageContentProps> = ({
                           </span>
                         )}
                       </span>
-                    </div>
+                    </article>
                   );
                 })}
               </div>
