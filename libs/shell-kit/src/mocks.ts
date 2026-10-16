@@ -1,17 +1,6 @@
 import type { SetupWorker } from 'msw/browser';
 
-export interface MockControls {
-  getScenario: () => string;
-  setScenario: (id: string) => void;
-  getScenarios: () => readonly string[];
-  getDatabase: () => unknown;
-  reset: () => void;
-  getNetwork: () => unknown;
-  setNetwork: (patch: unknown) => void;
-  getClock: () => unknown;
-  advanceClock: (ms: number) => void;
-  setClock: (isoOrDate: string | Date) => void;
-}
+import type { MockControls } from '@nft/mocks-core';
 
 let startMocksPromise: Promise<{
   worker: SetupWorker;
@@ -38,10 +27,12 @@ export async function startMocks(options: StartMocksOptions = {}): Promise<{
       { setupWorker },
       { resolveActiveScenario, applyScenario, exposeMockControls, mocksPingHandler },
       { handlers },
+      { socketHandler },
     ] = await Promise.all([
       import('msw/browser'),
       import('@nft/mocks-core'),
       import('@nft/mocks-handlers'),
+      import('@nft/mocks-socket'),
     ]);
 
     // 1. Resolve active scenario from URL params, storage, or env
@@ -52,8 +43,8 @@ export async function startMocks(options: StartMocksOptions = {}): Promise<{
     const controls = exposeMockControls();
 
     // 3. Setup and start MSW browser worker
-    const allHandlers = [mocksPingHandler, ...handlers];
-    activeWorker = setupWorker(...allHandlers);
+    const allHandlers = [mocksPingHandler, ...handlers, socketHandler];
+    activeWorker ??= setupWorker(...allHandlers);
 
     const swUrl = options.serviceWorkerUrl ?? '/mockServiceWorker.js';
 
@@ -68,7 +59,13 @@ export async function startMocks(options: StartMocksOptions = {}): Promise<{
   })();
   startMocksPromise = startPromise;
 
-  return startPromise;
+  try {
+    return await startPromise;
+  } catch (error) {
+    activeWorker?.stop();
+    if (startMocksPromise === startPromise) startMocksPromise = null;
+    throw error;
+  }
 }
 
 export function stopMocks(): void {

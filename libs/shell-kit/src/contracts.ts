@@ -46,14 +46,14 @@ export const REMOTE_MANIFESTS: Record<RemoteName, RemoteManifest> = {
     name: 'storefront',
     port: 4201,
     base: '/remotes/storefront/',
-    routes: ['/', '/catalogo', '/nft/$nftId'],
+    routes: ['/', '/nft/$nftId'],
     pages: ['HomePage', 'PdpPage'],
   },
   checkout: {
     name: 'checkout',
     port: 4202,
     base: '/remotes/checkout/',
-    routes: ['/carrinho', '/checkout', '/pedidos/$orderId/confirmacao'],
+    routes: ['/carrinho', '/pagamento', '/pedido/$orderId'],
     pages: ['CartPage', 'PaymentPage', 'ConfirmationPage'],
   },
   account: {

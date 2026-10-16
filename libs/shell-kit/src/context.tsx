@@ -27,12 +27,24 @@ export function toShellUserSession(
   return userSession;
 }
 
+export interface ShellFeedbackNotifyOptions {
+  message: string;
+  tone?: 'info' | 'success' | 'warning' | 'error' | undefined;
+  politeness?: 'polite' | 'assertive' | undefined;
+}
+
+export interface ShellFeedback {
+  notify: (options: ShellFeedbackNotifyOptions) => void;
+  announce: (message: string, politeness?: 'polite' | 'assertive') => void;
+}
+
 export interface ShellContextValue {
   queryClient: QueryClient;
   httpClient: HttpClient;
   realtimeClient: RealtimeClient;
   session: ShellUserSession | null;
   navigate: (to: string) => void;
+  feedback: ShellFeedback;
 }
 
 export const SHELL_CONTEXT_KEY = Symbol.for('nft.shell.context');
@@ -76,4 +88,11 @@ export function useShell(): ShellContextValue {
  */
 export function useSession(): ShellUserSession | null {
   return useShell().session;
+}
+
+/**
+ * Access the accessible feedback system (toast and live regions) from the Shell context.
+ */
+export function useFeedback(): ShellFeedback {
+  return useShell().feedback;
 }

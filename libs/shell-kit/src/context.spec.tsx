@@ -8,6 +8,7 @@ import {
   ShellProvider,
   useShell,
   useSession,
+  useFeedback,
   type ShellContextValue,
 } from './context';
 
@@ -23,6 +24,10 @@ describe('ShellContext (@nft/shell-kit)', () => {
       avatarUrl: 'https://example.com/avatar.png',
     },
     navigate: () => {},
+    feedback: {
+      notify: () => {},
+      announce: () => {},
+    },
   };
 
   it('throws an explicit error when useShell is called outside ShellProvider', () => {
@@ -83,5 +88,15 @@ describe('ShellContext (@nft/shell-kit)', () => {
     const { result } = renderHook(() => useSession(), { wrapper });
 
     expect(result.current).toBeNull();
+  });
+
+  it('provides the feedback singleton via useFeedback()', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ShellProvider value={mockContextValue}>{children}</ShellProvider>
+    );
+
+    const { result } = renderHook(() => useFeedback(), { wrapper });
+
+    expect(result.current).toBe(mockContextValue.feedback);
   });
 });

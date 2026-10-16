@@ -5,6 +5,8 @@ export type SingletonKey =
   | 'httpClient'
   | 'realtimeClient'
   | 'serviceWorker'
+  | 'liveRegion'
+  | 'toastProvider'
   | (string & {});
 
 export interface SingletonRegistry {

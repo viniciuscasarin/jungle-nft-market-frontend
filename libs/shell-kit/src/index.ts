@@ -3,15 +3,47 @@ export {
   ShellProvider,
   useShell,
   useSession,
+  useFeedback,
   toShellUserSession,
   type ShellUserSession,
   type ShellContextValue,
   type ShellProviderProps,
+  type ShellFeedback,
+  type ShellFeedbackNotifyOptions,
 } from './context';
 
 export {
+  globalFeedback,
+  GlobalLiveRegions,
+  ShellToastProvider,
+  announceToLiveRegion,
+  registerToastDispatcher,
+  getToastDispatcher,
+  GLOBAL_LIVE_REGIONS_KEY,
+  TOAST_PROVIDER_KEY,
+  type GlobalLiveRegionsProps,
+} from './feedback';
+
+export {
+  useUnavailable,
+  UNAVAILABLE_MESSAGE,
+} from './use-unavailable';
+
+export {
+  ShellPageChromeProvider,
+  usePageChrome,
+  ShellPageChromeContext,
+  type ShellPageChromeValue,
+  type UsePageChromeOptions,
+} from './page-chrome';
+
+export {
   bootstrapStandalone,
+  StandaloneNotFound,
   type StandaloneBootstrapConfig,
+  type StandalonePageDescriptor,
+  type StandaloneHistoryType,
+  type StandaloneNotFoundProps,
 } from './bootstrap';
 
 export {
@@ -52,3 +84,7 @@ export {
   type StartMocksOptions,
 } from './mocks';
 
+export {
+  RealtimeSync,
+  useRealtimeSync,
+} from './realtime-sync';

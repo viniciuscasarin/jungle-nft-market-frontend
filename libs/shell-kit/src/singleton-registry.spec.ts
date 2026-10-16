@@ -59,4 +59,18 @@ describe('singletonRegistry (@nft/shell-kit)', () => {
     expect(singletonRegistry.has('realtimeClient')).toBe(false);
     expect(singletonRegistry.getAll().size).toBe(0);
   });
+
+  it('validates that only one global live region exists in the runtime', () => {
+    const liveRegion1 = { id: 'live-region-1' };
+    const liveRegion2 = { id: 'live-region-2' };
+
+    singletonRegistry.assertSingleton('liveRegion', liveRegion1);
+    expect(singletonRegistry.get('liveRegion')).toBe(liveRegion1);
+
+    expect(() => {
+      singletonRegistry.assertSingleton('liveRegion', liveRegion2);
+    }).toThrow(
+      'Duplicate singleton detected for "liveRegion". Exactly one instance is allowed in the runtime.'
+    );
+  });
 });

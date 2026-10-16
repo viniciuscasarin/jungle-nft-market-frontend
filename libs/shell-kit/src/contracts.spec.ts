@@ -7,7 +7,7 @@ describe('Remote Contracts (@nft/shell-kit)', () => {
       name: 'storefront',
       port: 4201,
       base: '/remotes/storefront/',
-      routes: ['/', '/catalogo', '/nft/$nftId'],
+      routes: ['/', '/nft/$nftId'],
       pages: ['HomePage', 'PdpPage'],
     });
 
@@ -15,7 +15,7 @@ describe('Remote Contracts (@nft/shell-kit)', () => {
       name: 'checkout',
       port: 4202,
       base: '/remotes/checkout/',
-      routes: ['/carrinho', '/checkout', '/pedidos/$orderId/confirmacao'],
+      routes: ['/carrinho', '/pagamento', '/pedido/$orderId'],
       pages: ['CartPage', 'PaymentPage', 'ConfirmationPage'],
     });
 
