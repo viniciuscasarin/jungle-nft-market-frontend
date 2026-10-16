@@ -127,41 +127,46 @@ A infraestrutura e viabilidade técnica foram comprovadas e validadas empiricame
 
 ## 6. Contratos REST e eventos
 
-Documentação completa (método, path, request, response, erros) em [`docs/contracts.md`](docs/contracts.md). Os schemas zod em `shared/contracts` são a fonte; a documentação deriva deles.
+Documentação completa (método, path, request, response, erros e payloads) em [`docs/contracts.md`](docs/contracts.md). Os schemas zod em `@nft/shared-contracts` são a fonte única da verdade; a documentação deriva integralmente deles. Fixtures canônicas tipadas são exportadas em `@nft/shared-contracts/fixtures` para reutilização em testes e mocks.
 
-| Recurso | Operações |
-|---|---|
-| Sessão e conta | cadastro, login, consulta da sessão, logout, expiração |
-| NFTs | listagem (busca, filtros, ordenação, paginação) e detalhe |
-| Favoritos | consulta, inclusão, remoção |
-| Carrinho | consulta, inclusão, alteração, remoção de itens |
-| Cotação | cupom, disponibilidade, descontos, taxas, total |
-| Pedidos | criação idempotente, consulta de estado e recibo |
-| Perfil | consulta, atualização de dados e avatar, troca de senha |
-| Carteiras | consulta, cadastro, atualização |
+| Recurso | Operações | Schemas Chave |
+|---|---|---|
+| Sessão e conta | cadastro, login, consulta da sessão, logout, expiração | `SignUpInputSchema`, `SignInInputSchema`, `SessionSchema`, `UserSchema` |
+| NFTs | listagem (busca, filtros, ordenação, paginação) e detalhe | `NftItemSchema`, `NftEditionSchema`, `NftRatingSchema`, `NftListQuerySchema` |
+| Avaliações | listagem pública e somente leitura (notas 1 a 5 inteiras) | `ReviewSchema`, `ReviewListQuerySchema`, `ReviewListResponseSchema` |
+| Favoritos | consulta, inclusão, remoção | `FavoritesResponseSchema` |
+| Carrinho | consulta, inclusão, alteração, remoção de itens | `CartItemSchema`, `CartSchema`, `AddToCartInputSchema`, `UpdateCartItemInputSchema` |
+| Cotação | cupom, disponibilidade, descontos, taxas, total | `QuoteSchema`, `QuoteCouponSchema`, `ItemAvailabilitySchema`, `CreateQuoteInputSchema` |
+| Pedidos | criação idempotente, consulta de estado e recibo imutável | `OrderSchema`, `CollectorSchema`, `OrderReceiptSnapshotSchema`, `CreateOrderInputSchema` |
+| Perfil | consulta, atualização de dados e avatar, troca de senha | `ProfileSchema`, `UpdateProfileInputSchema`, `ChangePasswordInputSchema` |
+| Carteiras | consulta, cadastro, atualização (principal e secundária) | `WalletSchema`, `UserWalletsSchema`, `CreateWalletInputSchema` |
+| Search Params | parsing tolerante de URLs com fallback determinístico | `CatalogSearchParamsSchema`, `CartSearchParamsSchema`, `CheckoutSearchParamsSchema` |
 
 ### Erros
 
-Toda falha é normalizada em `ApiError` (`code`, `message`, `fieldErrors?`, `details?`, `retryable`). Códigos: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `SESSION_EXPIRED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `AVAILABILITY_CONFLICT`, `PRICE_CHANGED`, `IDEMPOTENCY_CONFLICT`, `TRANSIENT`. Falha de rede e timeout viram `TRANSIENT` com `retryable=true`.
+Toda falha é normalizada em `ApiError` (`code`, `message`, `fieldErrors?`, `details?`, `retryable`). Códigos padronizados em `ApiErrorCode`: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `SESSION_EXPIRED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `AVAILABILITY_CONFLICT`, `PRICE_CHANGED`, `IDEMPOTENCY_CONFLICT`, `TRANSIENT`, `NETWORK_ERROR`, `UNKNOWN_ERROR`. Falha de rede e timeout viram `TRANSIENT` ou `NETWORK_ERROR` com `retryable=true`.
 
 ### Eventos Socket.IO
 
-Envelope: `{ id, type, resource: { kind, id }, version, occurredAt, userId?, payload }`, união discriminada por `type`.
+Envelope padronizado (`RealtimeEnvelopeSchema`) modelado como união discriminada por `type`:
+- `nft.updated` (`NftUpdatedEnvelopeSchema`): `{ id, type: 'nft.updated', resource: 'nft', resourceId, version, timestamp, payload: { nftId, editionId?, price?, availableSupply?, maxSupply? } }`.
+- `order.updated` (`OrderUpdatedEnvelopeSchema`): `{ id, type: 'order.updated', resource: 'order', resourceId, version, timestamp, userId, payload: { orderId, userId, status, transactionHash?, confirmedAt?, rejectionReason? } }`.
 
-| Evento | Efeito |
-|---|---|
-| `nft.updated` | Atualiza preço e disponibilidade em catálogo, detalhe e carrinho |
-| `order.updated` | Atualiza estado do pedido; exibe confirmação ou recusa |
+Helpers puros em `@nft/shared-contracts`:
+- `isDuplicate(incoming, existingListOrSet)`: deduplica eventos por `id`.
+- `isStale(incomingVersion, currentVersion)`: descarta eventos onde `version <= currentVersion`.
 
 Todo recurso carrega `version` inteira e monotônica.
 
 ## 7. Dinheiro
 
-- ETH trafega, persiste e é calculado como string decimal. `number` é rejeitado nos schemas e na API de `shared/money`.
-- Precisão mínima de 18 casas, arredondamento `ROUND_HALF_UP`, sem notação científica.
-- Quantidades são inteiras.
-- Formatação pt-BR com casas configuráveis, apenas na apresentação.
-- A cotação da API é a referência para finalizar o pedido. O cliente nunca recalcula total para enviar.
+- Implementado em `@nft/shared-money` com tipo opaco branded `EthAmount` e erro customizado `InvalidEthAmountError`.
+- Encapsulamento estrito: `decimal.js` é configurado internamente com precisão 36 e `ROUND_HALF_UP`, e **nunca** vaza tipos públicos para fora da lib.
+- Funções puras: `parse`, `add`, `sub`, `mul(amount, intQty)`, `percent`, `sum`, `compare`, `isZero`, `format`, `toApi`.
+- Rejeição estrita de tipos `number`, strings vazias, caracteres malformados e notação científica (`1e-18`).
+- Quantidades são estritamente inteiras.
+- Formatação pt-BR com separador de milhar (.) e decimal (,), com casas decimais configuráveis, aplicada apenas na camada de apresentação.
+- A cotação da API (`/api/quote`) é a única referência para finalizar o pedido. O cliente nunca recalcula totais para enviar.
 
 ## 8. Sessão
 
