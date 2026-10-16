@@ -43,8 +43,8 @@ export async function startMocks(options: StartMocksOptions = {}): Promise<{
       { handlers },
     ] = await Promise.all([
       import('msw/browser'),
-      import(/* @vite-ignore */ coreModule),
-      import(/* @vite-ignore */ handlersModule),
+      import('@nft/mocks-core'),
+      import('@nft/mocks-handlers'),
     ]);
 
     // 1. Resolve active scenario from URL params, storage, or env
