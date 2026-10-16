@@ -41,7 +41,7 @@ O sistema SHALL gerenciar as transições de identidade do usuário (`A -> null`
 
 #### Scenario: Troca de usuário sem vazamento de dados
 - **WHEN** uma sessão ativa do usuário A é substituída pela autenticação do usuário B
-- **THEN** todas as queries em andamento do usuário A são canceladas imediatamente, as chaves de query privadas indexadas por `userId` de A são expurgadas do cache, a conexão de eventos em tempo real é reiniciada com o token do usuário B e nenhuma interface exibe dados residuais do usuário A.
+- **THEN** todas as queries em andamento do usuário A são canceladas imediatamente, as chaves de query privadas indexadas por `userId` de A são expurgadas do cache, o cliente de eventos em tempo real é desconectado e limpo (reabrindo conexão apenas sob demanda se houver subscriptions ativas para o usuário B) e nenhuma interface exibe dados residuais do usuário A.
 
 #### Scenario: Expiração concorrente de sessão
 - **WHEN** a sessão expira e múltiplas requisições paralelas retornam erro `SESSION_EXPIRED` (401)
@@ -59,8 +59,8 @@ O sistema SHALL gerenciar as transições de identidade do usuário (`A -> null`
 O sistema SHALL sanitizar parâmetros de busca de redirecionamento (`redirect`) para prevenir ataques de Open Redirect e loops de autenticação.
 
 #### Scenario: Redirecionamento para rota interna válida
-- **WHEN** um usuário não autenticado tenta acessar `/checkout?step=review` e é enviado para `/login?redirect=%2Fcheckout%3Fstep%3Dreview`
-- **THEN** após autenticar com sucesso, o sistema sanitiza o caminho e navega o usuário exatamente para `/checkout?step=review`.
+- **WHEN** um usuário não autenticado tenta acessar `/pagamento?step=review` e é enviado para `/login?redirect=%2Fpagamento%3Fstep%3Dreview`
+- **THEN** após autenticar com sucesso, o sistema sanitiza o caminho e navega o usuário exatamente para `/pagamento?step=review`.
 
 #### Scenario: Redirecionamento para URL externa ou rota de autenticação
 - **WHEN** o parâmetro `redirect` contém valores inseguros como `https://evil.com`, `//phishing.org`, `javascript:void(0)` ou rotas de autenticação (`/login`, `/cadastro`)
