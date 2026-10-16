@@ -75,3 +75,12 @@ export function stopMocks(): void {
     startMocksPromise = null;
   }
 }
+
+export async function authenticateDevSession(
+  httpClient: import('@nft/shared-http').HttpClient,
+  credentials?: { identifier?: string; password?: string },
+) {
+  const { authenticateStandaloneDevSession } = await import('@nft/mocks-core');
+  return authenticateStandaloneDevSession(httpClient, credentials);
+}
+

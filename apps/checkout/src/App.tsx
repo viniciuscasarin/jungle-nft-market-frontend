@@ -1,45 +1,63 @@
-import React from 'react';
+import * as React from 'react';
+import { EmptyState, Button, IconAlertCircle } from '@nft/shared-ui';
 
-export function App() {
+export interface CheckoutAppProps {
+  shellOrigin?: string;
+  onNavigateToShell?: () => void;
+}
+
+export function App({
+  shellOrigin = 'http://localhost:4200',
+  onNavigateToShell,
+}: CheckoutAppProps) {
+  const handleOpenShell = () => {
+    if (onNavigateToShell) {
+      onNavigateToShell();
+      return;
+    }
+    if (typeof window !== 'undefined' && window.location) {
+      if (typeof window.location.assign === 'function') {
+        window.location.assign(shellOrigin);
+      } else {
+        window.location.href = shellOrigin;
+      }
+    }
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-950/80 px-6 py-4 backdrop-blur">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🌿</span>
-            <span className="text-lg font-extrabold tracking-tight text-emerald-400">
-              Checkout Remote
-            </span>
-          </div>
-          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
-            Porta 4202
-          </span>
-        </div>
+    <div
+      role="region"
+      aria-label="Checkout Standalone Indisponível"
+      className="flex min-h-screen flex-col items-center justify-center p-6 bg-surface-default font-mono text-text-primary"
+    >
+      <header className="sr-only">
+        <h1>Checkout Remoto - Modo Standalone</h1>
       </header>
 
-      <main className="container mx-auto flex-1 px-4 py-12" role="region" aria-label="Fluxo de Checkout">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 shadow-xl backdrop-blur sm:p-12">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-            Carrinho & Pedidos
-          </div>
-          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-100 sm:text-4xl">
-            Checkout Remote
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-            Módulo responsável pelo gerenciamento de carrinho, cálculo de cotação com cupom e taxas de rede, e confirmação idempotente de pedido.
-          </p>
-          <div className="mt-8 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-6 text-sm text-slate-500">
-            <p className="font-medium text-slate-400">Status de Integração</p>
-            <p className="mt-1">
-              Pronto para execução independente em desenvolvimento ou consumo via Module Federation pelo host shell.
+      <main className="w-full max-w-xl">
+        <EmptyState
+          title="Fluxo Integrado Obrigatório"
+          description="O fluxo de carrinho, pagamento e confirmação de pedido depende da cotação e catálogo do host. Para efetuar compras ou emitir recibos com dados simulados consistentes, acesse o Shell integrado."
+          icon={<IconAlertCircle className="h-8 w-8 text-coral" aria-hidden="true" />}
+          action={
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleOpenShell}
+              data-testid="checkout-go-to-shell-button"
+            >
+              Acessar Shell Integrado (Porta 4200)
+            </Button>
+          }
+        >
+          <div className="rounded-xs border border-border-default/60 bg-surface-raised p-4 text-left text-caption-13 text-text-secondary">
+            <p className="font-bold text-text-primary mb-1">Por que esta tela é exibida?</p>
+            <p>
+              Conforme a arquitetura do desafio, pedidos são idempotentes e exigem cotação ativa da API. Nenhuma compra simulada ou recibo aparente é gerado isoladamente sem validação da simulação de rede.
             </p>
           </div>
-        </div>
+        </EmptyState>
       </main>
-
-      <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        <p>© 2026 Jungle NFT Market - Remote Independente</p>
-      </footer>
     </div>
   );
 }

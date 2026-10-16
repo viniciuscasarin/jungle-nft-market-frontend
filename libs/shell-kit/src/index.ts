@@ -44,10 +44,12 @@ export {
   resolveStandaloneHref,
   isSafeInternalPath,
   StandaloneLink,
+  StandaloneSessionExpired,
   type StandaloneBootstrapConfig,
   type StandalonePageDescriptor,
   type StandaloneHistoryType,
   type StandaloneNotFoundProps,
+  type StandaloneSessionExpiredProps,
   type ResolveDestinationOptions,
   type ResolvedStandaloneDestination,
   type StandaloneLinkProps,
@@ -88,6 +90,7 @@ export {
 export {
   startMocks,
   stopMocks,
+  authenticateDevSession,
   type StartMocksOptions,
 } from './mocks';
 

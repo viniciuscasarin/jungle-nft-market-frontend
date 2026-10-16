@@ -40,6 +40,45 @@ A escolha por uma arquitetura em **Monorepo orquestrado com Nx e pnpm**, combina
 
 ---
 
+## 📋 Metodologia de Desenvolvimento (OpenSpec)
+
+O projeto foi construído integralmente seguindo a metodologia **OpenSpec (Spec-Driven Development)**, uma disciplina rigorosa de engenharia orientada a contratos e especificações formais criada para guiar o pareamento com agentes autônomos de IA.
+
+### Como a Metodologia Foi Aplicada
+1. **Especificação Prévia e Verificável**: Nenhuma linha de código ou componente foi implementado sem antes passar por um ciclo formal de especificação. Cada funcionalidade nasce como uma proposta (`proposal.md`), acompanhada de requisitos normativos com palavras-chave RFC 2119 (`SHALL`, `MUST`) e cenários comportamentais testáveis no formato BDD (`WHEN ... THEN ...`).
+2. **Execução Rastreada e Fatiada**: O plano de implementação é dividido em tarefas atômicas e incrementais em `tasks.md`, com critérios estritos de aceitação e checagem contínua de tipos, lint e testes.
+3. **Zero Alucinação e Integridade Arquitetural**: Premissas de negócio, contratos de API e restrições técnicas são fixados antes da codificação, prevenindo desvios de escopo e atalhos arquiteturais.
+
+### Onde Encontrar os Artefatos do Fluxo de Desenvolvimento
+
+O avaliador pode auditar todo o processo decisório, evolução e rastreabilidade da solução nos seguintes diretórios:
+
+- **Manifesto do Projeto ([`openspec/project.md`](./openspec/project.md))**: Define a visão global do sistema, o inventário das aplicações e bibliotecas, as convenções de código, critérios de qualidade e as regras invioláveis.
+- **Especificações de Domínio e Sistema ([`openspec/specs/`](./openspec/specs/))**:
+  Contém as especificações canônicas que documentam os comportamentos de cada subsistema:
+  - `user-auth-and-session/`: Políticas de autenticação, tokens, expiração e retomada de contexto.
+  - `checkout-payment-and-orders/`: Regras de pagamento, validação de carteiras e idempotência.
+  - `order-confirmation-receipt/`: Contratos de recibo imutável e transições terminais de pedido.
+  - `realtime-connection-lifecycle/`: Protocolo Socket.IO, envelopes tipados e tolerância a falhas.
+  - `mock-infrastructure/`: Determinismo PRNG, perfis de rede e simulação de MSW.
+  - `module-federation-runtime/`: Topologia de micro-frontends, singletons e boundary de resiliência.
+  - `monetary-precision/`: Operações matemáticas em ETH via string decimal.
+  - `design-system-ui/` e `design-tokens-and-assets/`: Tokens extraídos do Figma e primitivos acessíveis.
+- **Ciclo de Mudanças e Tarefas ([`openspec/changes/`](./openspec/changes/))**:
+  Registra o histórico de execução de cada entrega:
+  - `openspec/changes/<change-id>/proposal.md`: Motivação, escopo, premissas de UX e impactos.
+  - `openspec/changes/<change-id>/tasks.md`: Lista passo a passo das tarefas executadas com status de conclusão (`[x]`).
+  - `openspec/changes/archive/`: Mudanças arquivadas que consolidaram as fundações do workspace, contratos, camada de mocks e infraestrutura de federação.
+- **Documentação Aprofundada ([`docs/`](./docs/))**:
+  Spikes técnicos e guias complementares gerados a partir das especificações:
+  - `docs/contracts.md`: Catálogo completo de endpoints REST e envelopes Socket.IO.
+  - `docs/cache-policy.md`: Estratégia de cache do TanStack Query e chaves de consulta.
+  - `docs/federation.md`: Contrato de Module Federation e execução standalone.
+  - `docs/spikes/module-federation.md`: Spike exploratório inicial de viabilidade técnica.
+  - `docs/design/`: Notas de fidelidade visual do Figma, acessibilidade e responsividade.
+
+---
+
 ## 1. Objetivos e restrições
 
 - Fluxos de descoberta, compra e conta do colecionador, em desktop e mobile.
@@ -180,6 +219,7 @@ A infraestrutura e viabilidade técnica foram comprovadas e validadas empiricame
   - **Composição e Inicialização Ordenada:** Fornece `QueryClientProvider` com o mesmo cliente do `ShellContext`, `ShellToastProvider`, `GlobalLiveRegions` e `ShellPageChromeProvider`. Consumidores conectados podem consultar dados, registrar chrome e anunciar feedback visual/acessível. A inicialização aguarda MSW e sessão opcional antes de montar a página, com loading acessível e `ErrorState` com retry no mesmo root e clientes, sem duplicar worker ou instâncias de clientes.
   - **Roteador e Histórico:** O router standalone utiliza `<Outlet />` na raiz e suporta `historyType: 'browser'` (padrão em dev para histórico nativo e refresh) e `historyType: 'memory'` (para testes determinísticos).
   - **Resolução de Destinos e Segurança:** Destinos locais usam o router do remote. Destinos externos ao remote (ex: PDP `/nft/$nftId`, Login `/login`, Checkout `/carrinho`) são resolvidos para a URL canônica na origem configurável do Shell (`shellOrigin`, padrão `http://localhost:4200` ou alternativa em E2E) preservando path, search e hash. Tentativas de open redirect ou destinos inseguros (`//evil.com`, `/\evil.com`, `javascript:`, etc.) são rejeitados para o fallback seguro `/`. URLs locais desconhecidas renderizam o estado acessível `StandaloneNotFound` (`role="region"`, `role="alert"`) com links de recuperação para o remote e para o Shell.
+  - **Limites e Dependências Funcionais de Checkout e Recibos:** O remote `apps/checkout` em modo standalone renderiza um estado explícito e acessível de indisponibilidade ("Fluxo Integrado Obrigatório") em todas as suas rotas (`/`, `/carrinho`, `/pagamento`, `/pedido/:orderId`), com botão de navegação direta ao Shell integrado (`http://localhost:4200`). Em estrita aderência à regra inviolável 8 ("Ação fora de escopo não aparenta sucesso"), o checkout standalone nunca simula compras ou gera recibos fora do fluxo integrado, pois depende do carrinho ativo, cálculo de cotação da API com cupom e taxas de rede, e confirmação idempotente de pedido com emissão de recibo gerido pelo Shell.
 - **Distribuição Consolidada de Produção:**
   - Build consolidado via `scripts/build-integrated.js` (`pnpm build`) gerando `dist/integrated/` com Shell na raiz e remotes sob `/remotes/<app>/`.
   - Servidor de preview (`pnpm preview`) escutando na porta 4200 com SPA fallback total para qualquer subrota e headers de cache apropriados (`no-cache` em `remoteEntry.js` e imutável para assets com hash).

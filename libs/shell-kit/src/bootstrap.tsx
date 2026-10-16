@@ -140,9 +140,11 @@ export interface StandaloneBootstrapConfig {
   pages?: StandalonePageDescriptor[];
   shellOrigin?: string;
   initMsw?: () => Promise<void>;
-  initSession?: (
-    client: ShellContextValue['httpClient'],
-  ) => Promise<StandaloneSessionInitResult>;
+  initSession?:
+    | 'dev'
+    | ((
+        client: ShellContextValue['httpClient'],
+      ) => Promise<StandaloneSessionInitResult>);
   session?: ShellUserSession | null;
   token?: string | null;
   onNavigate?: (to: string) => void;
@@ -575,7 +577,13 @@ export async function bootstrapStandalone(
     try {
       await initMsw?.();
       if (initSession) {
-        const result = await initSession(httpClient);
+        let result: StandaloneSessionInitResult = null;
+        if (initSession === 'dev') {
+          const { authenticateStandaloneDevSession } = await import('@nft/mocks-core');
+          result = await authenticateStandaloneDevSession(httpClient);
+        } else {
+          result = await initSession(httpClient);
+        }
         if (result) {
           if ('token' in result && typeof result.token === 'string') {
             activeToken = result.token;
