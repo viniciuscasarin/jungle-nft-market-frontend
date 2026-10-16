@@ -29,7 +29,12 @@ const baseRestrictedPaths = [
     name: '@tanstack/react-query',
     message: 'Direct import of @tanstack/react-query is prohibited outside shared-query, data-access, and feature.',
   },
+  {
+    name: '@nft/shared-testing',
+    message: 'Direct import of @nft/shared-testing is restricted to test and story files (*.spec.*, *.test.*, *.stories.*).',
+  },
 ];
+
 
 const baseRestrictedPatterns = [
   {
@@ -61,6 +66,7 @@ export default [
       '**/.nx',
       '**/*.gen.ts',
       '**/@mf-types/**',
+      '**/public/**',
       'dist',
       'build',
     ],
@@ -81,6 +87,11 @@ export default [
         {
           enforceBuildableLibDependency: true,
           allowCircularSelfDependency: false,
+          checkDynamicDependenciesExceptions: [
+            '@nft/mocks-core',
+            '@nft/mocks-handlers',
+            'msw/browser',
+          ],
           allow: [],
           depConstraints: [
             // 1. Cross-app imports prohibited
@@ -166,6 +177,10 @@ export default [
               notDependOnLibsWithTags: ['scope:mocks'],
             },
             {
+              sourceTag: 'scope:testing',
+              notDependOnLibsWithTags: ['type:app', 'type:feature'],
+            },
+            {
               sourceTag: 'scope:shared',
               notDependOnLibsWithTags: ['scope:mocks', 'type:app', 'type:feature'],
             },
@@ -184,7 +199,7 @@ export default [
       'no-restricted-imports': buildRestrictedImports(),
     },
   },
-  // Overrides for encapsulated third-party libraries
+  // Overrides for encapsulated third-party libraries (production and test)
   {
     files: ['libs/shared/http/**/*.{ts,tsx,js,jsx}'],
     rules: {
@@ -211,18 +226,6 @@ export default [
   },
   {
     files: [
-      'libs/mocks/**/*.{ts,tsx,js,jsx}',
-      'libs/shell-kit/**/*.{ts,tsx,js,jsx}',
-      'apps/web-e2e/**/*.{ts,tsx,js,jsx}',
-    ],
-    rules: {
-      'no-restricted-imports': buildRestrictedImports({
-        allow: ['msw', '@mswjs/socket.io-binding'],
-      }),
-    },
-  },
-  {
-    files: [
       'libs/shared/query/**/*.{ts,tsx,js,jsx}',
       'libs/**/data-access/**/*.{ts,tsx,js,jsx}',
       'libs/**/feature/**/*.{ts,tsx,js,jsx}',
@@ -233,4 +236,41 @@ export default [
       }),
     },
   },
+  {
+    files: [
+      'libs/mocks/**/*.{ts,tsx,js,jsx}',
+      'libs/shell-kit/**/*.{ts,tsx,js,jsx}',
+      'libs/shared/testing/**/*.{ts,tsx,js,jsx}',
+      'apps/web-e2e/**/*.{ts,tsx,js,jsx}',
+    ],
+    rules: {
+      'no-restricted-imports': buildRestrictedImports({
+        allow: ['msw', '@mswjs/socket.io-binding', '@nft/shared-testing'],
+      }),
+    },
+  },
+  // Test, story, and tooling files can import @nft/shared-testing
+  {
+    files: [
+      '**/*.{spec,test}.{ts,tsx,js,jsx}',
+      '**/*.stories.{ts,tsx,js,jsx}',
+      '.storybook/**/*.{ts,tsx,js,jsx}',
+      'apps/storybook/**/*.{ts,tsx,js,jsx}',
+    ],
+    rules: {
+      'no-restricted-imports': buildRestrictedImports({
+        allow: [
+          '@nft/shared-testing',
+          '@tanstack/react-query',
+          '@radix-ui/*',
+          'axios',
+          'socket.io-client',
+          'decimal.js',
+          'msw',
+          '@mswjs/socket.io-binding',
+        ],
+      }),
+    },
+  },
 ];
+

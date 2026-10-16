@@ -120,5 +120,58 @@ describe('Architectural Boundaries & Encapsulation Enforcement', () => {
     const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
     expect(rules).toContain('@nx/enforce-module-boundaries');
   });
+
+  it('deve permitir que @nft/shared-testing importe @nft/mocks-core e msw legalmente', async () => {
+    const results = await eslint.lintText(
+      "import { getMockDatabase } from '@nft/mocks-core';\nimport { HttpResponse } from 'msw';\nconsole.log(getMockDatabase, HttpResponse);\n",
+      {
+        filePath: 'libs/shared/testing/src/test-mocks-allowed.ts',
+      }
+    );
+    const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
+    expect(rules).not.toContain('@nx/enforce-module-boundaries');
+    expect(rules).not.toContain('no-restricted-imports');
+  });
+
+  it('deve proibir código de produção de importar @nft/shared-testing', async () => {
+    const results = await eslint.lintText(
+      "import { render } from '@nft/shared-testing';\nconsole.log(render);\n",
+      {
+        filePath: 'libs/catalog/feature/src/catalog-component.ts',
+      }
+    );
+    const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
+    expect(rules).toContain('no-restricted-imports');
+  });
+
+  it('deve autorizar arquivos *.spec.ts e *.test.ts a importar @nft/shared-testing', async () => {
+    const results = await eslint.lintText(
+      "import { render } from '@nft/shared-testing';\nconsole.log(render);\n",
+      {
+        filePath: 'libs/catalog/feature/src/catalog-component.spec.ts',
+      }
+    );
+    const rules = results[0]?.messages.map((m) => m.ruleId) ?? [];
+    expect(rules).not.toContain('no-restricted-imports');
+  });
+
+  it('deve proibir feature e data-access de importar @nft/mocks-core', async () => {
+    const resFeature = await eslint.lintText(
+      "import { getMockDatabase } from '@nft/mocks-core';\nconsole.log(getMockDatabase);\n",
+      {
+        filePath: 'libs/catalog/feature/src/feature-test.ts',
+      }
+    );
+    expect(resFeature[0]?.messages.map((m) => m.ruleId)).toContain('@nx/enforce-module-boundaries');
+
+    const resDataAccess = await eslint.lintText(
+      "import { getMockDatabase } from '@nft/mocks-core';\nconsole.log(getMockDatabase);\n",
+      {
+        filePath: 'libs/catalog/data-access/src/data-access-test.ts',
+      }
+    );
+    expect(resDataAccess[0]?.messages.map((m) => m.ruleId)).toContain('@nx/enforce-module-boundaries');
+  });
 });
+
 

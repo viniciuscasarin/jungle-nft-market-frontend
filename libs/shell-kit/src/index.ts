@@ -3,6 +3,7 @@ export {
   ShellProvider,
   useShell,
   useSession,
+  toShellUserSession,
   type ShellUserSession,
   type ShellContextValue,
   type ShellProviderProps,
@@ -44,3 +45,10 @@ export {
   withRemoteTimeout,
   type RemoteBoundaryProps,
 } from './remote-boundary';
+
+export {
+  startMocks,
+  stopMocks,
+  type StartMocksOptions,
+} from './mocks';
+

@@ -3,11 +3,28 @@ import type { QueryClient } from '@nft/shared-query';
 import type { HttpClient } from '@nft/shared-http';
 import type { RealtimeClient } from '@nft/shared-realtime';
 
+import type { Session } from '@nft/shared-contracts';
+
 export interface ShellUserSession {
   userId: string;
   name: string;
   email: string;
-  avatarUrl?: string;
+  avatarUrl?: string | undefined;
+}
+
+export function toShellUserSession(
+  session: Session | null | undefined,
+): ShellUserSession | null {
+  if (!session) return null;
+  const userSession: ShellUserSession = {
+    userId: session.user.id,
+    name: session.user.displayName,
+    email: session.user.email,
+  };
+  if (session.user.avatarUrl) {
+    userSession.avatarUrl = session.user.avatarUrl;
+  }
+  return userSession;
 }
 
 export interface ShellContextValue {

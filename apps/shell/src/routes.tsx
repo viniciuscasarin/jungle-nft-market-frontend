@@ -4,6 +4,7 @@ import {
   createRoute,
   createRouter,
   redirect,
+  useNavigate,
   Link,
   Outlet,
   type ErrorComponentProps,
@@ -22,8 +23,11 @@ import {
   DefaultRemoteSkeleton,
   RemoteBoundary,
   withRemoteTimeout,
+  toShellUserSession,
   type ShellUserSession,
 } from '@nft/shell-kit';
+import { Header, type HeaderUser } from '@nft/shared-ui';
+import { LoginPage, SignUpPage, useOptionalAuth } from '@nft/auth-feature';
 
 export interface RouterContext {
   session?: ShellUserSession | null;
@@ -31,6 +35,7 @@ export interface RouterContext {
 
 export const LoginSearchSchema = z.object({
   redirect: z.string().optional().catch(undefined),
+  reason: z.string().optional().catch(undefined),
 });
 
 export function NotFoundComponent() {
@@ -206,59 +211,60 @@ export function requireAuth({
   }
 }
 
-export function LoginComponent() {
-  return (
-    <main
-      role="region"
-      aria-label="Autenticação"
-      className="container mx-auto px-4 py-12"
-    >
-      <div className="max-w-md mx-auto rounded-2xl border border-slate-800 bg-slate-900/50 p-8 shadow-xl backdrop-blur text-center">
-        <h1 className="text-2xl font-bold text-slate-100">Entrar na Conta</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Acesse sua conta para concluir compras e gerenciar suas carteiras.
-        </p>
-      </div>
-    </main>
-  );
-}
+export const LoginComponent = LoginPage;
 
 export function RootComponent() {
   useEffect(() => {
     singletonProbe.increment('apps/shell');
   }, []);
 
+  const navigate = useNavigate();
+  const authContext = useOptionalAuth();
+  const routeContext = rootRoute.useRouteContext();
+  const session = authContext?.session
+    ? toShellUserSession(authContext.session)
+    : (routeContext?.session ?? null);
+
+  const handleLoginClick = () => {
+    void navigate({ to: '/login' as never });
+  };
+
+  const handleLogoutClick = async () => {
+    if (authContext) {
+      await authContext.logout();
+    }
+    void navigate({ to: '/login' as never });
+  };
+
+  const handleCartClick = () => {
+    void navigate({ to: '/carrinho' as never });
+  };
+
+  const headerUser: HeaderUser | null = session
+    ? {
+        name: session.name,
+        avatarUrl: session.avatarUrl ?? undefined,
+      }
+    : null;
+
+  const shellNavLinks = [
+    { label: 'Início', href: '/' },
+    { label: 'Catálogo', href: '/catalogo' },
+    { label: 'Carrinho', href: '/carrinho' },
+    { label: 'Perfil', href: '/perfil' },
+    { label: 'Carteiras', href: '/carteiras' },
+  ];
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link
-            to="/"
-            preload="intent"
-            className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-emerald-400 transition hover:opacity-90"
-          >
-            <span>🌿</span>
-            <span>Jungle NFT Market</span>
-          </Link>
-          <nav aria-label="Navegação Principal" className="flex items-center gap-6 text-sm font-medium text-slate-300">
-            <Link to="/" preload="intent" className="transition hover:text-emerald-400">
-              Início
-            </Link>
-            <Link to="/catalogo" preload="intent" className="transition hover:text-emerald-400">
-              Catálogo
-            </Link>
-            <Link to="/carrinho" preload="intent" className="transition hover:text-emerald-400">
-              Carrinho
-            </Link>
-            <Link to="/perfil" preload="intent" className="transition hover:text-emerald-400">
-              Perfil
-            </Link>
-            <Link to="/carteiras" preload="intent" className="transition hover:text-emerald-400">
-              Carteiras
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100 font-mono">
+      <Header
+        className="block w-full border-b border-border-default px-4 bg-surface-default"
+        user={headerUser}
+        navLinks={shellNavLinks}
+        onLoginClick={handleLoginClick}
+        onLogoutClick={handleLogoutClick}
+        onCartClick={handleCartClick}
+      />
 
       <div className="flex-1">
         <Outlet />
@@ -374,6 +380,13 @@ export const loginRoute = createRoute({
   component: LoginComponent,
 });
 
+export const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/cadastro',
+  validateSearch: (search) => LoginSearchSchema.parse(search),
+  component: SignUpPage,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   catalogRoute,
@@ -384,6 +397,7 @@ export const routeTree = rootRoute.addChildren([
   profileRoute,
   walletsRoute,
   loginRoute,
+  registerRoute,
 ]);
 
 export const router = createRouter({

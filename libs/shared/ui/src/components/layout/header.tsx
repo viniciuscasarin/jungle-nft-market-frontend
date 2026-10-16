@@ -13,8 +13,8 @@ export interface HeaderNavLink {
 
 export interface HeaderUser {
   name: string;
-  avatarUrl?: string;
-  walletAddress?: string;
+  avatarUrl?: string | undefined;
+  walletAddress?: string | undefined;
 }
 
 export interface HeaderProps {

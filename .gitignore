@@ -43,3 +43,12 @@ Thumbs.db
 # Playwright
 test-results/
 playwright-report/
+
+# Standalone mock workers in remotes
+apps/storefront/public/mockServiceWorker.js
+apps/checkout/public/mockServiceWorker.js
+apps/account/public/mockServiceWorker.js
+
+tmp/
+
+

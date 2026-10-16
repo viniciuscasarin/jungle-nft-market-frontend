@@ -1,24 +1,16 @@
 import { http, HttpResponse } from 'msw';
-import { mockNfts, mockUsers } from '@nft/mocks-fixtures';
+import { mockNfts } from '@nft/mocks-fixtures';
 
-export const authHandlers = [
-  http.get('/api/session', () => {
-    return HttpResponse.json({ user: mockUsers[0] });
-  }),
-  http.post('/api/auth/login', () => {
-    return HttpResponse.json({ token: 'mock-session-token', user: mockUsers[0] });
-  }),
-  http.post('/api/auth/logout', () => {
-    return HttpResponse.json({ success: true });
-  }),
-];
+import { authHandlers } from './auth';
+
+export { authHandlers };
 
 export const catalogHandlers = [
   http.get('/api/nfts', () => {
     return HttpResponse.json({ items: mockNfts, total: mockNfts.length });
   }),
-  http.get('/api/nfts/:id', ({ params }) => {
-    const nft = mockNfts.find((item) => item.id === params['id']);
+  http.get('/api/nfts/:id', ({ params }: { params: Record<string, string | readonly string[] | undefined> }) => {
+    const nft = mockNfts.find((item: { id: string }) => item.id === params['id']);
     if (!nft) {
       return new HttpResponse(null, { status: 404 });
     }

@@ -22,7 +22,11 @@ export const SignUpInputSchema = z.object({
     .min(3, 'Username deve ter pelo menos 3 caracteres')
     .regex(/^[a-zA-Z0-9_]+$/, 'Username deve conter apenas letras, números e underscore'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: z
+    .string()
+    .min(8, 'Senha deve ter no mínimo 8 caracteres')
+    .regex(/[a-zA-Z]/, 'Senha deve conter pelo menos uma letra')
+    .regex(/[0-9]/, 'Senha deve conter pelo menos um número'),
 });
 
 export type SignUpInput = z.infer<typeof SignUpInputSchema>;
