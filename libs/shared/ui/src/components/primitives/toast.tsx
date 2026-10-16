@@ -67,34 +67,44 @@ export function useToast() {
 
 const toastVariantConfig: Record<
   ToastVariant,
-  { borderClass: string; icon: React.ReactNode; titleClass: string }
+  { borderClass: string; titleClass: string }
 > = {
   default: {
     borderClass: 'border-border-default bg-surface-raised',
     titleClass: 'text-text-primary',
-    icon: <IconInfo className="h-5 w-5 text-text-secondary shrink-0" />,
   },
   info: {
     borderClass: 'border-border-default bg-surface-raised',
     titleClass: 'text-accent',
-    icon: <IconInfo className="h-5 w-5 text-accent shrink-0" />,
   },
   success: {
     borderClass: 'border-feedback-success/50 bg-surface-raised',
     titleClass: 'text-feedback-success',
-    icon: <IconCheckCircle className="h-5 w-5 text-feedback-success shrink-0" />,
   },
   warning: {
     borderClass: 'border-accent/50 bg-surface-raised',
     titleClass: 'text-accent',
-    icon: <IconAlertCircle className="h-5 w-5 text-accent shrink-0" />,
   },
   error: {
     borderClass: 'border-feedback-error/50 bg-surface-raised',
     titleClass: 'text-feedback-error',
-    icon: <IconAlertCircle className="h-5 w-5 text-feedback-error shrink-0" />,
   },
 };
+
+function getDefaultToastIcon(variant: ToastVariant): React.ReactNode {
+  switch (variant) {
+    case 'default':
+      return <IconInfo className="h-5 w-5 text-text-secondary shrink-0" />;
+    case 'info':
+      return <IconInfo className="h-5 w-5 text-accent shrink-0" />;
+    case 'success':
+      return <IconCheckCircle className="h-5 w-5 text-feedback-success shrink-0" />;
+    case 'warning':
+      return <IconAlertCircle className="h-5 w-5 text-accent shrink-0" />;
+    case 'error':
+      return <IconAlertCircle className="h-5 w-5 text-feedback-error shrink-0" />;
+  }
+}
 
 export const ToastContainer: React.FC<{
   toasts: ToastItem[];
@@ -108,7 +118,9 @@ export const ToastContainer: React.FC<{
     >
       <div aria-live="polite" aria-atomic="false" className="flex flex-col gap-2">
         {toasts.map((toast) => {
-          const config = toastVariantConfig[toast.variant ?? 'default'];
+          const variant = toast.variant ?? 'default';
+          const config = toastVariantConfig[variant];
+          const icon = getDefaultToastIcon(variant);
           return (
             <div
               key={toast.id}
@@ -118,7 +130,7 @@ export const ToastContainer: React.FC<{
                 config.borderClass
               )}
             >
-              {config.icon}
+              {icon}
               <div className="flex-1 space-y-0.5 min-w-0">
                 {toast.title && <h5 className={cn('font-bold', config.titleClass)}>{toast.title}</h5>}
                 {toast.description && (

@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header
       className={cn(
-        'hidden md:block w-full h-[45px] p-0 bg-transparent border-b border-border-default font-mono select-none transition-colors',
+        'hidden lg:block w-full h-[45px] p-0 bg-transparent border-b border-border-default font-mono select-none transition-colors',
         className
       )}
     >

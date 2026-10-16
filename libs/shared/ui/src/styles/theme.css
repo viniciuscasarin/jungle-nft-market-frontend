@@ -102,10 +102,11 @@
   --shadow-modal: 0px 20px 50px 0px rgba(0, 0, 0, 0.75);
   --shadow-dropdown: 0px 8px 24px 0px rgba(10, 6, 4, 0.60);
 
-  /* --- Breakpoints (390, 768, 1440) --- */
+  /* --- Breakpoints (390, 768, 1024, 1440) --- */
   --breakpoint-sm: 390px;
   --breakpoint-md: 768px;
-  --breakpoint-lg: 1440px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
   --breakpoint-mobile: 390px;
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1440px;

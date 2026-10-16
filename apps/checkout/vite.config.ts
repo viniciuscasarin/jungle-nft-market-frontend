@@ -35,6 +35,14 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       react(),
     ],
+    optimizeDeps: {
+      exclude: ['@tailwindcss/vite', '@tailwindcss/oxide'],
+      esbuildOptions: {
+        loader: {
+          '.node': 'empty',
+        },
+      },
+    },
     server: {
       port: 4202,
       host: 'localhost',

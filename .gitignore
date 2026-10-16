@@ -13,6 +13,9 @@ out/
 .next/
 @mf-types/
 **/@mf-types/
+.mf/
+**/.mf/
+apps/storefront/public/assets/
 
 # Environment files
 .env

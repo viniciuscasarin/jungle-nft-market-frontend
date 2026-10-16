@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from '@nft/shared-router';
 import { useShell, useSession } from '@nft/shell-kit';
+import { PdpPageContent } from '@nft/catalog-ui';
 
 export function PdpPage() {
   const { queryClient } = useShell();
@@ -14,26 +15,25 @@ export function PdpPage() {
     // Standalone or unrouted fallback
   }
 
+  const title = nftId ? `Detalhes do NFT #${nftId}` : 'Detalhes do NFT #4092 - Cosmic Bloom';
+  const tokenId = nftId ? `#${nftId}` : '#4092';
+
   return (
     <div
       data-testid="storefront-pdp-page"
-      className="max-w-4xl mx-auto p-6 space-y-4"
+      className="w-full min-h-screen bg-surface-default text-text-primary"
     >
-      <div className="border border-border-default rounded-lg p-6 bg-surface-card">
-        <span className="text-tiny-10 uppercase tracking-widest text-text-accent font-mono font-bold">
-          Storefront Remote
-        </span>
-        <h1 className="text-heading-24 font-bold text-text-primary mt-2">
-          Detalhes do NFT {nftId ? `#${nftId}` : ''}
-        </h1>
-        <p className="text-body-14 text-text-secondary mt-2">
-          Página de detalhes do item colecionável (PDP). Carregada via Module Federation.
-        </p>
-        <div className="mt-4 pt-4 border-t border-border-soft flex gap-4 text-caption-12 text-text-muted font-mono">
-          <span>QueryClient: {queryClient ? 'Conectado' : 'Ausente'}</span>
-          <span>Sessão: {session ? session.name : 'Visitante'}</span>
-        </div>
+      {/* Metadados acessíveis e de integração com host Shell */}
+      <div className="sr-only">
+        <span>Storefront Remote</span>
+        <span>QueryClient: {queryClient ? 'Conectado' : 'Ausente'}</span>
+        <span>Sessão: {session ? session.name : 'Visitante'}</span>
       </div>
+
+      <PdpPageContent
+        title={title}
+        tokenId={tokenId}
+      />
     </div>
   );
 }

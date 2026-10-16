@@ -22,41 +22,50 @@ const variantConfig: Record<
   {
     containerClass: string;
     titleColor: string;
-    defaultIcon: React.ReactNode;
     role: 'alert' | 'status';
   }
 > = {
   default: {
     containerClass: 'bg-surface-raised border-border-default text-text-primary',
     titleColor: 'text-text-primary',
-    defaultIcon: <IconInfo className="h-5 w-5 text-text-secondary shrink-0 mt-0.5" />,
     role: 'status',
   },
   info: {
     containerClass: 'bg-surface-raised border-border-default text-text-primary',
     titleColor: 'text-accent',
-    defaultIcon: <IconInfo className="h-5 w-5 text-accent shrink-0 mt-0.5" />,
     role: 'status',
   },
   success: {
     containerClass: 'bg-surface-raised border-feedback-success/40 text-text-primary',
     titleColor: 'text-feedback-success',
-    defaultIcon: <IconCheckCircle className="h-5 w-5 text-feedback-success shrink-0 mt-0.5" />,
     role: 'status',
   },
   warning: {
     containerClass: 'bg-surface-raised border-accent/40 text-text-primary',
     titleColor: 'text-accent',
-    defaultIcon: <IconAlertCircle className="h-5 w-5 text-accent shrink-0 mt-0.5" />,
     role: 'alert',
   },
   error: {
     containerClass: 'bg-surface-raised border-feedback-error/40 text-text-primary',
     titleColor: 'text-feedback-error',
-    defaultIcon: <IconAlertCircle className="h-5 w-5 text-feedback-error shrink-0 mt-0.5" />,
     role: 'alert',
   },
 };
+
+function getDefaultAlertIcon(variant: AlertVariant): React.ReactNode {
+  switch (variant) {
+    case 'default':
+      return <IconInfo className="h-5 w-5 text-text-secondary shrink-0 mt-0.5" />;
+    case 'info':
+      return <IconInfo className="h-5 w-5 text-accent shrink-0 mt-0.5" />;
+    case 'success':
+      return <IconCheckCircle className="h-5 w-5 text-feedback-success shrink-0 mt-0.5" />;
+    case 'warning':
+      return <IconAlertCircle className="h-5 w-5 text-accent shrink-0 mt-0.5" />;
+    case 'error':
+      return <IconAlertCircle className="h-5 w-5 text-feedback-error shrink-0 mt-0.5" />;
+  }
+}
 
 export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   (
@@ -75,7 +84,7 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     ref
   ) => {
     const config = variantConfig[variant];
-    const renderedIcon = icon ?? config.defaultIcon;
+    const renderedIcon = icon ?? getDefaultAlertIcon(variant);
 
     return (
       <div

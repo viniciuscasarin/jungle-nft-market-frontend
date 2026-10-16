@@ -9,6 +9,7 @@ const config: StorybookConfig = {
     '../../../libs/shared/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
     '../../../libs/shared/ui/src/**/*.mdx',
     '../../../libs/profile/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+    '../../../libs/catalog/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
   ],
   addons: [
     '@storybook/addon-essentials',
